@@ -733,6 +733,14 @@
       repo=migrated;
     }catch(e){repoBlocked=`Saved orders could not be loaded safely: ${e.message||'browser storage unavailable'}. Orders are locked; existing storage has not been cleared.`;showError('repository-warning',repoBlocked)}
   }
+
+async function syncRepositoryToCloud(data){
+  await Promise.all([
+    saveCloudRecords('orders', data.orders),
+    saveCloudRecords('customers', data.customers),
+    saveCloudSetting('repo-counters', data.counters)
+  ]);
+}
   
 function commitRepo(next){
   if(repoBlocked){notify(repoBlocked);return false}
