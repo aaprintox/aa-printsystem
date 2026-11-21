@@ -1,46 +1,15 @@
 
-const WORKER_ORIGIN = "https://aa-printsystem-api.aaprintox.workers.dev";
+const WORKER_URL = "https://aa-printsystem-api.aaprintox.workers.dev";
 
 export async function onRequest(context) {
-  const request = context.request;
-  const incomingUrl = new URL(request.url);
+  const incomingUrl = new URL(context.request.url);
 
-  const targetUrl =
-    WORKER_ORIGIN + incomingUrl.pathname + incomingUrl.search;
+  const targetUrl = new URL(
+    incomingUrl.pathname + incomingUrl.search,
+    WORKER_URL
+  );
 
-  try {
-    const headers = new Headers(request.headers);
-    headers.set("Origin", WORKER_ORIGIN);
-    headers.set("Cache-Control", "no-store");
+  const request = new Request(targetUrl.toString(), context.request);
 
-    const options = {
-      method: request.method,
-      headers,
-      redirect: "manual"
-    };
-
-    if (request.method !== "GET" && request.method !== "HEAD") {
-      options.body = request.body;
-    }
-
-    const workerRequest = new Request(targetUrl, options);
-    const workerResponse = await fetch(workerRequest);
-
-    const responseHeaders = new Headers(workerResponse.headers);
-    responseHeaders.set("Cache-Control", "no-store");
-
-    return new Response(workerResponse.body, {
-      status: workerResponse.status,
-      statusText: workerResponse.statusText,
-      headers: responseHeaders
-    });
-  } catch (error) {
-    return Response.json(
-      {
-        success: false,
-        message: "Unable to connect to AA PrintSystem API."
-      },
-      { status: 502 }
-    );
-  }
+  return fetch(request);
 }
