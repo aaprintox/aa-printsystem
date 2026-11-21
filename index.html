@@ -627,19 +627,7 @@
   const showError = (id,text) => {$(id).textContent=text;$(id).hidden=!text};
   function notify(text){$('toast').textContent=text;$('toast').hidden=false;clearTimeout(notify.timer);notify.timer=setTimeout(()=>$('toast').hidden=true,4500)}
   function readLegacy(name,fallback){try{const raw=localStorage.getItem(PREFIX+name);return raw===null?fallback:JSON.parse(raw)}catch{return fallback}}
-  function saveLegacy(name,value){
-    try{
-      localStorage.setItem(PREFIX+name,JSON.stringify(value));
-      syncLegacyToCloud(name,value).catch(error=>{
-        console.error('Cloud sync failed for '+name+':',error);
-        notify('Saved on this device, but cloud sync failed for '+name+'. Check your connection and sign in again.');
-      });
-      return true;
-    }catch{
-      notify('Could not save in this browser. Check available storage.');
-      return false;
-    }
-  }
+  function saveLegacy(name,value){try{localStorage.setItem(PREFIX+name,JSON.stringify(value));return true}catch{notify('Could not save in this browser. Check available storage.');return false}}
   // CLOUD DATABASE CONNECTION
   async function cloudRequest(path, options = {}) {
     const response = await fetch('/api/shop/' + path, {
@@ -679,58 +667,6 @@
     return cloudRequest('settings/' + key, {
       method: 'PUT', body: { setting }
     });
-  }
-  const legacyCloudMap={
-    products:{type:'records',key:'products'},
-    recent:{type:'setting',key:'recent-calculations'},
-    settings:{type:'setting',key:'business-settings'},
-    'message-templates':{type:'setting',key:'message-templates'},
-    appearance:{type:'setting',key:'appearance'},
-    'tracking-preview':{type:'setting',key:'tracking-preview'}
-  };
-  async function syncLegacyToCloud(name,value){
-    const target=legacyCloudMap[name];
-    if(!target)return;
-    if(target.type==='records')return saveCloudRecords(target.key,value);
-    return saveCloudSetting(target.key,value);
-  }
-  async function loadLegacyFromCloud(name,fallback){
-    const target=legacyCloudMap[name];
-    if(!target)return fallback;
-    const cloudValue=target.type==='records'
-      ? await loadCloudRecords(target.key)
-      : await loadCloudSetting(target.key);
-    const cloudIsEmpty=cloudValue===null||cloudValue===undefined||(Array.isArray(cloudValue)&&cloudValue.length===0);
-    const fallbackHasData=Array.isArray(fallback)?fallback.length>0:!!fallback;
-    if(cloudIsEmpty){
-      if(fallbackHasData)await syncLegacyToCloud(name,fallback);
-      return fallback;
-    }
-    localStorage.setItem(PREFIX+name,JSON.stringify(cloudValue));
-    return cloudValue;
-  }
-  async function syncOtherDataFromCloud(){
-    try{
-      const names=Object.keys(legacyCloudMap);
-      const values=await Promise.all(names.map(name=>loadLegacyFromCloud(name,readLegacy(name,null))));
-      const cloudByName=Object.fromEntries(names.map((name,index)=>[name,values[index]]));
-      if(Array.isArray(cloudByName.products))products=cloudByName.products;
-      if(Array.isArray(cloudByName.recent))recent=cloudByName.recent;
-      if(cloudByName.settings&&typeof cloudByName.settings==='object')settings={...defaults,...cloudByName.settings};
-      if(cloudByName['message-templates']&&typeof cloudByName['message-templates']==='object')templates={...defaultTemplates,...cloudByName['message-templates']};
-      if(cloudByName.appearance&&typeof cloudByName.appearance==='object'){
-        savedAppearance=normalizeAppearance(cloudByName.appearance);
-        pendingAppearance={...savedAppearance};
-        applyAppearance(savedAppearance);
-        renderAppearance();
-      }
-      if(cloudByName['tracking-preview']&&typeof cloudByName['tracking-preview']==='object')trackingPreview={...trackingPreview,...cloudByName['tracking-preview']};
-      fillSettings();renderProducts();renderDashboard();renderQuote();renderOrderLines();calculatePricing();calculateProfit();
-      notify('Products and business preferences loaded from your cloud database.');
-    }catch(error){
-      console.error('Other cloud data loading failed:',error);
-      notify('Some cloud settings could not be loaded. Your device data is still available.');
-    }
   }
   let products=readLegacy('products',sampleProducts);
   if(!Array.isArray(products))products=sampleProducts;
@@ -1169,9 +1105,48 @@
   $('print-quote').onclick=()=>{const discount=Number($('quote-discount').value),customer=$('quote-customer').value.trim();if(!validAmount($('quote-discount').value)||discount>100||!customer||!quoteLines.length||quoteLines.some(l=>!products.some(p=>p.id===l.productId)||!Number.isInteger(l.quantity)||l.quantity<1)){showError('quote-error','Enter a customer, valid products and quantities, and a discount between 0% and 100%.');return}showError('quote-error','');const items=quoteLines.map(l=>{const p=products.find(p=>p.id===l.productId);return {name:p.name,quantity:l.quantity,price:p.price}}),subtotal=items.reduce((sum,i)=>sum+cents(i.quantity*i.price),0)/100,off=Math.round(cents(subtotal)*discount/100)/100;fillPrint('QUOTATION',customer,$('quote-contact').value.trim(),items,subtotal,off,subtotal-off,$('quote-notes').value.trim())};
 
   function fillSettings(){for(const [id,value] of Object.entries({'business-name':settings.name,'business-address':settings.address,'business-contact':settings.contact,'currency-symbol':settings.currency,'business-date-format':settings.dateFormat,'default-margin':settings.margin,'default-labor':settings.labor,'default-overhead':settings.overhead}))$(id).value=value;for(const [id,key] of Object.entries({'template-confirm-messenger':'confirmMessenger','template-confirm-sms':'confirmSms','template-ready-messenger':'readyMessenger','template-ready-sms':'readySms'}))$(id).value=templates[key];$('tracking-title').value=trackingPreview.title;$('tracking-instructions').value=trackingPreview.instructions}
-  $('settings-form').onsubmit=e=>{e.preventDefault();const next={name:$('business-name').value.trim(),address:$('business-address').value.trim(),contact:$('business-contact').value.trim(),currency:$('currency-symbol').value.trim(),dateFormat:$('business-date-format').value,margin:Number($('default-margin').value),labor:Number($('default-labor').value),overhead:Number($('default-overhead').value)};if(!next.name||!next.currency||!['default-margin','default-labor','default-overhead'].every(id=>validAmount($(id).value))){showError('settings-error','Enter a business name, currency symbol, and non-negative defaults.');return}if(saveLegacy('settings',next)){settings=next;showError('settings-error','');renderAllOrders();renderProducts();renderQuote();renderOrderLines();calculatePricing();calculateProfit();notify('Business settings saved.')}};
+  $('settings-form').onsubmit=async e=>{
+    e.preventDefault();
+    const next={name:$('business-name').value.trim(),address:$('business-address').value.trim(),contact:$('business-contact').value.trim(),currency:$('currency-symbol').value.trim(),dateFormat:$('business-date-format').value,margin:Number($('default-margin').value),labor:Number($('default-labor').value),overhead:Number($('default-overhead').value)};
+    if(!next.name||!next.currency||!['default-margin','default-labor','default-overhead'].every(id=>validAmount($(id).value))){showError('settings-error','Enter a business name, currency symbol, and non-negative defaults.');return}
+    if(!saveLegacy('settings',next))return;
+    settings=next;
+    showError('settings-error','');
+    renderAllOrders();renderProducts();renderQuote();renderOrderLines();calculatePricing();calculateProfit();
+    try{
+      await saveCloudSetting('business',next);
+      notify('Business settings saved and synced to the cloud.');
+    }catch(error){
+      console.error('Business settings cloud save failed:',error);
+      showError('settings-error','Saved in this browser, but cloud sync failed: '+(error.message||'Please try again.'));
+      notify('Business settings saved locally; cloud sync needs attention.');
+    }
+  };
+
+  async function syncBusinessSettingsFromCloud(){
+    try{
+      const cloudSettings=await loadCloudSetting('business');
+      if(cloudSettings&&typeof cloudSettings==='object'){
+        settings={...defaults,...cloudSettings};
+        saveLegacy('settings',settings);
+        fillSettings();
+        $('price-margin').value=settings.margin;
+        $('cost-labor').value=settings.labor;
+        $('cost-other').value=settings.overhead;
+        renderAllOrders();renderProducts();renderQuote();renderOrderLines();calculatePricing();calculateProfit();
+        notify('Business settings loaded from the cloud.');
+      }else{
+        // One-time migration: copy existing browser settings to the cloud when no cloud copy exists.
+        await saveCloudSetting('business',settings);
+        notify('Your existing business settings have been copied to the cloud.');
+      }
+    }catch(error){
+      console.error('Business settings cloud loading failed:',error);
+      notify('Could not load business settings from the cloud. Your browser settings remain available.');
+    }
+  }
   $('message-settings-form').onsubmit=e=>{e.preventDefault();const next={confirmMessenger:$('template-confirm-messenger').value,confirmSms:$('template-confirm-sms').value,readyMessenger:$('template-ready-messenger').value,readySms:$('template-ready-sms').value};if(Object.values(next).some(v=>!v.trim())){showError('template-error','All four message templates need text.');return}if(saveLegacy('message-templates',next)){templates=next;showError('template-error','');notify('Message templates saved in this browser.')}};
-  $('tracking-settings-form').onsubmit=e=>{e.preventDefault();trackingPreview={title:$('tracking-title').value.trim()||'Track your print order',instructions:$('tracking-instructions').value.trim()||'Enter your order reference and registered contact number.',showBalance:$('show-balance').checked,descriptions:$('status-descriptions').value.trim()};saveLegacy('tracking-preview',trackingPreview);notify('Tracking preview settings saved. Public tracking is still not connected.')};
+  $('tracking-settings-form').onsubmit=e=>{e.preventDefault();trackingPreview={title:$('tracking-title').value.trim()||'Track your print order',instructions:$('tracking-instructions').value.trim()||'Enter your order reference and registered contact number.',showBalance:$('show-balance').checked,descriptions:$('status-descriptions').value.trim()};notify('Local tracking preview updated. Public tracking is still not connected.')};
 
   const themes={sage:{name:'Sage & Beige',accent:'#456c5a',page:'#f7f4ed',surface:'#ffffff',sidebar:'#e8eee3',highlight:'#e8eee3'},pink:{name:'Pink & Cream',accent:'#a74264',page:'#fcf5ef',surface:'#ffffff',sidebar:'#f8e7ea',highlight:'#f8e7ea'},blue:{name:'Blue & White',accent:'#28639b',page:'#f3f7fb',surface:'#ffffff',sidebar:'#e5eff9',highlight:'#e5eff9'},lavender:{name:'Lavender & Gray',accent:'#65508d',page:'#f5f4f8',surface:'#ffffff',sidebar:'#eae7f0',highlight:'#eae7f0'},gold:{name:'Black & Gold',accent:'#9c701f',page:'#f5f3ee',surface:'#ffffff',sidebar:'#e7e4dc',highlight:'#f2e9d5'},terracotta:{name:'Terracotta & Cream',accent:'#a44d37',page:'#fbf4eb',surface:'#ffffff',sidebar:'#f4e6dc',highlight:'#f4e6dc'},mint:{name:'Mint & White',accent:'#277866',page:'#f2faf7',surface:'#ffffff',sidebar:'#def2eb',highlight:'#def2eb'}};
   function normalizeAppearance(a){return {theme:themes[a?.theme]?a.theme:'sage',dark:a?.dark===true,accent:typeof a?.accent==='string'&&/^#[0-9a-f]{6}$/i.test(a.accent)?a.accent:null}}
@@ -1194,7 +1169,7 @@
   statuses.forEach(s=>{$('order-filter').add(new Option(s,s));$('detail-status').add(new Option(s,s))});
   loadRepo();fillSettings();applyAppearance(savedAppearance);renderAppearance();resetOrderForm();renderAllOrders();renderProducts();calculatePricing();calculateProfit();quoteLines.push({id:uid(),productId:'',quantity:1});renderQuote();
   syncRepositoryFromCloud();
-  syncOtherDataFromCloud();
+  syncBusinessSettingsFromCloud();
   $('price-margin').value=settings.margin;$('cost-labor').value=settings.labor;$('cost-other').value=settings.overhead;calculatePricing();
   if(window.lucide)lucide.createIcons();
   if(window.location.hash==='#track')showPublic();
