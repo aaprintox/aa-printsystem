@@ -6,7 +6,7 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&amp;family=Fraunces:wght@600;700&amp;display=swap" rel="stylesheet">
   <style>
     :root{--page:#f7f4ed;--surface:#fff;--sidebar:#e8eee3;--ink:#24352e;--muted:#586b63;--line:#e3e7de;--field:#fcfcf9;--accent:#456c5a;--accent-text:#fff;--accent-deep:#254739;--subtle:#edf2e9;--highlight:#e8eee3;--danger:#a64037;--focus:#af8b47}
-    *{box-sizing:border-box}html,body{width:100%;margin:0}body{background:var(--page);color:var(--ink);font-family:"DM Sans",sans-serif}h1,h2,h3,.brand,.metric{font-family:Fraunces,serif;letter-spacing:-.035em}button{cursor:pointer}button:disabled{opacity:.55;cursor:not-allowed}[hidden]{display:none!important}
+    *{box-sizing:border-box}html,body{width:100%;margin:0}html:not(.authenticated) body{visibility:hidden}body{background:var(--page);color:var(--ink);font-family:"DM Sans",sans-serif}h1,h2,h3,.brand,.metric{font-family:Fraunces,serif;letter-spacing:-.035em}button{cursor:pointer}button:disabled{opacity:.55;cursor:not-allowed}[hidden]{display:none!important}
     button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
     .app-shell{width:100%;min-height:100vh;display:flex}.sidebar{width:242px;flex:none;background:var(--sidebar);border-right:1px solid var(--line);padding:28px 16px;display:flex;flex-direction:column;gap:27px}.brand{font-size:27px;color:var(--accent-deep);font-weight:700;letter-spacing:-1.3px}.brand-dot{color:#c18753}
     .nav-button{width:100%;text-align:left;display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:13px;color:var(--muted);font-weight:700}.nav-button svg{width:19px;height:19px;flex:none}.nav-button:hover,.nav-button.active{background:var(--surface);color:var(--accent-deep);box-shadow:0 4px 14px #17241c12}
@@ -33,6 +33,7 @@
     </div>
     <nav aria-label="Main navigation" class="space-y-1"><button type="button" class="nav-button active" data-view="dashboard"><i data-lucide="layout-dashboard"></i><span data-template-id="nav-dashboard" class="canva-text" style="font-weight: 400; font-style: normal; font-size: 15px;">Dashboard</span></button> <button type="button" class="nav-button" data-view="pricing"><i data-lucide="calculator"></i><span data-template-id="nav-pricing" class="canva-text" style="font-weight: 400; font-style: normal; font-size: 15px;">Pricing Calculator</span></button> <button type="button" class="nav-button" data-view="products"><i data-lucide="package"></i><span data-template-id="nav-products" class="canva-text" style="font-weight: 400; font-style: normal; font-size: 15px;">Products &amp; Services</span></button> <button type="button" class="nav-button" data-view="profit"><i data-lucide="trending-up"></i><span data-template-id="nav-profit" class="canva-text" style="font-weight: 400; font-style: normal; font-size: 15px;">Profit &amp; Markup</span></button> <button type="button" class="nav-button" data-view="quotes"><i data-lucide="file-text"></i><span data-template-id="nav-quotes" class="canva-text" style="font-weight: 400; font-style: normal; font-size: 15px;">Quotations</span></button> <button type="button" class="nav-button" data-view="orders"><i data-lucide="clipboard-list"></i><span data-template-id="nav-orders" class="canva-text" style="font-weight: 400; font-style: normal; font-size: 15px;">Orders</span></button> <button type="button" class="nav-button" data-view="customers"><i data-lucide="users"></i><span data-template-id="nav-customers" class="canva-text" style="font-weight: 400; font-style: normal; font-size: 15px;">Customers</span></button> <button type="button" class="nav-button" data-view="settings"><i data-lucide="settings-2"></i><span data-template-id="nav-settings" class="canva-text" style="font-weight: 400; font-style: normal; font-size: 15px;">Business Settings</span></button> <button type="button" class="nav-button" data-view="appearance"><i data-lucide="palette"></i><span data-template-id="nav-appearance" class="canva-text" style="font-weight: 400; font-style: normal; font-size: 15px;">Appearance &amp; Themes</span></button>
     </nav>
+    <button id="logout-button" type="button" class="nav-button" style="width:100%;margin-top:8px;justify-content:flex-start"><i data-lucide="log-out"></i><span>Sign Out</span></button>
     <p class="mt-auto px-3 text-xs muted">A little more clarity for every print job.</p>
    </aside>
    <main class="workspace">
@@ -589,8 +590,37 @@
    <p id="print-notes" style="margin-top:35px;white-space:pre-wrap"></p>
   </div>
   <script>
-(() => {
+(async () => {
   'use strict';
+
+  // Verify the shop-owner session before showing the dashboard or loading shop data.
+  try {
+    const sessionResponse = await fetch('/api/shop/me', { credentials: 'same-origin', cache: 'no-store' });
+    if (sessionResponse.status === 401) {
+      window.location.replace('/shop/login');
+      return;
+    }
+    if (!sessionResponse.ok) {
+      throw new Error('Unable to verify your shop session (HTTP ' + sessionResponse.status + ').');
+    }
+    const sessionData = await sessionResponse.json();
+    if (!sessionData.success) {
+      window.location.replace('/shop/login');
+      return;
+    }
+    if (sessionData.owner && sessionData.owner.must_change_password) {
+      alert('Your account requires a password update. Please contact AA PrintSystem Support before continuing.');
+      window.location.replace('/shop/login');
+      return;
+    }
+    document.documentElement.classList.add('authenticated');
+  } catch (authError) {
+    console.error('Shop session verification failed:', authError);
+    document.body.innerHTML = '<main style="max-width:560px;margin:12vh auto;padding:28px;font-family:Arial,sans-serif;color:#26352d"><h2>Unable to verify your shop session</h2><p>Please check your internet connection and try again. If the problem continues, contact AA PrintSystem Support.</p><button onclick="location.reload()" style="padding:10px 16px">Try again</button></main>';
+    document.documentElement.classList.add('authenticated');
+    return;
+  }
+
   const $ = id => document.getElementById(id);
   const uid = () => crypto.randomUUID();
   const statuses = ['Pending','Confirmed','Processing','For Quality Checking','Ready for Pickup','Completed','Cancelled'];
@@ -1167,6 +1197,18 @@
   $('reset-theme').onclick=()=>{const next={theme:'sage',dark:false,accent:null};if(saveLegacy('appearance',next)){savedAppearance={...next};pendingAppearance={...next};previewing=false;applyAppearance(next);renderAppearance();notify('Default theme restored.')}};
 
   statuses.forEach(s=>{$('order-filter').add(new Option(s,s));$('detail-status').add(new Option(s,s))});
+  $('logout-button').onclick = async () => {
+    const button = $('logout-button');
+    button.disabled = true;
+    try {
+      await fetch('/api/shop/logout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({}) });
+    } catch (error) {
+      console.error('Sign out request failed:', error);
+    } finally {
+      window.location.replace('/shop/login');
+    }
+  };
+
   loadRepo();fillSettings();applyAppearance(savedAppearance);renderAppearance();resetOrderForm();renderAllOrders();renderProducts();calculatePricing();calculateProfit();quoteLines.push({id:uid(),productId:'',quantity:1});renderQuote();
   syncRepositoryFromCloud();
   syncBusinessSettingsFromCloud();
