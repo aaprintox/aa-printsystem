@@ -733,11 +733,28 @@
       repo=migrated;
     }catch(e){repoBlocked=`Saved orders could not be loaded safely: ${e.message||'browser storage unavailable'}. Orders are locked; existing storage has not been cleared.`;showError('repository-warning',repoBlocked)}
   }
-  function commitRepo(next){
-    if(repoBlocked){notify(repoBlocked);return false}
-    try{const safe=validateRepo(next);localStorage.setItem(STORE,JSON.stringify(safe));repo=safe;renderAllOrders();return true}
-    catch(e){showError('repository-warning',`Could not save orders: ${e.message||'browser storage unavailable'}. Existing saved records remain unchanged.`);return false}
+  
+function commitRepo(next){
+  if(repoBlocked){notify(repoBlocked);return false}
+  try{
+    const safe=validateRepo(next);
+    localStorage.setItem(STORE,JSON.stringify(safe));
+    repo=safe;
+    renderAllOrders();
+
+    // Save the complete repository to the cloud.
+    syncRepositoryToCloud(safe).catch(error=>{
+      console.error('Cloud repository save failed:',error);
+      notify('Saved in this browser, but cloud sync failed. Please check your connection.');
+    });
+
+    return true;
+  }catch(e){
+    showError('repository-warning',`Could not save orders: ${e.message||'browser storage unavailable'}. Existing saved records remain unchanged.`);
+    return false;
   }
+}
+
   function nextReference(date){
     const day=date.replaceAll('-',''), prefix=`PB-${day}-`;
     const used=new Set(repo.orders.map(o=>o.reference));
