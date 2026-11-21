@@ -628,29 +628,22 @@
   function notify(text){$('toast').textContent=text;$('toast').hidden=false;clearTimeout(notify.timer);notify.timer=setTimeout(()=>$('toast').hidden=true,4500)}
   function readLegacy(name,fallback){try{const raw=localStorage.getItem(PREFIX+name);return raw===null?fallback:JSON.parse(raw)}catch{return fallback}}
   function saveLegacy(name,value){try{localStorage.setItem(PREFIX+name,JSON.stringify(value));return true}catch{notify('Could not save in this browser. Check available storage.');return false}}
-  
   // CLOUD DATABASE CONNECTION
   async function cloudRequest(path, options = {}) {
     const response = await fetch('/api/shop/' + path, {
       method: options.method || 'GET',
       credentials: 'same-origin',
-      headers: options.body
-        ? { 'Content-Type': 'application/json' }
-        : {},
+      headers: options.body ? { 'Content-Type': 'application/json' } : {},
       body: options.body ? JSON.stringify(options.body) : undefined
     });
 
     let result;
-    try {
-      result = await response.json();
-    } catch {
-      throw new Error('The server returned an unreadable response.');
-    }
+    try { result = await response.json(); }
+    catch { throw new Error('The server returned an unreadable response.'); }
 
     if (!response.ok || !result.success) {
       throw new Error(result.message || 'Cloud database request failed.');
     }
-
     return result;
   }
 
@@ -661,8 +654,7 @@
 
   async function saveCloudRecords(collection, records) {
     return cloudRequest('records/' + collection, {
-      method: 'PUT',
-      body: { records }
+      method: 'PUT', body: { records }
     });
   }
 
@@ -673,11 +665,9 @@
 
   async function saveCloudSetting(key, setting) {
     return cloudRequest('settings/' + key, {
-      method: 'PUT',
-      body: { setting }
+      method: 'PUT', body: { setting }
     });
   }
-
   let products=readLegacy('products',sampleProducts);
   if(!Array.isArray(products))products=sampleProducts;
   let recent=readLegacy('recent',[]);
@@ -733,36 +723,68 @@
       repo=migrated;
     }catch(e){repoBlocked=`Saved orders could not be loaded safely: ${e.message||'browser storage unavailable'}. Orders are locked; existing storage has not been cleared.`;showError('repository-warning',repoBlocked)}
   }
-
-async function syncRepositoryToCloud(data){
-  await Promise.all([
-    saveCloudRecords('orders', data.orders),
-    saveCloudRecords('customers', data.customers),
-    saveCloudSetting('repo-counters', data.counters)
-  ]);
-}
-  
-function commitRepo(next){
-  if(repoBlocked){notify(repoBlocked);return false}
-  try{
-    const safe=validateRepo(next);
-    localStorage.setItem(STORE,JSON.stringify(safe));
-    repo=safe;
-    renderAllOrders();
-
-    // Save the complete repository to the cloud.
-    syncRepositoryToCloud(safe).catch(error=>{
-      console.error('Cloud repository save failed:',error);
-      notify('Saved in this browser, but cloud sync failed. Please check your connection.');
-    });
-
-    return true;
-  }catch(e){
-    showError('repository-warning',`Could not save orders: ${e.message||'browser storage unavailable'}. Existing saved records remain unchanged.`);
-    return false;
+  async function syncRepositoryToCloud(data){
+    await Promise.all([
+      saveCloudRecords('orders', data.orders),
+      saveCloudRecords('customers', data.customers),
+      saveCloudSetting('repo-counters', data.counters)
+    ]);
   }
-}
 
+  async function syncRepositoryFromCloud(){
+    try{
+      const [cloudOrders, cloudCustomers, cloudCounters] = await Promise.all([
+        loadCloudRecords('orders'),
+        loadCloudRecords('customers'),
+        loadCloudSetting('repo-counters')
+      ]);
+
+      const cloudHasData = cloudOrders.length > 0 || cloudCustomers.length > 0;
+      const localHasData = repo.orders.length > 0 || repo.customers.length > 0;
+
+      if(cloudHasData){
+        const safe = validateRepo({
+          version: 3,
+          orders: cloudOrders,
+          customers: cloudCustomers,
+          counters: cloudCounters || {}
+        });
+        localStorage.setItem(STORE, JSON.stringify(safe));
+        repo = safe;
+        resetOrderForm();
+        renderAllOrders();
+        renderProducts();
+        notify('Your cloud orders and customers have been loaded.');
+        return;
+      }
+
+      if(localHasData){
+        await syncRepositoryToCloud(repo);
+        notify('Your existing browser orders and customers have been copied to the cloud.');
+      }
+    }catch(error){
+      console.error('Cloud loading failed:', error);
+      notify('Cloud loading failed. Your browser data remains available.');
+    }
+  }
+
+  function commitRepo(next){
+    if(repoBlocked){notify(repoBlocked);return false}
+    try{
+      const safe=validateRepo(next);
+      localStorage.setItem(STORE,JSON.stringify(safe));
+      repo=safe;
+      renderAllOrders();
+      syncRepositoryToCloud(safe).catch(error=>{
+        console.error('Cloud repository save failed:',error);
+        notify('Saved in this browser, but cloud sync failed. Please check your connection.');
+      });
+      return true;
+    }catch(e){
+      showError('repository-warning',`Could not save orders: ${e.message||'browser storage unavailable'}. Existing saved records remain unchanged.`);
+      return false;
+    }
+  }
   function nextReference(date){
     const day=date.replaceAll('-',''), prefix=`PB-${day}-`;
     const used=new Set(repo.orders.map(o=>o.reference));
@@ -1107,6 +1129,7 @@ function commitRepo(next){
 
   statuses.forEach(s=>{$('order-filter').add(new Option(s,s));$('detail-status').add(new Option(s,s))});
   loadRepo();fillSettings();applyAppearance(savedAppearance);renderAppearance();resetOrderForm();renderAllOrders();renderProducts();calculatePricing();calculateProfit();quoteLines.push({id:uid(),productId:'',quantity:1});renderQuote();
+  syncRepositoryFromCloud();
   $('price-margin').value=settings.margin;$('cost-labor').value=settings.labor;$('cost-other').value=settings.overhead;calculatePricing();
   if(window.lucide)lucide.createIcons();
   if(window.location.hash==='#track')showPublic();
