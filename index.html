@@ -628,6 +628,56 @@
   function notify(text){$('toast').textContent=text;$('toast').hidden=false;clearTimeout(notify.timer);notify.timer=setTimeout(()=>$('toast').hidden=true,4500)}
   function readLegacy(name,fallback){try{const raw=localStorage.getItem(PREFIX+name);return raw===null?fallback:JSON.parse(raw)}catch{return fallback}}
   function saveLegacy(name,value){try{localStorage.setItem(PREFIX+name,JSON.stringify(value));return true}catch{notify('Could not save in this browser. Check available storage.');return false}}
+  
+  // CLOUD DATABASE CONNECTION
+  async function cloudRequest(path, options = {}) {
+    const response = await fetch('/api/shop/' + path, {
+      method: options.method || 'GET',
+      credentials: 'same-origin',
+      headers: options.body
+        ? { 'Content-Type': 'application/json' }
+        : {},
+      body: options.body ? JSON.stringify(options.body) : undefined
+    });
+
+    let result;
+    try {
+      result = await response.json();
+    } catch {
+      throw new Error('The server returned an unreadable response.');
+    }
+
+    if (!response.ok || !result.success) {
+      throw new Error(result.message || 'Cloud database request failed.');
+    }
+
+    return result;
+  }
+
+  async function loadCloudRecords(collection) {
+    const result = await cloudRequest('records/' + collection);
+    return result.records || [];
+  }
+
+  async function saveCloudRecords(collection, records) {
+    return cloudRequest('records/' + collection, {
+      method: 'PUT',
+      body: { records }
+    });
+  }
+
+  async function loadCloudSetting(key) {
+    const result = await cloudRequest('settings/' + key);
+    return result.setting;
+  }
+
+  async function saveCloudSetting(key, setting) {
+    return cloudRequest('settings/' + key, {
+      method: 'PUT',
+      body: { setting }
+    });
+  }
+
   let products=readLegacy('products',sampleProducts);
   if(!Array.isArray(products))products=sampleProducts;
   let recent=readLegacy('recent',[]);
