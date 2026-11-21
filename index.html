@@ -6,7 +6,7 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&amp;family=Fraunces:wght@600;700&amp;display=swap" rel="stylesheet">
   <style>
     :root{--page:#f7f4ed;--surface:#fff;--sidebar:#e8eee3;--ink:#24352e;--muted:#586b63;--line:#e3e7de;--field:#fcfcf9;--accent:#456c5a;--accent-text:#fff;--accent-deep:#254739;--subtle:#edf2e9;--highlight:#e8eee3;--danger:#a64037;--focus:#af8b47}
-    *{box-sizing:border-box}html,body{width:100%;margin:0}html:not(.authenticated) body{visibility:hidden}body{background:var(--page);color:var(--ink);font-family:"DM Sans",sans-serif}h1,h2,h3,.brand,.metric{font-family:Fraunces,serif;letter-spacing:-.035em}button{cursor:pointer}button:disabled{opacity:.55;cursor:not-allowed}[hidden]{display:none!important}
+    *{box-sizing:border-box}html,body{width:100%;margin:0}body{background:var(--page);color:var(--ink);font-family:"DM Sans",sans-serif}h1,h2,h3,.brand,.metric{font-family:Fraunces,serif;letter-spacing:-.035em}button{cursor:pointer}button:disabled{opacity:.55;cursor:not-allowed}[hidden]{display:none!important}
     button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
     .app-shell{width:100%;min-height:100vh;display:flex}.sidebar{width:242px;flex:none;background:var(--sidebar);border-right:1px solid var(--line);padding:28px 16px;display:flex;flex-direction:column;gap:27px}.brand{font-size:27px;color:var(--accent-deep);font-weight:700;letter-spacing:-1.3px}.brand-dot{color:#c18753}
     .nav-button{width:100%;text-align:left;display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:13px;color:var(--muted);font-weight:700}.nav-button svg{width:19px;height:19px;flex:none}.nav-button:hover,.nav-button.active{background:var(--surface);color:var(--accent-deep);box-shadow:0 4px 14px #17241c12}
@@ -31,9 +31,8 @@
     <div class="flex items-center justify-between px-3">
      <span class="brand">AA <span class="brand-dot">PrintSystem</span></span><button id="menu-close" type="button" class="secondary" aria-label="Close navigation">×</button>
     </div>
-    <nav aria-label="Main navigation" class="space-y-1"><button type="button" class="nav-button active" data-view="dashboard"><i data-lucide="layout-dashboard"></i><span data-template-id="nav-dashboard" class="canva-text" style="font-weight: 400; font-style: normal; font-size: 15px;">Dashboard</span></button> <button type="button" class="nav-button" data-view="pricing"><i data-lucide="calculator"></i><span data-template-id="nav-pricing" class="canva-text" style="font-weight: 400; font-style: normal; font-size: 15px;">Pricing Calculator</span></button> <button type="button" class="nav-button" data-view="products"><i data-lucide="package"></i><span data-template-id="nav-products" class="canva-text" style="font-weight: 400; font-style: normal; font-size: 15px;">Products &amp; Services</span></button> <button type="button" class="nav-button" data-view="profit"><i data-lucide="trending-up"></i><span data-template-id="nav-profit" class="canva-text" style="font-weight: 400; font-style: normal; font-size: 15px;">Profit &amp; Markup</span></button> <button type="button" class="nav-button" data-view="quotes"><i data-lucide="file-text"></i><span data-template-id="nav-quotes" class="canva-text" style="font-weight: 400; font-style: normal; font-size: 15px;">Quotations</span></button> <button type="button" class="nav-button" data-view="orders"><i data-lucide="clipboard-list"></i><span data-template-id="nav-orders" class="canva-text" style="font-weight: 400; font-style: normal; font-size: 15px;">Orders</span></button> <button type="button" class="nav-button" data-view="customers"><i data-lucide="users"></i><span data-template-id="nav-customers" class="canva-text" style="font-weight: 400; font-style: normal; font-size: 15px;">Customers</span></button> <button type="button" class="nav-button" data-view="settings"><i data-lucide="settings-2"></i><span data-template-id="nav-settings" class="canva-text" style="font-weight: 400; font-style: normal; font-size: 15px;">Business Settings</span></button> <button type="button" class="nav-button" data-view="appearance"><i data-lucide="palette"></i><span data-template-id="nav-appearance" class="canva-text" style="font-weight: 400; font-style: normal; font-size: 15px;">Appearance &amp; Themes</span></button>
+    <nav aria-label="Main navigation" class="space-y-1"><button type="button" class="nav-button active" data-view="dashboard"><i data-lucide="layout-dashboard"></i><span data-template-id="nav-dashboard" class="canva-text" style="font-weight: 400; font-style: normal; font-size: 15px;">Dashboard</span></button> <button type="button" class="nav-button" data-view="pricing"><i data-lucide="calculator"></i><span data-template-id="nav-pricing" class="canva-text" style="font-weight: 400; font-style: normal; font-size: 15px;">Pricing Calculator</span></button> <button type="button" class="nav-button" data-view="products"><i data-lucide="package"></i><span data-template-id="nav-products" class="canva-text" style="font-weight: 400; font-style: normal; font-size: 15px;">Products &amp; Services</span></button> <button type="button" class="nav-button" data-view="profit"><i data-lucide="trending-up"></i><span data-template-id="nav-profit" class="canva-text" style="font-weight: 400; font-style: normal; font-size: 15px;">Profit &amp; Markup</span></button> <button type="button" class="nav-button" data-view="quotes"><i data-lucide="file-text"></i><span data-template-id="nav-quotes" class="canva-text" style="font-weight: 400; font-style: normal; font-size: 15px;">Quotations</span></button> <button type="button" class="nav-button" data-view="transactions"><i data-lucide="wallet"></i><span>Transactions</span></button> <button type="button" class="nav-button" data-view="expenses"><i data-lucide="receipt"></i><span>Expenses</span></button> <button type="button" class="nav-button" data-view="inventory"><i data-lucide="boxes"></i><span>Inventory</span></button> <button type="button" class="nav-button" data-view="orders"><i data-lucide="clipboard-list"></i><span data-template-id="nav-orders" class="canva-text" style="font-weight: 400; font-style: normal; font-size: 15px;">Orders</span></button> <button type="button" class="nav-button" data-view="customers"><i data-lucide="users"></i><span data-template-id="nav-customers" class="canva-text" style="font-weight: 400; font-style: normal; font-size: 15px;">Customers</span></button> <button type="button" class="nav-button" data-view="settings"><i data-lucide="settings-2"></i><span data-template-id="nav-settings" class="canva-text" style="font-weight: 400; font-style: normal; font-size: 15px;">Business Settings</span></button> <button type="button" class="nav-button" data-view="appearance"><i data-lucide="palette"></i><span data-template-id="nav-appearance" class="canva-text" style="font-weight: 400; font-style: normal; font-size: 15px;">Appearance &amp; Themes</span></button>
     </nav>
-    <button id="logout-button" type="button" class="nav-button" style="width:100%;margin-top:8px;justify-content:flex-start"><i data-lucide="log-out"></i><span>Sign Out</span></button>
     <p class="mt-auto px-3 text-xs muted">A little more clarity for every print job.</p>
    </aside>
    <main class="workspace">
@@ -223,6 +222,22 @@
         <div id="quote-results"></div><button id="print-quote" type="button" class="primary w-full mt-5">Print / Save as PDF</button>
        </aside>
       </div>
+     </section>
+
+     <section id="view-transactions" class="view" hidden>
+      <header class="mb-7"><p class="eyebrow">PAYMENTS & CASH FLOW</p><h1 class="page-heading">Transactions</h1><p class="muted">Record customer payments, deposits, and other money received.</p></header>
+      <div class="panel p-6 mb-5"><h2 class="section-title mb-4">Add transaction</h2><form id="transaction-form" class="grid md:grid-cols-3 gap-4"><div><label class="field-label">Date</label><input class="field" id="tx-date" type="date" required></div><div><label class="field-label">Customer / payer</label><input class="field" id="tx-customer" maxlength="100" required></div><div><label class="field-label">Order reference (optional)</label><input class="field" id="tx-order" maxlength="100"></div><div><label class="field-label">Amount</label><input class="field" id="tx-amount" class="field" type="number" min="0.01" step="0.01" required></div><div><label class="field-label">Payment method</label><select class="field" id="tx-method"><option>Cash</option><option>GCash</option><option>Bank transfer</option><option>Other</option></select></div><div><label class="field-label">Reference / notes</label><input class="field" id="tx-notes" maxlength="250"></div><div class="md:col-span-3"><button class="primary" type="submit">Save transaction</button></div></form></div>
+      <div class="panel p-6"><div class="flex justify-between flex-wrap gap-3 mb-4"><h2 class="section-title">Transaction history</h2><strong id="tx-total"></strong></div><div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr><th class="text-left p-2">Date</th><th class="text-left p-2">Payer</th><th class="text-left p-2">Order</th><th class="text-left p-2">Method</th><th class="text-right p-2">Amount</th><th></th></tr></thead><tbody id="tx-list"></tbody></table></div></div>
+     </section>
+     <section id="view-expenses" class="view" hidden>
+      <header class="mb-7"><p class="eyebrow">SHOP COSTS</p><h1 class="page-heading">Expenses</h1><p class="muted">Track operating costs and purchases for your printing shop.</p></header>
+      <div class="panel p-6 mb-5"><h2 class="section-title mb-4">Add expense</h2><form id="expense-form" class="grid md:grid-cols-3 gap-4"><div><label class="field-label">Date</label><input class="field" id="ex-date" type="date" required></div><div><label class="field-label">Category</label><select class="field" id="ex-category"><option>Supplies</option><option>Rent</option><option>Utilities</option><option>Salary</option><option>Transportation</option><option>Maintenance</option><option>Other</option></select></div><div><label class="field-label">Description</label><input class="field" id="ex-description" maxlength="150" required></div><div><label class="field-label">Amount</label><input class="field" id="ex-amount" type="number" min="0.01" step="0.01" required></div><div><label class="field-label">Payment method</label><select class="field" id="ex-method"><option>Cash</option><option>GCash</option><option>Bank transfer</option><option>Other</option></select></div><div><label class="field-label">Notes / reference</label><input class="field" id="ex-notes" maxlength="250"></div><div class="md:col-span-3"><button class="primary" type="submit">Save expense</button></div></form></div>
+      <div class="panel p-6"><div class="flex justify-between flex-wrap gap-3 mb-4"><h2 class="section-title">Expense history</h2><strong id="ex-total"></strong></div><div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr><th class="text-left p-2">Date</th><th class="text-left p-2">Category</th><th class="text-left p-2">Description</th><th class="text-left p-2">Method</th><th class="text-right p-2">Amount</th><th></th></tr></thead><tbody id="ex-list"></tbody></table></div></div>
+     </section>
+     <section id="view-inventory" class="view" hidden>
+      <header class="mb-7"><p class="eyebrow">SUPPLIES CONTROL</p><h1 class="page-heading">Inventory</h1><p class="muted">Manage paper, ink, laminating film, and other shop supplies.</p></header>
+      <div class="panel p-6 mb-5"><h2 class="section-title mb-4">Add inventory item</h2><form id="inventory-form" class="grid md:grid-cols-3 gap-4"><div><label class="field-label">Item name</label><input class="field" id="iv-name" maxlength="100" required></div><div><label class="field-label">Category</label><input class="field" id="iv-category" maxlength="60" placeholder="Paper, Ink, Packaging"></div><div><label class="field-label">Unit</label><input class="field" id="iv-unit" maxlength="20" placeholder="ream, bottle, piece" required></div><div><label class="field-label">Current quantity</label><input class="field" id="iv-quantity" type="number" min="0" step="0.01" required></div><div><label class="field-label">Low-stock alert at</label><input class="field" id="iv-reorder" type="number" min="0" step="0.01" value="5" required></div><div><label class="field-label">Unit cost (₱)</label><input class="field" id="iv-cost" type="number" min="0" step="0.01" value="0" required></div><div class="md:col-span-3"><button class="primary" type="submit">Add item</button></div></form></div>
+      <div class="panel p-6"><h2 class="section-title mb-4">Stock list</h2><div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr><th class="text-left p-2">Item</th><th class="text-left p-2">Category</th><th class="text-right p-2">On hand</th><th class="text-right p-2">Reorder level</th><th class="text-right p-2">Unit cost</th><th class="p-2">Stock adjustment</th><th></th></tr></thead><tbody id="iv-list"></tbody></table></div></div>
      </section>
      <section id="view-orders" class="view" hidden="">
       <header class="mb-7">
@@ -590,37 +605,8 @@
    <p id="print-notes" style="margin-top:35px;white-space:pre-wrap"></p>
   </div>
   <script>
-(async () => {
+(() => {
   'use strict';
-
-  // Verify the shop-owner session before showing the dashboard or loading shop data.
-  try {
-    const sessionResponse = await fetch('/api/shop/me', { credentials: 'same-origin', cache: 'no-store' });
-    if (sessionResponse.status === 401) {
-      window.location.replace('/shop/login');
-      return;
-    }
-    if (!sessionResponse.ok) {
-      throw new Error('Unable to verify your shop session (HTTP ' + sessionResponse.status + ').');
-    }
-    const sessionData = await sessionResponse.json();
-    if (!sessionData.success) {
-      window.location.replace('/shop/login');
-      return;
-    }
-    if (sessionData.owner && sessionData.owner.must_change_password) {
-      alert('Your account requires a password update. Please contact AA PrintSystem Support before continuing.');
-      window.location.replace('/shop/login');
-      return;
-    }
-    document.documentElement.classList.add('authenticated');
-  } catch (authError) {
-    console.error('Shop session verification failed:', authError);
-    document.body.innerHTML = '<main style="max-width:560px;margin:12vh auto;padding:28px;font-family:Arial,sans-serif;color:#26352d"><h2>Unable to verify your shop session</h2><p>Please check your internet connection and try again. If the problem continues, contact AA PrintSystem Support.</p><button onclick="location.reload()" style="padding:10px 16px">Try again</button></main>';
-    document.documentElement.classList.add('authenticated');
-    return;
-  }
-
   const $ = id => document.getElementById(id);
   const uid = () => crypto.randomUUID();
   const statuses = ['Pending','Confirmed','Processing','For Quality Checking','Ready for Pickup','Completed','Cancelled'];
@@ -658,46 +644,6 @@
   function notify(text){$('toast').textContent=text;$('toast').hidden=false;clearTimeout(notify.timer);notify.timer=setTimeout(()=>$('toast').hidden=true,4500)}
   function readLegacy(name,fallback){try{const raw=localStorage.getItem(PREFIX+name);return raw===null?fallback:JSON.parse(raw)}catch{return fallback}}
   function saveLegacy(name,value){try{localStorage.setItem(PREFIX+name,JSON.stringify(value));return true}catch{notify('Could not save in this browser. Check available storage.');return false}}
-  // CLOUD DATABASE CONNECTION
-  async function cloudRequest(path, options = {}) {
-    const response = await fetch('/api/shop/' + path, {
-      method: options.method || 'GET',
-      credentials: 'same-origin',
-      headers: options.body ? { 'Content-Type': 'application/json' } : {},
-      body: options.body ? JSON.stringify(options.body) : undefined
-    });
-
-    let result;
-    try { result = await response.json(); }
-    catch { throw new Error('The server returned an unreadable response.'); }
-
-    if (!response.ok || !result.success) {
-      throw new Error(result.message || 'Cloud database request failed.');
-    }
-    return result;
-  }
-
-  async function loadCloudRecords(collection) {
-    const result = await cloudRequest('records/' + collection);
-    return result.records || [];
-  }
-
-  async function saveCloudRecords(collection, records) {
-    return cloudRequest('records/' + collection, {
-      method: 'PUT', body: { records }
-    });
-  }
-
-  async function loadCloudSetting(key) {
-    const result = await cloudRequest('settings/' + key);
-    return result.setting;
-  }
-
-  async function saveCloudSetting(key, setting) {
-    return cloudRequest('settings/' + key, {
-      method: 'PUT', body: { setting }
-    });
-  }
   let products=readLegacy('products',sampleProducts);
   if(!Array.isArray(products))products=sampleProducts;
   let recent=readLegacy('recent',[]);
@@ -753,67 +699,10 @@
       repo=migrated;
     }catch(e){repoBlocked=`Saved orders could not be loaded safely: ${e.message||'browser storage unavailable'}. Orders are locked; existing storage has not been cleared.`;showError('repository-warning',repoBlocked)}
   }
-  async function syncRepositoryToCloud(data){
-    await Promise.all([
-      saveCloudRecords('orders', data.orders),
-      saveCloudRecords('customers', data.customers),
-      saveCloudSetting('repo-counters', data.counters)
-    ]);
-  }
-
-  async function syncRepositoryFromCloud(){
-    try{
-      const [cloudOrders, cloudCustomers, cloudCounters] = await Promise.all([
-        loadCloudRecords('orders'),
-        loadCloudRecords('customers'),
-        loadCloudSetting('repo-counters')
-      ]);
-
-      const cloudHasData = cloudOrders.length > 0 || cloudCustomers.length > 0;
-      const localHasData = repo.orders.length > 0 || repo.customers.length > 0;
-
-      if(cloudHasData){
-        const safe = validateRepo({
-          version: 3,
-          orders: cloudOrders,
-          customers: cloudCustomers,
-          counters: cloudCounters || {}
-        });
-        localStorage.setItem(STORE, JSON.stringify(safe));
-        repo = safe;
-        resetOrderForm();
-        renderAllOrders();
-        renderProducts();
-        notify('Your cloud orders and customers have been loaded.');
-        return;
-      }
-
-      if(localHasData){
-        await syncRepositoryToCloud(repo);
-        notify('Your existing browser orders and customers have been copied to the cloud.');
-      }
-    }catch(error){
-      console.error('Cloud loading failed:', error);
-      notify('Cloud loading failed. Your browser data remains available.');
-    }
-  }
-
   function commitRepo(next){
     if(repoBlocked){notify(repoBlocked);return false}
-    try{
-      const safe=validateRepo(next);
-      localStorage.setItem(STORE,JSON.stringify(safe));
-      repo=safe;
-      renderAllOrders();
-      syncRepositoryToCloud(safe).catch(error=>{
-        console.error('Cloud repository save failed:',error);
-        notify('Saved in this browser, but cloud sync failed. Please check your connection.');
-      });
-      return true;
-    }catch(e){
-      showError('repository-warning',`Could not save orders: ${e.message||'browser storage unavailable'}. Existing saved records remain unchanged.`);
-      return false;
-    }
+    try{const safe=validateRepo(next);localStorage.setItem(STORE,JSON.stringify(safe));repo=safe;renderAllOrders();return true}
+    catch(e){showError('repository-warning',`Could not save orders: ${e.message||'browser storage unavailable'}. Existing saved records remain unchanged.`);return false}
   }
   function nextReference(date){
     const day=date.replaceAll('-',''), prefix=`PB-${day}-`;
@@ -1069,7 +958,7 @@
     $('public-page').hidden=true;$('internal-app').hidden=false;document.querySelector('.mobile-top').hidden=false;
     document.querySelectorAll('.view').forEach(el=>el.hidden=el.id!=='view-'+view);
     document.querySelectorAll('.nav-button').forEach(el=>el.classList.toggle('active',el.dataset.view===(view==='order-detail'?'orders':view)));
-    closeMenu();if(view==='orders')renderAllOrders();if(view==='order-detail')renderDetail();if(view==='dashboard')renderDashboard();if(view==='products')renderProducts();if(view==='quotes')renderQuote();window.scrollTo(0,0)
+    closeMenu();if(view==='orders')renderAllOrders();if(view==='order-detail')renderDetail();if(view==='dashboard')renderDashboard();if(view==='products')renderProducts();if(view==='quotes')renderQuote();if(['transactions','expenses','inventory'].includes(view))renderModules();window.scrollTo(0,0)
   }
   function showPublic(){closeMenu();$('internal-app').hidden=true;document.querySelector('.mobile-top').hidden=true;$('public-page').hidden=false;$('public-title').textContent=trackingPreview.title;$('public-instructions').textContent=trackingPreview.instructions;showError('public-error','');window.scrollTo(0,0)}
   document.querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>setView(button.dataset.view)));
@@ -1132,49 +1021,30 @@
   $('quote-lines').addEventListener('input',e=>{if(!e.target.classList.contains('quote-qty'))return;const l=quoteLines.find(x=>x.id===e.target.closest('[data-quote-line]').dataset.quoteLine);l.quantity=Number(e.target.value);renderQuote()});
   $('quote-lines').addEventListener('click',e=>{if(!e.target.classList.contains('quote-remove'))return;quoteLines=quoteLines.filter(l=>l.id!==e.target.closest('[data-quote-line]').dataset.quoteLine);renderQuote()});
   $('quote-discount').oninput=updateQuote;
-  $('print-quote').onclick=()=>{const discount=Number($('quote-discount').value),customer=$('quote-customer').value.trim();if(!validAmount($('quote-discount').value)||discount>100||!customer||!quoteLines.length||quoteLines.some(l=>!products.some(p=>p.id===l.productId)||!Number.isInteger(l.quantity)||l.quantity<1)){showError('quote-error','Enter a customer, valid products and quantities, and a discount between 0% and 100%.');return}showError('quote-error','');const items=quoteLines.map(l=>{const p=products.find(p=>p.id===l.productId);return {name:p.name,quantity:l.quantity,price:p.price}}),subtotal=items.reduce((sum,i)=>sum+cents(i.quantity*i.price),0)/100,off=Math.round(cents(subtotal)*discount/100)/100;fillPrint('QUOTATION',customer,$('quote-contact').value.trim(),items,subtotal,off,subtotal-off,$('quote-notes').value.trim())};
+  $('print-quote').onclick=()=>{const discount=Number($('quote-discount').value),customer=$('quote-customer').value.trim();if(!validAmount($('quote-discount').value)||discount>100||!customer||!quoteLines.length||quoteLines.some(l=>!products.some(p=>p.id===l.productId)||!Number.isInteger(l.quantity)||l.quantity<1)){showError('quote-error','Enter a customer, valid products and quantities, and a discount between 0% and 100%.');return}showError('quote-error','');const items=quoteLines.map(l=>{const p=products.find(p=>p.id===l.productId);return {name:p.name,quantity:l.quantity,price:p.price}}),subtotal=items.reduce((sum,i)=>sum+cents(i.quantity*i.price),0)/100,off=Math.round(cents(subtotal)*discount/100)/100;const quotation={id:moduleId(),reference:'QT-'+new Date().toISOString().replace(/[-:T.Z]/g,'').slice(0,14),customer,contact:$('quote-contact').value.trim(),items,subtotal,discount:off,total:subtotal-off,notes:$('quote-notes').value.trim(),status:'Draft',createdAt:now()};moduleData.quotations.unshift(quotation);saveModuleData('quotations');fillPrint('QUOTATION',customer,$('quote-contact').value.trim(),items,subtotal,off,subtotal-off,$('quote-notes').value.trim())};
+
+
+  // Additional shop modules. Records are stored in the authenticated shop cloud API.
+  const moduleData={transactions:[],expenses:[],inventory:[],quotations:[]};
+  async function moduleRequest(collection,method='GET',records){const response=await fetch('/api/shop/records/'+collection,{method,credentials:'same-origin',headers:method==='PUT'?{'Content-Type':'application/json'}:undefined,body:method==='PUT'?JSON.stringify({records}):undefined});let data={};try{data=await response.json()}catch{}if(!response.ok||data.success===false)throw Error(data.message||'Could not sync '+collection+'. Please sign in again.');return data}
+  async function loadModuleData(){for(const c of Object.keys(moduleData)){try{const result=await moduleRequest(c);moduleData[c]=Array.isArray(result.records)?result.records:[]}catch(e){notify(e.message);break}}renderModules()}
+  async function saveModuleData(collection){try{await moduleRequest(collection,'PUT',moduleData[collection]);notify('Saved and synced to your shop account.');renderModules();return true}catch(e){notify(e.message);return false}}
+  const moduleId=()=>crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random().toString(16).slice(2);
+  function renderTransactions(){const rows=moduleData.transactions.slice().sort((a,b)=>b.date.localeCompare(a.date));$('tx-total').textContent='Total received: '+money(rows.reduce((s,x)=>s+Number(x.amount||0),0));$('tx-list').innerHTML=rows.map(x=>`<tr class="border-t"><td class="p-2">${esc(dateText(x.date))}</td><td class="p-2">${esc(x.customer)}</td><td class="p-2">${esc(x.order||'—')}</td><td class="p-2">${esc(x.method)}</td><td class="p-2 text-right">${money(x.amount)}</td><td class="p-2 text-right"><button class="danger" data-delete-tx="${esc(x.id)}">Delete</button></td></tr>`).join('')||'<tr><td colspan="6" class="p-4 muted">No transactions recorded yet.</td></tr>'}
+  function renderExpenses(){const rows=moduleData.expenses.slice().sort((a,b)=>b.date.localeCompare(a.date));$('ex-total').textContent='Total expenses: '+money(rows.reduce((s,x)=>s+Number(x.amount||0),0));$('ex-list').innerHTML=rows.map(x=>`<tr class="border-t"><td class="p-2">${esc(dateText(x.date))}</td><td class="p-2">${esc(x.category)}</td><td class="p-2">${esc(x.description)}</td><td class="p-2">${esc(x.method)}</td><td class="p-2 text-right">${money(x.amount)}</td><td class="p-2 text-right"><button class="danger" data-delete-ex="${esc(x.id)}">Delete</button></td></tr>`).join('')||'<tr><td colspan="6" class="p-4 muted">No expenses recorded yet.</td></tr>'}
+  function renderInventory(){ $('iv-list').innerHTML=moduleData.inventory.map(x=>`<tr class="border-t"><td class="p-2 font-semibold">${esc(x.name)}</td><td class="p-2">${esc(x.category||'—')}</td><td class="p-2 text-right">${Number(x.quantity)} ${esc(x.unit)}</td><td class="p-2 text-right">${Number(x.reorder)}</td><td class="p-2 text-right">${money(x.cost)}</td><td class="p-2"><div class="flex gap-1"><input aria-label="Quantity adjustment" class="field" style="width:75px" type="number" step="0.01" min="0.01" data-adjust-value="${esc(x.id)}"><button class="secondary" data-stock-in="${esc(x.id)}">+ In</button><button class="secondary" data-stock-out="${esc(x.id)}">− Out</button></div></td><td class="p-2"><button class="danger" data-delete-iv="${esc(x.id)}">Delete</button>${Number(x.quantity)<=Number(x.reorder)?'<div class="text-xs" style="color:var(--danger)">Low stock</div>':''}</td></tr>`).join('')||'<tr><td colspan="7" class="p-4 muted">No inventory items yet.</td></tr>' }
+  function renderModules(){renderTransactions();renderExpenses();renderInventory()}
+  $('tx-date').value=localDate();$('ex-date').value=localDate();
+  $('transaction-form').onsubmit=async e=>{e.preventDefault();const amount=Number($('tx-amount').value);if(!Number.isFinite(amount)||amount<=0)return notify('Enter a valid transaction amount.');moduleData.transactions.unshift({id:moduleId(),date:$('tx-date').value,customer:$('tx-customer').value.trim(),order:$('tx-order').value.trim(),amount,method:$('tx-method').value,notes:$('tx-notes').value.trim(),createdAt:now()});if(await saveModuleData('transactions'))e.target.reset();$('tx-date').value=localDate()};
+  $('expense-form').onsubmit=async e=>{e.preventDefault();const amount=Number($('ex-amount').value);if(!Number.isFinite(amount)||amount<=0)return notify('Enter a valid expense amount.');moduleData.expenses.unshift({id:moduleId(),date:$('ex-date').value,category:$('ex-category').value,description:$('ex-description').value.trim(),amount,method:$('ex-method').value,notes:$('ex-notes').value.trim(),createdAt:now()});if(await saveModuleData('expenses'))e.target.reset();$('ex-date').value=localDate()};
+  $('inventory-form').onsubmit=async e=>{e.preventDefault();const item={id:moduleId(),name:$('iv-name').value.trim(),category:$('iv-category').value.trim(),unit:$('iv-unit').value.trim(),quantity:Number($('iv-quantity').value),reorder:Number($('iv-reorder').value),cost:Number($('iv-cost').value),updatedAt:now()};if(!item.name||!item.unit||![item.quantity,item.reorder,item.cost].every(Number.isFinite)||item.quantity<0||item.reorder<0||item.cost<0)return notify('Check the inventory values.');moduleData.inventory.unshift(item);if(await saveModuleData('inventory'))e.target.reset()};
+  $('tx-list').onclick=async e=>{const b=e.target.closest('[data-delete-tx]');if(!b||!confirm('Delete this transaction?'))return;moduleData.transactions=moduleData.transactions.filter(x=>x.id!==b.dataset.deleteTx);await saveModuleData('transactions')};
+  $('ex-list').onclick=async e=>{const b=e.target.closest('[data-delete-ex]');if(!b||!confirm('Delete this expense?'))return;moduleData.expenses=moduleData.expenses.filter(x=>x.id!==b.dataset.deleteEx);await saveModuleData('expenses')};
+  $('iv-list').onclick=async e=>{const del=e.target.closest('[data-delete-iv]');if(del){if(!confirm('Delete this inventory item?'))return;moduleData.inventory=moduleData.inventory.filter(x=>x.id!==del.dataset.deleteIv);await saveModuleData('inventory');return}const b=e.target.closest('[data-stock-in],[data-stock-out]');if(!b)return;const item=moduleData.inventory.find(x=>x.id===(b.dataset.stockIn||b.dataset.stockOut));const input=$('iv-list').querySelector(`[data-adjust-value="${CSS.escape(item.id)}"]`),qty=Number(input.value);if(!Number.isFinite(qty)||qty<=0)return notify('Enter an adjustment quantity greater than zero.');const next=Number(item.quantity)+(b.hasAttribute('data-stock-in')?qty:-qty);if(next<0)return notify('Not enough stock for this adjustment.');item.quantity=next;item.updatedAt=now();await saveModuleData('inventory')};
+  const originalSetView=setView;
 
   function fillSettings(){for(const [id,value] of Object.entries({'business-name':settings.name,'business-address':settings.address,'business-contact':settings.contact,'currency-symbol':settings.currency,'business-date-format':settings.dateFormat,'default-margin':settings.margin,'default-labor':settings.labor,'default-overhead':settings.overhead}))$(id).value=value;for(const [id,key] of Object.entries({'template-confirm-messenger':'confirmMessenger','template-confirm-sms':'confirmSms','template-ready-messenger':'readyMessenger','template-ready-sms':'readySms'}))$(id).value=templates[key];$('tracking-title').value=trackingPreview.title;$('tracking-instructions').value=trackingPreview.instructions}
-  $('settings-form').onsubmit=async e=>{
-    e.preventDefault();
-    const next={name:$('business-name').value.trim(),address:$('business-address').value.trim(),contact:$('business-contact').value.trim(),currency:$('currency-symbol').value.trim(),dateFormat:$('business-date-format').value,margin:Number($('default-margin').value),labor:Number($('default-labor').value),overhead:Number($('default-overhead').value)};
-    if(!next.name||!next.currency||!['default-margin','default-labor','default-overhead'].every(id=>validAmount($(id).value))){showError('settings-error','Enter a business name, currency symbol, and non-negative defaults.');return}
-    if(!saveLegacy('settings',next))return;
-    settings=next;
-    showError('settings-error','');
-    renderAllOrders();renderProducts();renderQuote();renderOrderLines();calculatePricing();calculateProfit();
-    try{
-      await saveCloudSetting('business',next);
-      notify('Business settings saved and synced to the cloud.');
-    }catch(error){
-      console.error('Business settings cloud save failed:',error);
-      showError('settings-error','Saved in this browser, but cloud sync failed: '+(error.message||'Please try again.'));
-      notify('Business settings saved locally; cloud sync needs attention.');
-    }
-  };
-
-  async function syncBusinessSettingsFromCloud(){
-    try{
-      const cloudSettings=await loadCloudSetting('business');
-      if(cloudSettings&&typeof cloudSettings==='object'){
-        settings={...defaults,...cloudSettings};
-        saveLegacy('settings',settings);
-        fillSettings();
-        $('price-margin').value=settings.margin;
-        $('cost-labor').value=settings.labor;
-        $('cost-other').value=settings.overhead;
-        renderAllOrders();renderProducts();renderQuote();renderOrderLines();calculatePricing();calculateProfit();
-        notify('Business settings loaded from the cloud.');
-      }else{
-        // One-time migration: copy existing browser settings to the cloud when no cloud copy exists.
-        await saveCloudSetting('business',settings);
-        notify('Your existing business settings have been copied to the cloud.');
-      }
-    }catch(error){
-      console.error('Business settings cloud loading failed:',error);
-      notify('Could not load business settings from the cloud. Your browser settings remain available.');
-    }
-  }
+  $('settings-form').onsubmit=e=>{e.preventDefault();const next={name:$('business-name').value.trim(),address:$('business-address').value.trim(),contact:$('business-contact').value.trim(),currency:$('currency-symbol').value.trim(),dateFormat:$('business-date-format').value,margin:Number($('default-margin').value),labor:Number($('default-labor').value),overhead:Number($('default-overhead').value)};if(!next.name||!next.currency||!['default-margin','default-labor','default-overhead'].every(id=>validAmount($(id).value))){showError('settings-error','Enter a business name, currency symbol, and non-negative defaults.');return}if(saveLegacy('settings',next)){settings=next;showError('settings-error','');renderAllOrders();renderProducts();renderQuote();renderOrderLines();calculatePricing();calculateProfit();notify('Business settings saved.')}};
   $('message-settings-form').onsubmit=e=>{e.preventDefault();const next={confirmMessenger:$('template-confirm-messenger').value,confirmSms:$('template-confirm-sms').value,readyMessenger:$('template-ready-messenger').value,readySms:$('template-ready-sms').value};if(Object.values(next).some(v=>!v.trim())){showError('template-error','All four message templates need text.');return}if(saveLegacy('message-templates',next)){templates=next;showError('template-error','');notify('Message templates saved in this browser.')}};
   $('tracking-settings-form').onsubmit=e=>{e.preventDefault();trackingPreview={title:$('tracking-title').value.trim()||'Track your print order',instructions:$('tracking-instructions').value.trim()||'Enter your order reference and registered contact number.',showBalance:$('show-balance').checked,descriptions:$('status-descriptions').value.trim()};notify('Local tracking preview updated. Public tracking is still not connected.')};
 
@@ -1197,21 +1067,7 @@
   $('reset-theme').onclick=()=>{const next={theme:'sage',dark:false,accent:null};if(saveLegacy('appearance',next)){savedAppearance={...next};pendingAppearance={...next};previewing=false;applyAppearance(next);renderAppearance();notify('Default theme restored.')}};
 
   statuses.forEach(s=>{$('order-filter').add(new Option(s,s));$('detail-status').add(new Option(s,s))});
-  $('logout-button').onclick = async () => {
-    const button = $('logout-button');
-    button.disabled = true;
-    try {
-      await fetch('/api/shop/logout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({}) });
-    } catch (error) {
-      console.error('Sign out request failed:', error);
-    } finally {
-      window.location.replace('/shop/login');
-    }
-  };
-
-  loadRepo();fillSettings();applyAppearance(savedAppearance);renderAppearance();resetOrderForm();renderAllOrders();renderProducts();calculatePricing();calculateProfit();quoteLines.push({id:uid(),productId:'',quantity:1});renderQuote();
-  syncRepositoryFromCloud();
-  syncBusinessSettingsFromCloud();
+  loadRepo();loadModuleData();fillSettings();applyAppearance(savedAppearance);renderAppearance();resetOrderForm();renderAllOrders();renderProducts();calculatePricing();calculateProfit();quoteLines.push({id:uid(),productId:'',quantity:1});renderQuote();
   $('price-margin').value=settings.margin;$('cost-labor').value=settings.labor;$('cost-other').value=settings.overhead;calculatePricing();
   if(window.lucide)lucide.createIcons();
   if(window.location.hash==='#track')showPublic();
