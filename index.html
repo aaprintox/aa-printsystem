@@ -460,7 +460,12 @@
           <label class="field-label" for="product-sku">Item code / SKU (optional)</label><input id="product-sku" class="field" maxlength="40" placeholder="e.g. MAG-REF-001">
          </div>
          <div>
-          <label class="field-label" for="product-unit">Selling unit</label><input id="product-unit" class="field" maxlength="30" value="piece" placeholder="piece, set, pack">
+          <label class="field-label" for="product-description">Description (optional)</label><textarea id="product-description" class="field" rows="2" maxlength="300" placeholder="Short details about this product or service"></textarea>
+         </div>
+         <div>
+          <label class="field-label" for="product-unit">Selling unit</label><select id="product-unit" class="field"><option>piece</option><option>sheet</option><option>set</option><option>pack</option><option>copy</option><option>page</option><option>pair</option><option>roll</option><option>meter</option><option>bundle</option><option>box</option><option>lot</option><option>service</option><option value="__other__">Other (type your own)</option></select><input id="product-unit-custom" class="field mt-2" maxlength="30" placeholder="Enter selling unit" hidden></div>
+         <div>
+          <label class="field-label" for="product-status">Status</label><select id="product-status" class="field"><option value="active">Active — available for new orders</option><option value="inactive">Inactive — hidden from new orders</option></select>
          </div>
          <div>
           <label class="field-label" for="product-category">Category</label><select id="product-category" class="field" required=""></select>
@@ -480,7 +485,8 @@
        <section class="panel p-6">
         <div class="flex justify-between gap-3 mb-5">
          <h2 class="section-title">Your catalogue</h2><span id="catalogue-count" class="pill"></span>
-        </div><label for="product-search" class="field-label">Search products or categories</label><input id="product-search" class="field mb-5" type="search">
+        </div><label for="product-search" class="field-label">Search products, SKU or description</label><input id="product-search" class="field mb-3" type="search">
+        <div class="grid sm:grid-cols-3 gap-2 mb-4"><select id="product-filter-category" class="field" aria-label="Filter by category"><option value="">All categories</option></select><select id="product-filter-status" class="field" aria-label="Filter by status"><option value="all">All statuses</option><option value="active">Active only</option><option value="inactive">Inactive only</option></select><select id="product-sort" class="field" aria-label="Sort products"><option value="name">Sort: Name A–Z</option><option value="name-desc">Sort: Name Z–A</option><option value="price-low">Sort: Lowest price</option><option value="price-high">Sort: Highest price</option><option value="margin-low">Sort: Lowest margin</option></select></div>
         <div id="product-list"></div><div id="product-pagination" class="mt-4"></div>
        </section>
       </div>
@@ -1294,7 +1300,7 @@
   function alphaSort(values){return [...new Set(values.filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),undefined,{sensitivity:'base'}))}
   function orderCategoryOptions(selected){return '<option value="">Choose a category</option>'+alphaSort([...categories,...products.map(p=>p.category)]).map(c=>`<option value="${esc(c)}" ${selected===c?'selected':''}>${esc(c)}</option>`).join('')}
   function orderProductOptions(category,selected){
-    const list=products.filter(p=>p.category===category).slice().sort((a,b)=>a.name.localeCompare(b.name,undefined,{sensitivity:'base'}));
+    const list=products.filter(p=>p.category===category&&((p.status||'active')==='active'||p.id===selected)).slice().sort((a,b)=>a.name.localeCompare(b.name,undefined,{sensitivity:'base'}));
     return '<option value="">Choose a product or service</option>'+list.map(p=>`<option value="${esc(p.id)}" ${selected===p.id?'selected':''}>${esc(p.name)} — ${esc(money(p.price))}</option>`).join('')+'<option value="__custom__" '+(selected==='__custom__'?'selected':'')+'>＋ Add a custom item</option>';
   }
   function renderOrderLines(){
@@ -1948,7 +1954,7 @@
     const r=calculatePricing(),name=$('price-name').value.trim();
     if(!r.valid||!name){showError('pricing-error',r.valid?'Enter a product name before continuing.':$('pricing-error').textContent||'Enter valid costs before continuing.');return}
     $('product-name').value=name;
-    $('product-sku').value=$('price-sku').value.trim();$('product-unit').value=getPriceUnit()||'piece';
+    $('product-sku').value=$('price-sku').value.trim();const priceUnit=getPriceUnit()||'piece';const unitOptions=Array.from($('product-unit').options).map(o=>o.value);$('product-unit').value=unitOptions.includes(priceUnit)?priceUnit:'__other__';$('product-unit-custom').value=$('product-unit').value==='__other__'?priceUnit:'';$('product-unit-custom').hidden=$('product-unit').value!=='__other__';
     $('product-cost').value=(r.cost/r.quantity).toFixed(4);
     $('product-price').value=r.unit.toFixed(2);
     if(!$('product-category').value&&$('product-category').options.length)$('product-category').selectedIndex=0;
@@ -1956,6 +1962,8 @@
     notify('Price copied to the product form. Choose a category, then save it. You can use it in Quotations afterward.')
   };
   categories.forEach(c=>$('product-category').add(new Option(c,c)));
+  categories.forEach(c=>$('product-filter-category').add(new Option(c,c)));
+  $('product-unit').addEventListener('change',()=>{$('product-unit-custom').hidden=$('product-unit').value!=='__other__';if(!$('product-unit-custom').hidden)$('product-unit-custom').focus()});
   const targetMargin=()=>{const t=Number(settings.targetMargin);return Number.isFinite(t)&&t>0&&t<100?t:30};
   const pctText=n=>n===null||!Number.isFinite(n)?'—':n.toFixed(1)+'%';
   function marginBadge(p){
@@ -1990,12 +1998,14 @@
   });
 
   function renderProducts(){
-    const query=$('product-search').value.toLowerCase().trim(),shown=products.filter(p=>`${p.name} ${p.category} ${p.sku||''}`.toLowerCase().includes(query));
-    $('catalogue-count').textContent=`${shown.length} item${shown.length===1?'':'s'}`;
+    const query=$('product-search').value.toLowerCase().trim(),cat=$('product-filter-category').value,status=$('product-filter-status').value,sort=$('product-sort').value;
+    let shown=products.filter(p=>`${p.name} ${p.category} ${p.sku||''} ${p.description||''}`.toLowerCase().includes(query)&&(!cat||p.category===cat)&&(status==='all'||(p.status||'active')===status));
+    shown.sort((a,b)=>sort==='name-desc'?String(b.name).localeCompare(String(a.name)):sort==='price-low'?Number(a.price)-Number(b.price):sort==='price-high'?Number(b.price)-Number(a.price):sort==='margin-low'?((Number(a.price)-Number(a.cost))/Math.max(Number(a.price),.000001))-((Number(b.price)-Number(b.cost))/Math.max(Number(b.price),.000001)):String(a.name).localeCompare(String(b.name)));
+    const active=products.filter(p=>(p.status||'active')==='active').length;
+    $('catalogue-count').textContent=`${shown.length} shown · ${active} active of ${products.length}`;
     const page=pageSlice(shown,'products');
-    $('product-list').innerHTML=page.items.length?page.items.map(p=>`<article class="item-row mb-2" data-product-id="${esc(p.id)}"><strong>${esc(p.name)}</strong>${p.sku?`<span class="pill ml-2">${esc(p.sku)}</span>`:''}<span class="pill ml-2">${esc(p.category)}</span><p class="text-xs muted my-2">Total cost ${esc(exactMoney(p.cost))} · Selling ${esc(money(p.price))} / ${esc(p.unit||'unit')} · ${marginBadge(p)}</p><div class="flex flex-wrap gap-2"><button type="button" data-product-action="edit" class="secondary">Edit</button><button type="button" data-product-action="delete" class="danger">Delete</button></div></article>`).join(''):'<p class="text-sm muted py-5">No matching products. Add one using the form.</p>';
-    renderPagination('product-pagination','products',page.total,page.page,page.pages);
-    renderCatalogueHealth();
+    $('product-list').innerHTML=page.items.length?page.items.map(p=>`<article class="item-row mb-2" data-product-id="${esc(p.id)}"><div class="flex flex-wrap items-center gap-2"><strong>${esc(p.name)}</strong>${p.sku?`<span class="pill">${esc(p.sku)}</span>`:''}<span class="pill">${esc(p.category)}</span><span class="pill">${(p.status||'active')==='active'?'Active':'Inactive'}</span></div>${p.description?`<p class="text-sm muted mt-2">${esc(p.description)}</p>`:''}<p class="text-xs muted my-2">Cost ${esc(exactMoney(p.cost))} · Selling ${esc(money(p.price))} / ${esc(p.unit||'unit')} · Profit ${esc(money(Number(p.price)-Number(p.cost)))} · ${marginBadge(p)}</p><div class="flex flex-wrap gap-2"><button type="button" data-product-action="edit" class="secondary">Edit</button><button type="button" data-product-action="duplicate" class="secondary">Duplicate</button><button type="button" data-product-action="toggle" class="secondary">${(p.status||'active')==='active'?'Set inactive':'Set active'}</button><button type="button" data-product-action="delete" class="danger">Delete</button></div></article>`).join(''):'<p class="text-sm muted py-5">No matching products. Try changing your search or filters.</p>';
+    renderPagination('product-pagination','products',page.total,page.page,page.pages);renderCatalogueHealth();
   }
   function updateProductMarginPreview(){
     const el=$('product-margin-preview'),cost=Number($('product-cost').value),price=Number($('product-price').value);
@@ -2007,7 +2017,7 @@
   $('product-cost').addEventListener('input',updateProductMarginPreview);
   $('product-price').addEventListener('input',updateProductMarginPreview);
   function startEditProduct(p){
-    editingProductId=p.id;$('product-name').value=p.name;$('product-sku').value=p.sku||'';$('product-unit').value=p.unit||'piece';$('product-category').value=p.category;$('product-cost').value=p.cost;$('product-price').value=p.price;
+    editingProductId=p.id;$('product-name').value=p.name;$('product-sku').value=p.sku||'';$('product-description').value=p.description||'';$('product-status').value=p.status||'active';const unit=String(p.unit||'piece');const units=Array.from($('product-unit').options).map(o=>o.value);$('product-unit').value=units.includes(unit)?unit:'__other__';$('product-unit-custom').hidden=$('product-unit').value!=='__other__';$('product-unit-custom').value=$('product-unit').value==='__other__'?unit:'';$('product-category').value=p.category;$('product-cost').value=p.cost;$('product-price').value=p.price;
     $('product-form-title').textContent='Edit product';$('product-submit').textContent='Update product';$('product-cancel').hidden=false;$('product-name').focus();updateProductMarginPreview();
   }
   function renderCatalogueHealth(){
@@ -2035,24 +2045,27 @@
     const p=products.find(x=>x.id===b.closest('[data-health-id]').dataset.healthId);if(!p)return;
     setView('products');startEditProduct(p);
   });
-  function resetProduct(){editingProductId=null;$('product-form').reset();$('product-form-title').textContent='Add a product';$('product-submit').textContent='Save product';$('product-cancel').hidden=true;showError('product-error','');updateProductMarginPreview()}
+  function resetProduct(){editingProductId=null;$('product-form').reset();$('product-unit-custom').hidden=true;$('product-unit-custom').value='';$('product-status').value='active';$('product-form-title').textContent='Add a product';$('product-submit').textContent='Save product';$('product-cancel').hidden=true;showError('product-error','');updateProductMarginPreview()}
   $('product-cancel').onclick=resetProduct;
   $('product-form').onsubmit=e=>{
-    e.preventDefault();const name=$('product-name').value.trim(),sku=$('product-sku').value.trim(),unit=$('product-unit').value.trim()||'piece',category=$('product-category').value,cost=Number($('product-cost').value),price=Number($('product-price').value);
-    if(!name||!categories.includes(category)||!validAmount($('product-cost').value)||!validAmount($('product-price').value)){showError('product-error','Complete all fields with non-negative prices.');return}
+    e.preventDefault();const name=$('product-name').value.trim(),sku=$('product-sku').value.trim(),unit=$('product-unit').value==='__other__'?$('product-unit-custom').value.trim():$('product-unit').value,description=$('product-description').value.trim(),status=$('product-status').value,category=$('product-category').value,cost=Number($('product-cost').value),price=Number($('product-price').value);
+    if(!name||!unit||!['active','inactive'].includes(status)||!categories.includes(category)||!validAmount($('product-cost').value)||!validAmount($('product-price').value)){showError('product-error','Complete all fields with non-negative prices.');return}
     if(sku&&products.some(p=>p.id!==editingProductId&&String(p.sku||'').trim().toLowerCase()===sku.toLowerCase())){showError('product-error','This SKU is already assigned to another product. Use a unique SKU.');return}
     const next=structuredClone(products),existing=next.find(p=>p.id===editingProductId);
     if(editingProductId&&!existing){showError('product-error','This product is no longer available.');return}
-    if(existing)Object.assign(existing,{name,sku,unit,category,cost,price});else next.unshift({id:uid(),name,sku,unit,category,cost,price});
+    if(existing)Object.assign(existing,{name,sku,unit,description,status,category,cost,price});else next.unshift({id:uid(),name,sku,unit,description,status,category,cost,price});
     if(saveLegacy('products',next)){products=next;resetProduct();renderProducts();renderDashboard();renderQuote();renderOrderLines();notify(existing?'Product updated.':'Product saved.')}
   };
   $('product-search').oninput=()=>{listPages.products=1;renderProducts()};
+  ['product-filter-category','product-filter-status','product-sort'].forEach(id=>$(id).addEventListener('change',()=>{listPages.products=1;renderProducts()}));
   $('product-list').onclick=e=>{
     const b=e.target.closest('[data-product-action]');if(!b)return;const p=products.find(p=>p.id===b.closest('[data-product-id]').dataset.productId);if(!p)return;
     if(b.dataset.productAction==='edit')startEditProduct(p);
-    if(b.dataset.productAction==='delete')b.parentElement.innerHTML='<span>Delete this product?</span><button type="button" data-product-action="confirm" class="danger">Confirm delete</button><button type="button" data-product-action="cancel" class="secondary">Cancel</button>';
+    if(b.dataset.productAction==='toggle'){const next=products.map(x=>x.id===p.id?{...x,status:(x.status||'active')==='active'?'inactive':'active'}:x);if(saveLegacy('products',next)){products=next;renderProducts();renderQuote();renderOrderLines();notify((p.status||'active')==='active'?'Product set to inactive.':'Product set to active.')}}
+    if(b.dataset.productAction==='duplicate'){const copy={...p,id:uid(),name:p.name+' (Copy)',sku:'',status:'inactive'};const next=[copy,...products];if(saveLegacy('products',next)){products=next;renderProducts();notify('Product copied as an inactive item. Update its name, code and prices before activating it.')}}
+    if(b.dataset.productAction==='delete')b.parentElement.innerHTML='<span class="text-sm">Delete this product? Old orders and quotations keep their saved item names and prices. This cannot be undone.</span><button type="button" data-product-action="confirm" class="danger">Confirm delete</button><button type="button" data-product-action="cancel" class="secondary">Cancel</button>';
     if(b.dataset.productAction==='cancel')renderProducts();
-    if(b.dataset.productAction==='confirm'){const next=products.filter(x=>x.id!==p.id);if(saveLegacy('products',next)){products=next;if(editingProductId===p.id)resetProduct();renderProducts();renderDashboard();renderQuote();renderOrderLines();notify('Product deleted.')}}
+    if(b.dataset.productAction==='confirm'){const next=products.filter(x=>x.id!==p.id);if(saveLegacy('products',next)){products=next;if(editingProductId===p.id)resetProduct();renderProducts();renderDashboard();renderQuote();renderOrderLines();notify('Product deleted. Saved order and quotation details were not changed.')}}
   };
   function calculateProfit(){
     const cost=Number($('profit-cost').value),price=Number($('profit-price').value),target=Number($('profit-target').value),valid=['profit-cost','profit-price','profit-target'].every(id=>validAmount($(id).value))&&target<100;
@@ -2223,7 +2236,7 @@
     return (stored==='Draft'||stored==='Sent')&&q.validUntil&&q.validUntil<localDate()?'Expired':stored;
   }
   function quoteProductOptions(id){
-    return '<option value="">Choose a product or service</option>'+products.map(p=>`<option value="${esc(p.id)}" ${id===p.id?'selected':''}>${esc(p.name)} — ${esc(money(p.price))}</option>`).join('')+`<option value="__custom__" ${id==='__custom__'?'selected':''}>＋ Custom item (e.g. design fee)</option>`;
+    return '<option value="">Choose a product or service</option>'+products.filter(p=>(p.status||'active')==='active'||p.id===id).map(p=>`<option value="${esc(p.id)}" ${id===p.id?'selected':''}>${esc(p.name)}${(p.status||'active')==='inactive'?' (Inactive — saved item)':''} — ${esc(money(p.price))}</option>`).join('')+`<option value="__custom__" ${id==='__custom__'?'selected':''}>＋ Custom item (e.g. design fee)</option>`;
   }
   function quoteLineHtml(l){
     const custom=l.productId==='__custom__';
