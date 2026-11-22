@@ -248,7 +248,18 @@
        <p class="muted">Simple numbers, smarter prices, healthier profits.</p>
       </header>
       <p id="dash-period" class="eyebrow mb-3"></p>
-      <div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
+      <article class="panel p-4 mb-5">
+  <div class="flex flex-wrap items-end justify-between gap-3">
+   <div><p class="eyebrow mb-1">REPORT PERIOD</p><h2 class="section-title">Choose the dates to review</h2></div>
+   <div class="flex flex-wrap items-end gap-2">
+    <label class="text-sm">Period<select id="dash-range" class="field mt-1"><option value="this-month">This month</option><option value="last-month">Last month</option><option value="last-7">Last 7 days</option><option value="last-30">Last 30 days</option><option value="this-year">This year</option><option value="custom">Custom dates</option></select></label>
+    <label id="dash-from-wrap" class="text-sm" hidden>From<input id="dash-from" type="date" class="field mt-1"></label>
+    <label id="dash-to-wrap" class="text-sm" hidden>To<input id="dash-to" type="date" class="field mt-1"></label>
+   </div>
+  </div>
+  <p class="text-xs muted mt-2" id="dash-range-note">Figures below update when you change the report period.</p>
+ </article>
+ <div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
        <article class="panel p-5">
         <p class="muted mb-2">Revenue (orders placed)</p><strong id="metric-sales" class="metric">—</strong>
         <p id="metric-sales-note" class="text-xs muted mt-2"></p>
@@ -263,7 +274,7 @@
        </article>
        <article class="panel highlight-panel p-5">
         <p class="mb-2">Net cash (collected − expenses)</p><strong id="metric-profit" class="metric">—</strong>
-        <p class="text-xs muted mt-2">Real money in minus real money out this month.</p>
+        <p class="text-xs muted mt-2">Real money in minus real money out for the selected period.</p>
        </article>
        <article class="panel p-5">
         <p class="muted mb-2">Outstanding balances</p><strong id="metric-outstanding" class="metric">—</strong>
@@ -271,10 +282,16 @@
        </article>
        <article class="panel p-5">
         <p class="muted mb-2">Products &amp; services</p><strong id="metric-products" class="metric">0</strong>
-        <p class="text-xs muted mt-2">In your catalogue.</p>
+        <p class="text-xs muted mt-2">Active products in your catalogue.</p>
        </article>
       </div>
       <div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-4 mb-6"><article class="panel p-5"><p class="muted mb-2">Fixed expense target</p><strong id="metric-fixed-target" class="metric">—</strong><p id="metric-fixed-note" class="text-xs muted mt-2">Monthly equivalent of active recurring bills.</p></article><article class="panel p-5"><p class="muted mb-2">Fixed expense coverage</p><strong id="metric-fixed-coverage" class="metric">—</strong><p id="metric-fixed-coverage-note" class="text-xs muted mt-2">Revenue compared with fixed expenses.</p></article><article class="panel highlight-panel p-5"><p class="mb-2">Operating result</p><strong id="metric-operating-profit" class="metric">—</strong><p class="text-xs muted mt-2">Revenue minus recorded operating expenses. Product direct costs are not included yet.</p></article></div>
+      <div class="grid lg:grid-cols-2 gap-5 mb-6">
+  <article class="panel p-5"><div class="flex flex-wrap justify-between items-center gap-2 mb-3"><h2 class="section-title">Sales trend</h2><span class="text-xs muted" id="dash-trend-label">Based on selected period</span></div><div id="dash-sales-trend" class="space-y-3"></div></article>
+  <article class="panel p-5"><h2 class="section-title mb-3">Best-selling products & services</h2><div id="dash-top-products" class="space-y-3"></div></article>
+  <article class="panel p-5"><h2 class="section-title mb-3">Order status</h2><div id="dash-order-status" class="space-y-3"></div></article>
+  <article class="panel p-5"><h2 class="section-title mb-3">Expense breakdown</h2><div id="dash-expense-breakdown" class="space-y-3"></div></article>
+ </div>
       <div class="grid lg:grid-cols-2 gap-5">
        <article class="panel p-6">
         <p class="eyebrow mb-3">READY WHEN YOU ARE</p>
@@ -287,7 +304,7 @@
         <div id="recent-list"></div>
        </article>
       </div>
-      <p class="text-xs muted mt-5">Revenue is the value of orders placed this month. Cash collected is money actually received, taken from Transactions. Saved pricing calculations are estimates and are never counted here.</p>
+      <p class="text-xs muted mt-5">Revenue is the value of orders placed in the selected period. Cash collected is money actually received, taken from Transactions. Saved pricing calculations are estimates and are never counted here.</p>
      </section>
      <section id="view-pricing" class="view" hidden="">
       <header class="mb-7">
@@ -1424,36 +1441,83 @@
   $('customer-list').addEventListener('click',e=>{const b=e.target.closest('[data-customer-edit]');if(!b)return;const c=repo.customers.find(x=>x.id===b.dataset.customerEdit);if(c)openCustomerForm(c)});
   $('customer-form').addEventListener('submit',e=>{e.preventDefault();const name=$('customer-name').value.trim(),phone=$('customer-phone').value.trim();if(!name){showError('customer-form-error','Please enter the customer name.');return}const at=now(),customers=repo.customers.slice(),wasEditing=!!editingCustomerId;if(editingCustomerId){const index=customers.findIndex(c=>c.id===editingCustomerId);if(index<0){showError('customer-form-error','This customer record could not be found. Refresh and try again.');return}customers[index]={...customers[index],name,phone}}else customers.push({id:uid(),name,phone,createdAt:at});if(commitRepo({...repo,customers})){resetCustomerForm();notify(wasEditing?'Customer details updated.':'Customer added successfully.')}});
   function signedMoney(n){return n<0?'−'+money(Math.abs(n)):money(n)}
+  function dashboardRange(){
+    const today=localDate(),preset=$('dash-range')?.value||'this-month';
+    const shift=(date,days)=>{const d=new Date(date+'T12:00:00');d.setDate(d.getDate()+days);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
+    let from=today,to=today;
+    if(preset==='this-month'){from=today.slice(0,7)+'-01'}
+    else if(preset==='last-month'){const d=new Date(today+'T12:00:00');d.setDate(1);d.setMonth(d.getMonth()-1);from=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;to=shift(today,-Number(today.slice(8,10)))}
+    else if(preset==='last-7')from=shift(today,-6);
+    else if(preset==='last-30')from=shift(today,-29);
+    else if(preset==='this-year')from=today.slice(0,4)+'-01-01';
+    else if(preset==='custom'){from=$('dash-from').value||today;to=$('dash-to').value||today;if(from>to)[from,to]=[to,from]}
+    return {from,to,preset};
+  }
   function renderDashboard(){
-    $('metric-products').textContent=products.length;
-    const month=localDate().slice(0,7);
-    $('dash-period').textContent=new Date().toLocaleDateString('en-PH',{month:'long',year:'numeric'})+' · real figures';
-    const active=repo.orders.filter(d=>d.status!=='Cancelled'),monthOrders=active.filter(d=>String(d.orderDate).slice(0,7)===month);
-    $('metric-sales').textContent=money(monthOrders.reduce((sum,d)=>sum+cents(d.total),0)/100);
-    $('metric-sales-note').textContent=`${monthOrders.length} order${monthOrders.length===1?'':'s'} placed this month, paid or not. Cancelled orders are left out.`;
-    $('metric-outstanding').textContent=money(active.reduce((sum,d)=>sum+cents(balance(d)),0)/100);
+    $('metric-products').textContent=products.filter(p=>p.active!==false).length;
+    const range=dashboardRange(),{from,to}=range,within=date=>{const d=String(date||'').slice(0,10);return d>=from&&d<=to};
+    const dateLabel=from===to?dateText(from):`${dateText(from)} – ${dateText(to)}`;
+    $('dash-period').textContent=dateLabel+' · report figures';
+    $('dash-range-note').textContent=`Showing orders, transactions, and expenses dated ${dateLabel}.`;
+    $('dash-from-wrap').hidden=range.preset!=='custom';$('dash-to-wrap').hidden=range.preset!=='custom';
+    const allActive=repo.orders.filter(d=>d.status!=='Cancelled'),periodOrders=allActive.filter(d=>within(d.orderDate));
+    const revenueCents=periodOrders.reduce((sum,d)=>sum+cents(d.total),0),revenue=revenueCents/100;
+    $('metric-sales').textContent=money(revenue);
+    $('metric-sales-note').textContent=`${periodOrders.length} order${periodOrders.length===1?'':'s'} placed in this period, paid or not. Cancelled orders are excluded.`;
+    $('metric-outstanding').textContent=money(allActive.reduce((sum,d)=>sum+cents(balance(d)),0)/100);
+    $('metric-sales').title=`${periodOrders.length} active orders from ${from} to ${to}`;
     const profit=$('metric-profit');
     if(!modulesLoaded){
       ['metric-cash','metric-expenses','metric-fixed-target','metric-fixed-coverage','metric-operating-profit'].forEach(id=>$(id).textContent='—');profit.textContent='—';profit.classList.remove('error');
       ['metric-cash-note','metric-expenses-note'].forEach(id=>$(id).textContent='Loading your transactions and expenses…');
     }else{
-      const activeOrderIds=new Set(active.map(d=>d.id));const inMonth=x=>String(x.date).slice(0,7)===month,received=moduleData.transactions.filter(x=>inMonth(x)&&(!x.orderId||activeOrderIds.has(x.orderId))),allExpenseRows=moduleData.expenses.filter(x=>!isFixedTemplate(x)&&x.status!=='deleted'&&inMonth(x)),spent=allExpenseRows.filter(x=>!isFixedOccurrence(x)||x.status==='paid');
-      const cash=received.reduce((sum,t)=>sum+cents(transactionNetAmount(t)),0),incurred=spent.reduce((sum,x)=>sum+cents(x.amount),0),paidOut=moduleData.expenses.filter(x=>!isFixedTemplate(x)&&x.status!=='deleted').reduce((sum,x)=>sum+cents(isFixedOccurrence(x)?(x.payments||[]).filter(p=>String(p.date||'').slice(0,7)===month).reduce((v,p)=>v+Number(p.amount||0),0):(inMonth(x)?(x.amount||0):0)),0),revenueCents=monthOrders.reduce((sum,d)=>sum+cents(d.total),0),revenue=revenueCents/100,fixedTemplates=moduleData.expenses.filter(x=>isFixedTemplate(x)&&x.active!==false),fixedTarget=fixedTemplates.reduce((sum,t)=>sum+fixedMonthlyEquivalent(t),0),operatingResult=revenue-incurred/100;
-      $('metric-cash').textContent=money(cash/100);
+      const activeOrderIds=new Set(allActive.map(d=>d.id));
+      const received=moduleData.transactions.filter(x=>within(x.date)&&(!x.orderId||activeOrderIds.has(x.orderId)));
+      const expenseRows=moduleData.expenses.filter(x=>!isFixedTemplate(x)&&x.status!=='deleted');
+      const incurredRows=expenseRows.filter(x=>isFixedOccurrence(x)?x.status==='paid'&&within(x.date):within(x.date));
+      const incurredCents=incurredRows.reduce((sum,x)=>sum+cents(x.amount),0);
+      const cashCents=received.reduce((sum,t)=>sum+cents(transactionNetAmount(t)),0);
+      const paidOutCents=expenseRows.reduce((sum,x)=>sum+cents(isFixedOccurrence(x)?(x.payments||[]).filter(p=>within(p.date)).reduce((v,p)=>v+Number(p.amount||0),0):(within(x.date)?(x.amount||0):0)),0);
+      $('metric-cash').textContent=money(cashCents/100);
       const refundCount=received.filter(t=>t.type==='refund').length;
-      $('metric-cash-note').textContent=`Net of ${refundCount} refund${refundCount===1?'':'s'} recorded this month.`;
-      $('metric-expenses').textContent=money(incurred/100);
-      $('metric-expenses-note').textContent=`${spent.length} actual expense${spent.length===1?'':'s'} counted this month. Pending and partial fixed bills are not counted as completed expenses.`;
-      profit.textContent=signedMoney((cash-paidOut)/100);profit.classList.toggle('error',cash-paidOut<0);
-      $('metric-fixed-target').textContent=money(fixedTarget);
+      $('metric-cash-note').textContent=`Net of ${refundCount} refund${refundCount===1?'':'s'} recorded in this period.`;
+      $('metric-expenses').textContent=money(incurredCents/100);
+      $('metric-expenses-note').textContent=`${incurredRows.length} completed expense${incurredRows.length===1?'':'s'} counted. Pending or partial fixed bills are not counted as completed expenses.`;
+      profit.textContent=signedMoney((cashCents-paidOutCents)/100);profit.classList.toggle('error',cashCents-paidOutCents<0);
+      const fixedTemplates=moduleData.expenses.filter(x=>isFixedTemplate(x)&&x.active!==false),fixedMonthly=fixedTemplates.reduce((sum,t)=>sum+fixedMonthlyEquivalent(t),0);
+      const days=Math.max(1,Math.round((new Date(to+'T12:00:00')-new Date(from+'T12:00:00'))/86400000)+1),fixedTarget=fixedMonthly*days/30.4375;
+      $('metric-fixed-target').textContent=money(fixedMonthly)+' / month';
       const coverage=fixedTarget?revenue/fixedTarget*100:0;
       $('metric-fixed-coverage').textContent=fixedTarget?coverage.toFixed(0)+'%':'—';
-      $('metric-fixed-coverage-note').textContent=fixedTarget?(revenue>=fixedTarget?'Fixed expenses covered by '+money(revenue-fixedTarget)+' in revenue.':'Still need '+money(fixedTarget-revenue)+' in revenue to cover fixed expenses.'):'Set up fixed expenses to track coverage.';
+      $('metric-fixed-coverage-note').textContent=fixedTarget?(revenue>=fixedTarget?'Revenue is above the estimated fixed expense target by '+money(revenue-fixedTarget)+'.':'Revenue is '+money(fixedTarget-revenue)+' below the estimated fixed expense target for this period.'):'Set up fixed expenses to track coverage.';
+      const operatingResult=revenue-incurredCents/100;
       $('metric-operating-profit').textContent=signedMoney(operatingResult);$('metric-operating-profit').classList.toggle('error',operatingResult<0);
     }
+    // Sales trend: daily when the selected range is short, monthly for longer reports.
+    const span=Math.max(1,Math.round((new Date(to+'T12:00:00')-new Date(from+'T12:00:00'))/86400000)+1),monthly=span>62;
+    const trendMap=new Map();
+    periodOrders.forEach(d=>{const key=monthly?String(d.orderDate||'').slice(0,7):String(d.orderDate||'').slice(0,10);if(!key)return;const row=trendMap.get(key)||{sales:0,count:0};row.sales+=Number(d.total)||0;row.count++;trendMap.set(key,row)});
+    let trend=[...trendMap.entries()].sort((a,b)=>a[0].localeCompare(b[0]));
+    if(trend.length>12)trend=trend.slice(-12);
+    const maxTrend=Math.max(1,...trend.map(([,v])=>v.sales));
+    $('dash-trend-label').textContent=monthly?'Monthly totals':'Daily totals';
+    $('dash-sales-trend').innerHTML=trend.length?trend.map(([key,v])=>{const label=monthly?new Date(key+'-01T12:00:00').toLocaleDateString('en-PH',{month:'short',year:'2-digit'}):dateText(key);return `<div><div class="flex justify-between gap-3 text-xs mb-1"><span>${esc(label)} · ${v.count} order${v.count===1?'':'s'}</span><strong>${esc(money(v.sales))}</strong></div><div class="w-full rounded-full overflow-hidden" style="height:8px;background:var(--line)"><div style="height:8px;width:${Math.max(0,Math.min(100,v.sales/maxTrend*100))}%;background:var(--accent);border-radius:999px"></div></div></div>`}).join(''):'<p class="muted text-sm">No orders in this period yet.</p>';
+    const productTotals=new Map();periodOrders.forEach(d=>(d.items||[]).forEach(item=>{const key=String(item.name||'Unnamed item');const row=productTotals.get(key)||{qty:0,total:0};row.qty+=Number(item.quantity)||0;row.total+=(Number(item.quantity)||0)*(Number(item.price)||0);productTotals.set(key,row)}));
+    const topProducts=[...productTotals.entries()].sort((a,b)=>b[1].qty-a[1].qty||b[1].total-a[1].total).slice(0,5);
+    $('dash-top-products').innerHTML=topProducts.length?topProducts.map(([name,v],i)=>`<div class="flex items-center justify-between gap-3 border-t pt-2"><div class="min-w-0"><strong class="text-sm">${i+1}. ${esc(name)}</strong><p class="text-xs muted">${v.qty} sold</p></div><strong class="text-sm whitespace-nowrap">${esc(money(v.total))}</strong></div>`).join(''):'<p class="muted text-sm">No product sales in this period yet.</p>';
+    const statusCounts={};periodOrders.forEach(d=>{const key=d.status||'Pending';statusCounts[key]=(statusCounts[key]||0)+1});
+    const cancelled=repo.orders.filter(d=>d.status==='Cancelled'&&within(d.orderDate)).length;if(cancelled)statusCounts.Cancelled=cancelled;
+    const statusRows=Object.entries(statusCounts).sort((a,b)=>b[1]-a[1]);
+    $('dash-order-status').innerHTML=statusRows.length?statusRows.map(([name,count])=>`<div class="flex items-center justify-between gap-3 border-t pt-2"><span class="text-sm">${esc(name)}</span><strong>${count}</strong></div>`).join(''):'<p class="muted text-sm">No orders in this period yet.</p>';
+    const categoryTotals=new Map();
+    if(modulesLoaded)moduleData.expenses.filter(x=>!isFixedTemplate(x)&&x.status!=='deleted'&&(isFixedOccurrence(x)?x.status==='paid':true)&&within(x.date)).forEach(x=>{const key=x.category||'Other';categoryTotals.set(key,(categoryTotals.get(key)||0)+Number(x.amount||0))});
+    const categoryRows=[...categoryTotals.entries()].sort((a,b)=>b[1]-a[1]).slice(0,6);
+    $('dash-expense-breakdown').innerHTML=!modulesLoaded?'<p class="muted text-sm">Loading expense records…</p>':categoryRows.length?categoryRows.map(([name,total])=>`<div class="flex items-center justify-between gap-3 border-t pt-2"><span class="text-sm">${esc(name)}</span><strong class="text-sm">${esc(money(total))}</strong></div>`).join(''):'<p class="muted text-sm">No completed expenses in this period.</p>';
     $('profit-overview').textContent=recent.length?`${recent.length} saved pricing calculation${recent.length===1?'':'s'}. These are estimates and are not counted in the figures above.`:'Save a pricing calculation to keep a copy of its recipe and price.';
-    $('recent-list').innerHTML=recent.length?recent.slice(0,4).map(r=>`<div class="item-row mb-2"><strong>${esc(r.name)}</strong><p class="text-xs muted">${esc(timeText(r.at))} · ${esc(money(r.profit))} estimated profit</p></div>`).join(''):'<p class="text-sm muted">No calculations saved yet.</p>'
+    $('recent-list').innerHTML=recent.length?recent.slice(0,4).map(r=>`<div class="item-row mb-2"><strong>${esc(r.name)}</strong><p class="text-xs muted">${esc(timeText(r.at))} · ${esc(money(r.profit))} estimated profit</p></div>`).join(''):'<p class="text-sm muted">No calculations saved yet.</p>';
   }
+  $('dash-range').addEventListener('change',()=>{if($('dash-range').value==='custom'){const today=localDate();$('dash-from').value=today.slice(0,7)+'-01';$('dash-to').value=today}renderDashboard()});
+  ['dash-from','dash-to'].forEach(id=>$(id).addEventListener('change',renderDashboard));
   function renderAllOrders(){renderCustomerSelect();renderQuoteCustomerOptions();renderReferencePreview();renderOrderList();renderDetail();renderCustomers();renderDashboard()}
   $('detail-status').onchange=e=>{
     const d=selected();if(!d)return;const status=e.target.value;if(status===d.status)return;
