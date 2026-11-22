@@ -1300,8 +1300,10 @@
   function alphaSort(values){return [...new Set(values.filter(Boolean))].sort((a,b)=>String(a).localeCompare(String(b),undefined,{sensitivity:'base'}))}
   function orderCategoryOptions(selected){return '<option value="">Choose a category</option>'+alphaSort([...categories,...products.map(p=>p.category)]).map(c=>`<option value="${esc(c)}" ${selected===c?'selected':''}>${esc(c)}</option>`).join('')}
   function orderProductOptions(category,selected){
-    const list=products.filter(p=>p.category===category&&((p.status||'active')==='active'||p.id===selected)).slice().sort((a,b)=>a.name.localeCompare(b.name,undefined,{sensitivity:'base'}));
-    return '<option value="">Choose a product or service</option>'+list.map(p=>`<option value="${esc(p.id)}" ${selected===p.id?'selected':''}>${esc(p.name)} — ${esc(money(p.price))}</option>`).join('')+'<option value="__custom__" '+(selected==='__custom__'?'selected':'')+'>＋ Add a custom item</option>';
+    // When no category is selected, show every active product. Once a category is chosen, narrow the list.
+    // Keep an already-selected inactive product visible so saved orders can still be edited safely.
+    const list=products.filter(p=>(!category||p.category===category)&&((p.status||'active')==='active'||p.id===selected)).slice().sort((a,b)=>a.name.localeCompare(b.name,undefined,{sensitivity:'base'}));
+    return '<option value="">Choose a product or service</option>'+list.map(p=>`<option value="${esc(p.id)}" ${selected===p.id?'selected':''}>${esc(p.name)}${!category?' · '+esc(p.category):''} — ${esc(money(p.price))}</option>`).join('')+'<option value="__custom__" '+(selected==='__custom__'?'selected':'')+'>＋ Add a custom item</option>';
   }
   function renderOrderLines(){
     const holder=$('order-lines'),ids=new Set(orderLines.map(l=>l.id));
@@ -1566,7 +1568,7 @@
     $('public-page').hidden=true;$('internal-app').hidden=false;document.querySelector('.mobile-top').hidden=false;
     document.querySelectorAll('.view').forEach(el=>el.hidden=el.id!=='view-'+view);
     document.querySelectorAll('.nav-button').forEach(el=>el.classList.toggle('active',el.dataset.view===(view==='order-detail'?'orders':view)));
-    closeMenu();document.querySelector('.content-width')?.scrollTo({top:0,behavior:'auto'});if(view==='orders')renderAllOrders();if(view==='order-detail')renderDetail();if(view==='dashboard')renderDashboard();if(view==='products')renderProducts();if(view==='quotes'){renderQuote();renderQuoteList()}if(view==='profit')renderCatalogueHealth();if(['transactions','expenses','inventory'].includes(view))renderModules()
+    closeMenu();document.querySelector('.content-width')?.scrollTo({top:0,behavior:'auto'});if(view==='orders'){renderAllOrders();renderOrderLines()}if(view==='order-detail')renderDetail();if(view==='dashboard')renderDashboard();if(view==='products')renderProducts();if(view==='quotes'){renderQuote();renderQuoteList()}if(view==='profit')renderCatalogueHealth();if(['transactions','expenses','inventory'].includes(view))renderModules()
   }
   function showPublic(){closeMenu();$('internal-app').hidden=true;document.querySelector('.mobile-top').hidden=true;$('public-page').hidden=false;$('public-title').textContent=trackingPreview.title;$('public-instructions').textContent=trackingPreview.instructions;showError('public-error','');window.scrollTo(0,0)}
   document.querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>setView(button.dataset.view)));
@@ -2062,7 +2064,7 @@
     const b=e.target.closest('[data-product-action]');if(!b)return;const p=products.find(p=>p.id===b.closest('[data-product-id]').dataset.productId);if(!p)return;
     if(b.dataset.productAction==='edit')startEditProduct(p);
     if(b.dataset.productAction==='toggle'){const next=products.map(x=>x.id===p.id?{...x,status:(x.status||'active')==='active'?'inactive':'active'}:x);if(saveLegacy('products',next)){products=next;renderProducts();renderQuote();renderOrderLines();notify((p.status||'active')==='active'?'Product set to inactive.':'Product set to active.')}}
-    if(b.dataset.productAction==='duplicate'){const copy={...p,id:uid(),name:p.name+' (Copy)',sku:'',status:'inactive'};const next=[copy,...products];if(saveLegacy('products',next)){products=next;renderProducts();notify('Product copied as an inactive item. Update its name, code and prices before activating it.')}}
+    if(b.dataset.productAction==='duplicate'){const copy={...p,id:uid(),name:p.name+' (Copy)',sku:'',status:'inactive'};const next=[copy,...products];if(saveLegacy('products',next)){products=next;renderProducts();renderQuote();renderOrderLines();notify('Product copied as an inactive item. Update its name, code and prices before activating it.')}}
     if(b.dataset.productAction==='delete')b.parentElement.innerHTML='<span class="text-sm">Delete this product? Old orders and quotations keep their saved item names and prices. This cannot be undone.</span><button type="button" data-product-action="confirm" class="danger">Confirm delete</button><button type="button" data-product-action="cancel" class="secondary">Cancel</button>';
     if(b.dataset.productAction==='cancel')renderProducts();
     if(b.dataset.productAction==='confirm'){const next=products.filter(x=>x.id!==p.id);if(saveLegacy('products',next)){products=next;if(editingProductId===p.id)resetProduct();renderProducts();renderDashboard();renderQuote();renderOrderLines();notify('Product deleted. Saved order and quotation details were not changed.')}}
