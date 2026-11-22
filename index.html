@@ -407,7 +407,7 @@
      </section>
 
      <section id="view-transactions" class="view" hidden>
-      <header class="mb-7"><p class="eyebrow">PAYMENTS & CASH FLOW</p><h1 class="page-heading">Transactions</h1><p class="muted">Every payment recorded on an order appears here automatically. Add other money received below.</p></header>
+      <header class="mb-7"><p class="eyebrow">PAYMENTS & CASH FLOW</p><h1 class="page-heading">Transactions</h1><p class="muted">Order payments and refunds appear here automatically. Refunds reduce net cash received. Add other money received below.</p></header>
       <div class="panel p-6 mb-5"><h2 class="section-title mb-4">Add transaction</h2><form id="transaction-form" class="grid md:grid-cols-3 gap-4"><div><label class="field-label">Date</label><input class="field" id="tx-date" type="date" required></div><div><label class="field-label">Customer / payer</label><input class="field" id="tx-customer" maxlength="100" required></div><div><label class="field-label">Order reference (optional)</label><input class="field" id="tx-order" maxlength="100"></div><div><label class="field-label">Amount</label><input id="tx-amount" class="field" type="number" min="0.01" step="0.01" required></div><div><label class="field-label">Payment method</label><select class="field" id="tx-method"><option>Cash</option><option>GCash</option><option>Bank transfer</option><option>Other</option></select></div><div><label class="field-label">Reference / notes</label><input class="field" id="tx-notes" maxlength="250"></div><div class="md:col-span-3"><button class="primary" type="submit">Save transaction</button></div></form></div>
       <div class="panel p-6"><div class="flex justify-between flex-wrap gap-3 mb-4"><h2 class="section-title">Transaction history</h2><strong id="tx-total"></strong></div><div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr><th class="text-left p-2">Date</th><th class="text-left p-2">Payer</th><th class="text-left p-2">Order</th><th class="text-left p-2">Method</th><th class="text-right p-2">Amount</th><th></th></tr></thead><tbody id="tx-list"></tbody></table></div></div>
      </section>
@@ -565,6 +565,20 @@
           </div>
          </div><button id="add-payment" type="button" class="secondary mt-2">Record payment</button>
          <div id="payment-history" class="text-sm muted mt-3"></div>
+         <div class="result-row mt-3"><span>Total refunds</span><strong id="detail-refunded">₱0.00</strong></div>
+         <div class="result-row"><span>Net amount received</span><strong id="detail-net-received">₱0.00</strong></div>
+         <div id="refund-history" class="text-sm muted mt-3">No refunds recorded.</div>
+         <button id="show-refund-form" type="button" class="secondary mt-3">Record Refund</button>
+         <div id="refund-form" class="notice mt-3" hidden>
+          <h3 class="font-bold mb-3">Record partial refund</h3>
+          <div class="grid sm:grid-cols-2 gap-3">
+           <div><label class="field-label" for="refund-amount">Refund amount</label><input id="refund-amount" class="field" type="number" min="0.01" step="0.01" inputmode="decimal"></div>
+           <div><label class="field-label" for="refund-method">Refund method</label><select id="refund-method" class="field"><option>Cash</option><option>GCash</option><option>Bank Transfer</option><option>Other</option></select></div>
+           <div class="sm:col-span-2"><label class="field-label" for="refund-reason">Reason / notes</label><input id="refund-reason" class="field" maxlength="250" placeholder="Reason for refund"></div>
+          </div>
+          <div class="flex flex-wrap gap-2 mt-3"><button id="record-refund" type="button" class="primary">Confirm and save refund</button><button id="cancel-refund" type="button" class="secondary">Cancel</button></div>
+          <p class="text-xs muted mt-2">Refunds are recorded separately. Cancelling an order does not automatically issue a refund.</p>
+         </div>
          <p id="detail-instructions" class="text-sm mt-4"></p>
          <p id="detail-notes" class="text-sm muted mt-2"></p>
          <p id="detail-error" class="error text-sm mt-3" role="alert" hidden=""></p>
@@ -924,6 +938,9 @@
   const dateText=s=>{if(!isDate(s))return '—';const d=new Date(s+'T12:00:00');return settings.dateFormat==='iso'?s:d.toLocaleDateString('en-PH',settings.dateFormat==='long'?{year:'numeric',month:'long',day:'numeric'}:{year:'numeric',month:'2-digit',day:'2-digit'})};
   const timeText=s=>{const d=new Date(s);return Number.isNaN(d.getTime())?'—':d.toLocaleString('en-PH')};
   const paid=d=>Math.round((d.payments||[]).reduce((sum,p)=>sum+cents(p.amount||0),0))/100;
+  const refunded=d=>Math.round((d.refunds||[]).reduce((sum,r)=>sum+cents(r.amount||0),0))/100;
+  const netReceived=d=>Math.max(0,Math.round((cents(paid(d))-cents(refunded(d)))))/100;
+  const refundableBalance=d=>Math.max(0,Math.round((cents(paid(d))-cents(refunded(d)))))/100;
   const balance=d=>Math.max(0,Math.round((cents(d.total)-cents(paid(d)))/1))/100;
   const paymentStatus=d=>paid(d)<=0?'Unpaid':balance(d)<=0?'Fully Paid':'Partially Paid';
   const selected=()=>repo.orders.find(d=>d.id===selectedId);
@@ -935,11 +952,15 @@
     const items=Array.isArray(raw.items)?raw.items.map(i=>({id:String(i.id||uid()),name:String(i.name||'').trim(),quantity:Number(i.quantity),price:Number(i.price)})):[];
     if(items.some(i=>!i.name||!Number.isInteger(i.quantity)||i.quantity<1||!Number.isFinite(i.price)||i.price<0))throw Error('A saved order contains invalid items.');
     const payments=Array.isArray(raw.payments)?raw.payments.map(p=>({id:String(p.id||uid()),amount:Number(p.amount),method:methods.includes(p.method)?p.method:'Other',at:String(p.at||raw.createdAt||now())})):[];
-    if(payments.some(p=>!Number.isFinite(p.amount)||p.amount<0))throw Error('A saved order contains invalid payments.');
+    if(payments.some(p=>!Number.isFinite(p.amount)||p.amount<=0))throw Error('A saved order contains invalid payments.');
+    const refunds=Array.isArray(raw.refunds)?raw.refunds.map(r=>({id:String(r.id||uid()),amount:Number(r.amount),method:methods.includes(r.method)?r.method:'Other',at:String(r.at||raw.createdAt||now()),reason:String(r.reason||'')})):[];
+    if(refunds.some(r=>!Number.isFinite(r.amount)||r.amount<=0))throw Error('A saved order contains invalid refunds.');
+    const paymentTotal=payments.reduce((sum,p)=>sum+cents(p.amount),0),refundTotal=refunds.reduce((sum,r)=>sum+cents(r.amount),0);
+    if(refundTotal>paymentTotal)throw Error('A saved order contains refunds greater than its recorded payments.');
     const subtotal=items.reduce((sum,i)=>sum+cents(i.quantity*i.price),0)/100;
     const discount=Number(raw.discount||0);
     const total=Number.isFinite(Number(raw.total))?Number(raw.total):Math.max(0,subtotal-discount);
-    return {id:String(raw.id),reference:String(raw.reference),customerId:String(raw.customerId||''),customer:String(raw.customer||''),phone:String(raw.phone||''),orderDate:String(raw.orderDate||String(raw.createdAt||'').slice(0,10)||localDate()),pickupDate:String(raw.pickupDate||raw.date||''),date:String(raw.pickupDate||raw.date||''),createdAt:String(raw.createdAt||now()),updatedAt:String(raw.updatedAt||raw.createdAt||now()),items,subtotal,discount:Number.isFinite(discount)?discount:0,total,payments,status:statuses.includes(raw.status)?raw.status:'Pending',history:Array.isArray(raw.history)?raw.history.map(h=>({status:String(h.status||''),at:String(h.at||''),actor:String(h.actor||'Owner · local browser')})):[],instructions:String(raw.instructions||''),notes:String(raw.notes||''),notification:raw.notification&&typeof raw.notification==='object'?raw.notification:{},messages:raw.messages&&typeof raw.messages==='object'?raw.messages:{}};
+    return {id:String(raw.id),reference:String(raw.reference),customerId:String(raw.customerId||''),customer:String(raw.customer||''),phone:String(raw.phone||''),orderDate:String(raw.orderDate||String(raw.createdAt||'').slice(0,10)||localDate()),pickupDate:String(raw.pickupDate||raw.date||''),date:String(raw.pickupDate||raw.date||''),createdAt:String(raw.createdAt||now()),updatedAt:String(raw.updatedAt||raw.createdAt||now()),items,subtotal,discount:Number.isFinite(discount)?discount:0,total,payments,refunds,status:statuses.includes(raw.status)?raw.status:'Pending',history:Array.isArray(raw.history)?raw.history.map(h=>({status:String(h.status||''),at:String(h.at||''),actor:String(h.actor||'Owner · local browser')})):[],instructions:String(raw.instructions||''),notes:String(raw.notes||''),notification:raw.notification&&typeof raw.notification==='object'?raw.notification:{},messages:raw.messages&&typeof raw.messages==='object'?raw.messages:{}};
   }
   function validateRepo(parsed){
     if(!parsed||typeof parsed!=='object'||parsed.version!==3||!Array.isArray(parsed.orders)||!Array.isArray(parsed.customers)||!parsed.counters||typeof parsed.counters!=='object')throw Error('The browser repository has an unsupported or malformed format.');
@@ -1140,8 +1161,11 @@
     $('detail-meta').textContent=`${displayName(d)} · ${displayPhone(d)} · ordered ${dateText(d.orderDate)} · pickup ${dateText(d.pickupDate)}`;
     $('detail-items').innerHTML=d.items.map(i=>lineRow(`${i.name} × ${i.quantity} @ ${money(i.price)}`,money(i.quantity*i.price))).join('');
     $('detail-subtotal').textContent=money(d.subtotal);$('detail-discount').textContent=money(d.discount);$('detail-total').textContent=money(d.total);$('detail-paid').textContent=money(paid(d));$('detail-balance').textContent=money(balance(d));$('detail-payment-status').textContent=paymentStatus(d);
+    $('detail-refunded').textContent=money(refunded(d));$('detail-net-received').textContent=money(netReceived(d));
     $('detail-status').value=d.status;$('detail-status').disabled=d.status==='Cancelled';$('add-payment').disabled=d.status==='Cancelled'||balance(d)<=0;
     $('payment-history').innerHTML=d.payments.length?'<strong>Payment history</strong><br>'+d.payments.map(p=>`${esc(timeText(p.at))} · ${esc(p.method)} · ${esc(money(p.amount))}`).join('<br>'):'No payments recorded.';
+    $('refund-history').innerHTML=d.refunds?.length?'<strong>Refund history</strong><br>'+d.refunds.map(r=>`${esc(timeText(r.at))} · ${esc(r.method)} · ${esc(money(r.amount))}${r.reason?' · '+esc(r.reason):''}`).join('<br>'):'No refunds recorded.';
+    $('show-refund-form').disabled=refundableBalance(d)<=0;$('refund-form').hidden=true;$('refund-amount').value='';$('refund-reason').value='';
     $('detail-instructions').textContent=d.instructions?`Order instructions: ${d.instructions}`:'';
     $('detail-notes').textContent=d.notes?`Internal notes: ${d.notes}`:'';
     $('detail-timeline').innerHTML=milestones.map(([status,label])=>{const matches=d.history.filter(h=>h.status===status);return `<li><strong>${esc(label)}</strong><span class="block muted">${matches.length?matches.map(h=>esc(timeText(h.at))).join(' · '):'Not reached'}</span></li>`}).join('')+(d.history.some(h=>h.status==='Cancelled')?`<li class="error"><strong>Cancelled</strong><span class="block">${esc(timeText(d.history.findLast(h=>h.status==='Cancelled').at))}</span></li>`:'');
@@ -1167,9 +1191,10 @@
       ['metric-cash-note','metric-expenses-note'].forEach(id=>$(id).textContent='Loading your transactions and expenses…');
     }else{
       const inMonth=x=>String(x.date).slice(0,7)===month,received=moduleData.transactions.filter(inMonth),spent=moduleData.expenses.filter(inMonth);
-      const cash=received.reduce((sum,t)=>sum+cents(t.amount),0),out=spent.reduce((sum,x)=>sum+cents(x.amount),0);
+      const cash=received.reduce((sum,t)=>sum+cents(transactionNetAmount(t)),0),out=spent.reduce((sum,x)=>sum+cents(x.amount),0);
       $('metric-cash').textContent=money(cash/100);
-      $('metric-cash-note').textContent=`${received.length} payment${received.length===1?'':'s'} actually received this month.`;
+      const refundCount=received.filter(t=>t.type==='refund').length;
+      $('metric-cash-note').textContent=`Net of ${refundCount} refund${refundCount===1?'':'s'} recorded this month.`;
       $('metric-expenses').textContent=money(out/100);
       $('metric-expenses-note').textContent=`${spent.length} expense${spent.length===1?'':'s'} recorded this month.`;
       profit.textContent=signedMoney((cash-out)/100);profit.classList.toggle('error',cash-out<0);
@@ -1200,6 +1225,21 @@
     e.currentTarget.disabled=true;
     try{if(commitRepo(next)){input.value='';notify('Payment saved and added to Transactions.')}else showError('detail-error','Could not save this payment. Amount and method have been preserved.')}finally{e.currentTarget.disabled=false;renderDetail()}
   };
+  $('show-refund-form').onclick=()=>{$('refund-form').hidden=false;$('refund-amount').focus()};
+  $('cancel-refund').onclick=()=>{$('refund-form').hidden=true;$('refund-amount').value='';$('refund-reason').value=''};
+  $('record-refund').onclick=async e=>{
+    const d=selected();if(!d||repoBlocked)return;
+    const amount=Number($('refund-amount').value),reason=$('refund-reason').value.trim(),method=$('refund-method').value;
+    if(!validAmount($('refund-amount').value)||amount<=0){showError('detail-error','Enter a refund amount greater than zero.');return}
+    if(cents(amount)>cents(refundableBalance(d))){showError('detail-error',`Refund cannot exceed the remaining refundable amount of ${money(refundableBalance(d))}.`);return}
+    if(!reason){showError('detail-error','Enter a reason or note for this refund.');return}
+    if(!confirm(`Record a ${money(amount)} refund for ${d.reference} via ${method}? This will reduce net cash received.`))return;
+    const next=structuredClone(repo),item=next.orders.find(o=>o.id===d.id),at=now();
+    item.refunds=Array.isArray(item.refunds)?item.refunds:[];
+    item.refunds.push({id:uid(),amount,method,at,reason});item.updatedAt=at;
+    e.currentTarget.disabled=true;
+    try{if(commitRepo(next)){$('refund-form').hidden=true;$('refund-amount').value='';$('refund-reason').value='';notify('Refund recorded. Original payments remain in the payment history.')}else showError('detail-error','Refund could not be saved. No refund was recorded.')}finally{e.currentTarget.disabled=false;renderDetail()}
+  };
   $('edit-order').onclick=()=>{
     const d=selected();if(!d)return;editingOrderId=d.id;$('order-form-heading').textContent='Edit order';$('save-order').textContent='Save changes';$('cancel-order-edit').hidden=false;
     $('order-customer-select').value=d.customerId;const exists=repo.customers.some(c=>c.id===d.customerId);if(exists){const c=repo.customers.find(c=>c.id===d.customerId);$('order-customer-search').value=`${c.name} · ${c.phone}`}else $('order-customer-search').value='';showNewCustomer(!exists);
@@ -1207,7 +1247,7 @@
     $('order-date').value=d.orderDate;$('order-pickup').value=d.pickupDate;$('order-discount').value=d.discount;$('order-deposit').value='0';$('order-payment-method').value='Cash';$('order-instructions').value=d.instructions;$('order-notes').value=d.notes;
     orderLines=d.items.map(i=>{const p=products.find(p=>p.name.toLowerCase()===String(i.name||'').trim().toLowerCase());return {...i,category:p?.category||'',productId:p?.id||'__custom__',custom:!p}});renderOrderLines();renderReferencePreview();setView('orders');$('order-form').scrollIntoView({behavior:'smooth',block:'start'})
   };
-  $('delete-order').onclick=()=>{const d=selected();if(!d)return;$('delete-confirmation').hidden=false;$('delete-confirmation').querySelector('p').textContent=`Permanently delete ${d.reference}? ${(d.payments||[]).length?`Its ${(d.payments||[]).length} recorded payment${(d.payments||[]).length===1?'':'s'} will also be removed from Transactions. `:''}It will no longer count toward ${displayName(d)}'s order history or totals. This cannot be undone.`;$('confirm-delete').textContent='Confirm delete';$('confirm-delete').dataset.action='delete'};
+  $('delete-order').onclick=()=>{const d=selected();if(!d)return;if((d.payments||[]).length||(d.refunds||[]).length){showError('detail-error','This order has financial history and cannot be permanently deleted. Keep it in the records and use cancellation instead.');return}$('delete-confirmation').hidden=false;$('delete-confirmation').querySelector('p').textContent=`Permanently delete ${d.reference}? It will no longer count toward ${displayName(d)}'s order history or totals. This cannot be undone.`;$('confirm-delete').textContent='Confirm delete';$('confirm-delete').dataset.action='delete'};
   $('keep-order').onclick=()=>$('delete-confirmation').hidden=true;
   $('confirm-delete').onclick=e=>{
     const d=selected();if(!d)return;const next=structuredClone(repo),action=e.currentTarget.dataset.action;
@@ -1736,19 +1776,20 @@
   let modulesLoaded=false;
   async function moduleRequest(collection,method='GET',records){const response=await fetch('/api/shop/records/'+collection,{method,credentials:'same-origin',headers:method==='PUT'?{'Content-Type':'application/json'}:undefined,body:method==='PUT'?JSON.stringify({records}):undefined});let data={};try{data=await response.json()}catch{}if(!response.ok||data.success===false)throw Error(data.message||'Could not sync '+collection+'. Please sign in again.');return data}
   async function loadModuleData(){let ok=true;for(const c of Object.keys(moduleData)){try{const result=await moduleRequest(c);moduleData[c]=Array.isArray(result.records)?result.records:[]}catch(e){ok=false;notify(e.message);break}}modulesLoaded=ok;renderModules();if(ok)syncPaymentTransactions()}
-  async function saveModuleData(collection){try{await moduleRequest(collection,'PUT',moduleData[collection]);notify('Saved and synced to your shop account.');renderModules();return true}catch(e){notify(e.message);return false}}
+  async function saveModuleData(collection,nextRecords){const previous=moduleData[collection];const candidate=Array.isArray(nextRecords)?nextRecords:previous;try{await moduleRequest(collection,'PUT',candidate);moduleData[collection]=candidate;notify('Saved and synced to your shop account.');renderModules();return true}catch(e){moduleData[collection]=previous;notify('Not saved. Your previous '+collection+' records were kept: '+e.message);renderModules();return false}}
   const moduleId=()=>crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random().toString(16).slice(2);
-  function renderTransactions(){const rows=moduleData.transactions.slice().sort((a,b)=>b.date.localeCompare(a.date));$('tx-total').textContent='Total received: '+money(rows.reduce((s,x)=>s+Number(x.amount||0),0));$('tx-list').innerHTML=rows.map(x=>`<tr class="border-t"><td class="p-2">${esc(dateText(x.date))}</td><td class="p-2">${esc(x.customer)}</td><td class="p-2">${esc(x.order||'—')}</td><td class="p-2">${esc(x.method)}</td><td class="p-2 text-right">${money(x.amount)}</td><td class="p-2 text-right">${x.paymentId?'<span class="pill" title="This entry mirrors a payment on the order. Delete the order to remove it.">Order payment</span>':`<button class="danger" data-delete-tx="${esc(x.id)}">Delete</button>`}</td></tr>`).join('')||'<tr><td colspan="6" class="p-4 muted">No transactions recorded yet.</td></tr>'}
+  function transactionNetAmount(x){return (x.type==='refund'?-1:1)*Number(x.amount||0)}
+  function renderTransactions(){const rows=moduleData.transactions.slice().sort((a,b)=>b.date.localeCompare(a.date));$('tx-total').textContent='Net cash received: '+money(rows.reduce((s,x)=>s+cents(transactionNetAmount(x)),0)/100);$('tx-list').innerHTML=rows.map(x=>`<tr class="border-t"><td class="p-2">${esc(dateText(x.date))}</td><td class="p-2">${esc(x.customer)}</td><td class="p-2">${esc(x.order||'—')}</td><td class="p-2">${esc(x.type==='refund'?'Refund · '+x.method:x.method)}</td><td class="p-2 text-right">${x.type==='refund'?'−':''}${money(x.amount)}</td><td class="p-2 text-right">${x.paymentId?'<span class="pill" title="This entry mirrors a payment on the order.">Order payment</span>':x.refundId?'<span class="pill" title="This entry mirrors a refund on the order.">Order refund</span>':`<button class="danger" data-delete-tx="${esc(x.id)}">Delete</button>`}</td></tr>`).join('')||'<tr><td colspan="6" class="p-4 muted">No transactions recorded yet.</td></tr>'}
   function renderExpenses(){const rows=moduleData.expenses.slice().sort((a,b)=>b.date.localeCompare(a.date));$('ex-total').textContent='Total expenses: '+money(rows.reduce((s,x)=>s+Number(x.amount||0),0));$('ex-list').innerHTML=rows.map(x=>`<tr class="border-t"><td class="p-2">${esc(dateText(x.date))}</td><td class="p-2">${esc(x.category)}</td><td class="p-2">${esc(x.description)}</td><td class="p-2">${esc(x.method)}</td><td class="p-2 text-right">${money(x.amount)}</td><td class="p-2 text-right"><button class="danger" data-delete-ex="${esc(x.id)}">Delete</button></td></tr>`).join('')||'<tr><td colspan="6" class="p-4 muted">No expenses recorded yet.</td></tr>'}
   function renderInventory(){ $('iv-list').innerHTML=moduleData.inventory.map(x=>`<tr class="border-t"><td class="p-2 font-semibold">${esc(x.name)}</td><td class="p-2">${esc(x.category||'—')}</td><td class="p-2 text-right">${Number(x.quantity)} ${esc(x.unit)}</td><td class="p-2 text-right">${Number(x.reorder)}</td><td class="p-2 text-right">${money(x.cost)}</td><td class="p-2"><div class="flex gap-1"><input aria-label="Quantity adjustment" class="field" style="width:75px" type="number" step="0.01" min="0.01" data-adjust-value="${esc(x.id)}"><button class="secondary" data-stock-in="${esc(x.id)}">+ In</button><button class="secondary" data-stock-out="${esc(x.id)}">− Out</button></div></td><td class="p-2"><button class="danger" data-delete-iv="${esc(x.id)}">Delete</button>${Number(x.quantity)<=Number(x.reorder)?'<div class="text-xs" style="color:var(--danger)">Low stock</div>':''}</td></tr>`).join('')||'<tr><td colspan="7" class="p-4 muted">No inventory items yet.</td></tr>' }
   function renderModules(){renderTransactions();renderExpenses();renderInventory();renderDashboard();renderQuoteList();updateQuoteHeading()}
   $('tx-date').value=localDate();$('ex-date').value=localDate();
-  $('transaction-form').onsubmit=async e=>{e.preventDefault();const amount=Number($('tx-amount').value);if(!Number.isFinite(amount)||amount<=0)return notify('Enter a valid transaction amount.');moduleData.transactions.unshift({id:moduleId(),date:$('tx-date').value,customer:$('tx-customer').value.trim(),order:$('tx-order').value.trim(),amount,method:$('tx-method').value,notes:$('tx-notes').value.trim(),createdAt:now()});if(await saveModuleData('transactions'))e.target.reset();$('tx-date').value=localDate()};
-  $('expense-form').onsubmit=async e=>{e.preventDefault();const amount=Number($('ex-amount').value);if(!Number.isFinite(amount)||amount<=0)return notify('Enter a valid expense amount.');moduleData.expenses.unshift({id:moduleId(),date:$('ex-date').value,category:$('ex-category').value,description:$('ex-description').value.trim(),amount,method:$('ex-method').value,notes:$('ex-notes').value.trim(),createdAt:now()});if(await saveModuleData('expenses'))e.target.reset();$('ex-date').value=localDate()};
-  $('inventory-form').onsubmit=async e=>{e.preventDefault();const item={id:moduleId(),name:$('iv-name').value.trim(),category:$('iv-category').value.trim(),unit:$('iv-unit').value.trim(),quantity:Number($('iv-quantity').value),reorder:Number($('iv-reorder').value),cost:Number($('iv-cost').value),updatedAt:now()};if(!item.name||!item.unit||![item.quantity,item.reorder,item.cost].every(Number.isFinite)||item.quantity<0||item.reorder<0||item.cost<0)return notify('Check the inventory values.');moduleData.inventory.unshift(item);if(await saveModuleData('inventory'))e.target.reset()};
-  $('tx-list').onclick=async e=>{const b=e.target.closest('[data-delete-tx]');if(!b||!confirm('Delete this transaction?'))return;moduleData.transactions=moduleData.transactions.filter(x=>x.id!==b.dataset.deleteTx);await saveModuleData('transactions')};
-  $('ex-list').onclick=async e=>{const b=e.target.closest('[data-delete-ex]');if(!b||!confirm('Delete this expense?'))return;moduleData.expenses=moduleData.expenses.filter(x=>x.id!==b.dataset.deleteEx);await saveModuleData('expenses')};
-  $('iv-list').onclick=async e=>{const del=e.target.closest('[data-delete-iv]');if(del){if(!confirm('Delete this inventory item?'))return;moduleData.inventory=moduleData.inventory.filter(x=>x.id!==del.dataset.deleteIv);await saveModuleData('inventory');return}const b=e.target.closest('[data-stock-in],[data-stock-out]');if(!b)return;const item=moduleData.inventory.find(x=>x.id===(b.dataset.stockIn||b.dataset.stockOut));const input=$('iv-list').querySelector(`[data-adjust-value="${CSS.escape(item.id)}"]`),qty=Number(input.value);if(!Number.isFinite(qty)||qty<=0)return notify('Enter an adjustment quantity greater than zero.');const next=Number(item.quantity)+(b.hasAttribute('data-stock-in')?qty:-qty);if(next<0)return notify('Not enough stock for this adjustment.');item.quantity=next;item.updatedAt=now();await saveModuleData('inventory')};
+  $('transaction-form').onsubmit=async e=>{e.preventDefault();const amount=Number($('tx-amount').value);if(!Number.isFinite(amount)||amount<=0)return notify('Enter a valid transaction amount.');const next=[{id:moduleId(),date:$('tx-date').value,customer:$('tx-customer').value.trim(),order:$('tx-order').value.trim(),amount,method:$('tx-method').value,notes:$('tx-notes').value.trim(),createdAt:now()},...moduleData.transactions];if(await saveModuleData('transactions',next))e.target.reset();$('tx-date').value=localDate()};
+  $('expense-form').onsubmit=async e=>{e.preventDefault();const amount=Number($('ex-amount').value);if(!Number.isFinite(amount)||amount<=0)return notify('Enter a valid expense amount.');const next=[{id:moduleId(),date:$('ex-date').value,category:$('ex-category').value,description:$('ex-description').value.trim(),amount,method:$('ex-method').value,notes:$('ex-notes').value.trim(),createdAt:now()},...moduleData.expenses];if(await saveModuleData('expenses',next))e.target.reset();$('ex-date').value=localDate()};
+  $('inventory-form').onsubmit=async e=>{e.preventDefault();const item={id:moduleId(),name:$('iv-name').value.trim(),category:$('iv-category').value.trim(),unit:$('iv-unit').value.trim(),quantity:Number($('iv-quantity').value),reorder:Number($('iv-reorder').value),cost:Number($('iv-cost').value),updatedAt:now()};if(!item.name||!item.unit||![item.quantity,item.reorder,item.cost].every(Number.isFinite)||item.quantity<0||item.reorder<0||item.cost<0)return notify('Check the inventory values.');if(await saveModuleData('inventory',[item,...moduleData.inventory]))e.target.reset()};
+  $('tx-list').onclick=async e=>{const b=e.target.closest('[data-delete-tx]');if(!b||!confirm('Delete this transaction?'))return;await saveModuleData('transactions',moduleData.transactions.filter(x=>x.id!==b.dataset.deleteTx))};
+  $('ex-list').onclick=async e=>{const b=e.target.closest('[data-delete-ex]');if(!b||!confirm('Delete this expense?'))return;await saveModuleData('expenses',moduleData.expenses.filter(x=>x.id!==b.dataset.deleteEx))};
+  $('iv-list').onclick=async e=>{const del=e.target.closest('[data-delete-iv]');if(del){if(!confirm('Delete this inventory item?'))return;await saveModuleData('inventory',moduleData.inventory.filter(x=>x.id!==del.dataset.deleteIv));return}const b=e.target.closest('[data-stock-in],[data-stock-out]');if(!b)return;const item=moduleData.inventory.find(x=>x.id===(b.dataset.stockIn||b.dataset.stockOut));const input=$('iv-list').querySelector(`[data-adjust-value="${CSS.escape(item.id)}"]`),qty=Number(input.value);if(!Number.isFinite(qty)||qty<=0)return notify('Enter an adjustment quantity greater than zero.');const next=Number(item.quantity)+(b.hasAttribute('data-stock-in')?qty:-qty);if(next<0)return notify('Not enough stock for this adjustment.');const updated={...item,quantity:next,updatedAt:now()};await saveModuleData('inventory',moduleData.inventory.map(x=>x.id===item.id?updated:x))};
 
   /* ===== Order payments -> Transactions (one source of truth for cash flow) ===== */
   let txSyncChain=Promise.resolve();
@@ -1759,18 +1800,26 @@
   function syncPaymentTransactions(){
     if(!modulesLoaded||repoBlocked)return txSyncChain;
     txSyncChain=txSyncChain.then(async()=>{
-      const list=moduleData.transactions;let changed=false;
+      const list=moduleData.transactions.map(t=>({...t}));let changed=false;
       const linked=new Set(list.filter(t=>t.paymentId).map(t=>t.paymentId));
-      for(const o of repo.orders)for(const p of o.payments||[]){
-        if(linked.has(p.id))continue;
-        // A shop owner who already typed this payment by hand: adopt it instead of double counting.
-        const manual=list.find(t=>!t.paymentId&&String(t.order||'').trim().toLowerCase()===o.reference.toLowerCase()&&cents(t.amount)===cents(p.amount));
-        if(manual){manual.paymentId=p.id;manual.orderId=o.id}
-        else list.unshift({id:moduleId(),date:paymentDate(p),customer:displayName(o),order:o.reference,orderId:o.id,paymentId:p.id,amount:p.amount,method:txMethod(p.method),notes:'Order payment (recorded automatically)',createdAt:p.at});
-        linked.add(p.id);changed=true;
+      const linkedRefunds=new Set(list.filter(t=>t.refundId).map(t=>t.refundId));
+      for(const o of repo.orders){
+        for(const p of o.payments||[]){
+          if(linked.has(p.id))continue;
+          // Adopt a matching manually entered payment instead of double counting it.
+          const manual=list.find(t=>!t.paymentId&&!t.refundId&&t.type!=='refund'&&String(t.order||'').trim().toLowerCase()===o.reference.toLowerCase()&&cents(t.amount)===cents(p.amount));
+          if(manual){manual.paymentId=p.id;manual.orderId=o.id}
+          else list.unshift({id:moduleId(),date:paymentDate(p),customer:displayName(o),order:o.reference,orderId:o.id,paymentId:p.id,amount:p.amount,method:txMethod(p.method),notes:'Order payment (recorded automatically)',createdAt:p.at});
+          linked.add(p.id);changed=true;
+        }
+        for(const r of o.refunds||[]){
+          if(linkedRefunds.has(r.id))continue;
+          list.unshift({id:moduleId(),date:paymentDate(r),customer:displayName(o),order:o.reference,orderId:o.id,refundId:r.id,type:'refund',amount:r.amount,method:txMethod(r.method),notes:r.reason||'Order refund',createdAt:r.at});
+          linkedRefunds.add(r.id);changed=true;
+        }
       }
       if(!changed)return;
-      try{await moduleRequest('transactions','PUT',list)}
+      try{await moduleRequest('transactions','PUT',list);moduleData.transactions=list}
       catch(e){notify('The payment is saved on the order, but the Transactions list could not sync: '+e.message)}
       renderModules();
     }).catch(e=>console.warn('Payment sync failed',e));
@@ -1780,9 +1829,8 @@
     if(!modulesLoaded)return;
     const kept=moduleData.transactions.filter(t=>t.orderId!==orderId);
     if(kept.length===moduleData.transactions.length)return;
-    moduleData.transactions=kept;
     txSyncChain=txSyncChain.then(async()=>{
-      try{await moduleRequest('transactions','PUT',moduleData.transactions)}
+      try{await moduleRequest('transactions','PUT',kept);moduleData.transactions=kept}
       catch(e){notify('Order deleted, but its Transactions entries could not sync: '+e.message)}
       renderModules();
     });
@@ -1875,17 +1923,14 @@
     }
     const q=collectQuote();if(!q)return;
     const i=moduleData.quotations.findIndex(x=>x.id===q.id);
-    if(i>=0)moduleData.quotations[i]=q;else moduleData.quotations.unshift(q);
-    editingQuoteId=q.id;
-    await saveModuleData('quotations');
-    updateQuoteHeading();
-    if(printAfter)printQuote(q);
+    const next=moduleData.quotations.slice();
+    if(i>=0)next[i]=q;else next.unshift(q);
+    if(await saveModuleData('quotations',next)){editingQuoteId=q.id;updateQuoteHeading();if(printAfter)printQuote(q)}
   }
   function linkQuoteToOrder(quoteId,order){
     const q=moduleData.quotations.find(x=>x.id===quoteId);if(!q||!modulesLoaded)return;
-    q.status='Accepted';q.orderId=order.id;q.orderRef=order.reference;q.updatedAt=now();
-    renderModules();
-    moduleRequest('quotations','PUT',moduleData.quotations).catch(e=>notify('Order saved, but the quotation status could not sync: '+e.message));
+    const updated={...q,status:'Accepted',orderId:order.id,orderRef:order.reference,updatedAt:now()};
+    saveModuleData('quotations',moduleData.quotations.map(x=>x.id===quoteId?updated:x)).catch(e=>notify('Order saved, but the quotation status could not sync: '+e.message));
   }
   function convertQuote(id){
     const q=moduleData.quotations.find(x=>x.id===id);if(!q)return;
@@ -1943,19 +1988,16 @@
     if(a==='cancel'){confirmQuoteDeleteId=null;renderQuoteList()}
     if(a==='confirm'){
       if(!modulesLoaded){notify('Your shop data has not finished loading. Try again in a moment.');return}
-      moduleData.quotations=moduleData.quotations.filter(x=>x.id!==id);confirmQuoteDeleteId=null;
-      if(editingQuoteId===id)resetQuoteForm();
-      await saveModuleData('quotations');
+      const next=moduleData.quotations.filter(x=>x.id!==id);
+      if(await saveModuleData('quotations',next)){confirmQuoteDeleteId=null;if(editingQuoteId===id)resetQuoteForm();renderQuoteList()}
     }
   });
   $('quote-list').addEventListener('change',async e=>{
     const sel=e.target.closest('[data-quote-status]');if(!sel)return;
     const q=moduleData.quotations.find(x=>x.id===sel.closest('[data-quote-id]').dataset.quoteId);if(!q)return;
     if(!modulesLoaded){notify('Your shop data has not finished loading. Try again in a moment.');renderQuoteList();return}
-    q.status=sel.value;q.updatedAt=now();
-    if(editingQuoteId===q.id)$('quote-status').value=q.status;
-    await saveModuleData('quotations');
-    if((q.status==='Draft'||q.status==='Sent')&&q.validUntil&&q.validUntil<localDate())notify('Saved, but its “valid until” date has passed, so it still shows as Expired. Open the quote to extend the date.');
+    const updated={...q,status:sel.value,updatedAt:now()};
+    if(await saveModuleData('quotations',moduleData.quotations.map(x=>x.id===q.id?updated:x))){if(editingQuoteId===q.id)$('quote-status').value=updated.status;if((updated.status==='Draft'||updated.status==='Sent')&&updated.validUntil&&updated.validUntil<localDate())notify('Saved, but its “valid until” date has passed, so it still shows as Expired. Open the quote to extend the date.')}
   });
   $('quote-search').oninput=renderQuoteList;$('quote-status-filter').onchange=renderQuoteList;
   $('add-quote-line').onclick=()=>{quoteLines.push(blankQuoteLine());renderQuote()};
