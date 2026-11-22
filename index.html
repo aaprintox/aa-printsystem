@@ -111,42 +111,84 @@
       <header class="mb-7">
        <p class="eyebrow">THE NUMBER CRUNCHER</p>
        <h1 class="page-heading">Pricing calculator</h1>
-       <p class="muted">Build a price with confidence. Start with the costs you know; add overhead only when you need it.</p>
+       <p class="muted">Build a price with confidence. Follows the 8-step calculation order from direct costs to final minimum charge.</p>
       </header>
       <div class="grid xl:grid-cols-[1.3fr_.7fr] gap-5 items-start">
        <form id="pricing-form" class="panel p-6">
-        <div class="mb-5 rounded-xl p-4" style="background:var(--surface-soft,#f3f5ef);border:1px solid var(--border,#dce4d8)">
+        <div class="mb-5 rounded-xl p-4" style="background:var(--subtle);border:1px solid var(--line)">
          <label class="field-label" for="pricing-template">Start with an example (optional)</label>
          <select id="pricing-template" class="field"><option value="">Choose a starter example…</option><option value="flyers">Flyers / Handouts</option><option value="stickers">Die-Cut Stickers</option><option value="photos">Photo Prints</option><option value="craft">Custom Craft / Gift Set</option></select>
          <p class="text-xs muted mt-2">Examples only—not fixed shop rates. Adjust every amount to match your actual costs.</p>
         </div>
-        <div class="mb-5 rounded-xl p-4" style="background:var(--surface-soft,#f3f5ef);border:1px solid var(--border,#dce4d8)">
-         <strong class="text-sm">Important: enter batch totals</strong>
-         <p class="text-sm muted mt-1">Enter the total cost for the entire quantity below—not the cost of one piece. The calculator divides the total by the quantity to estimate your per-unit price.</p>
+        <div class="mb-5 rounded-xl p-4" style="background:var(--subtle);border:1px solid var(--line)">
+         <strong class="text-sm">Important: enter batch totals &amp; private shop rates</strong>
+         <p class="text-sm muted mt-1">Enter batch totals for materials, consumables, and packaging. Unrounded costs stay accurate internally and round up at the end of the calculation order.</p>
         </div>
         <div class="grid sm:grid-cols-2 gap-4">
          <div class="sm:col-span-2"><label class="field-label" for="price-name">Product or service name</label><input id="price-name" class="field" required="" maxlength="100" placeholder="e.g. A4 full-color flyers"></div>
          <div><label class="field-label" for="price-quantity">Quantity in this job</label><input id="price-quantity" class="field price-input" type="number" min="1" step="1" value="100" required=""></div>
          <div>
-          <label class="field-label" for="price-margin">Markup (%)</label><input id="price-margin" class="field price-input" type="number" min="0" max="9999" step="0.01" value="30" required="">
-          <p class="text-xs muted mt-1">Markup is added to your cost. Profit margin is your profit as a share of the selling price.</p>
-          <div class="flex flex-wrap gap-2 mt-2" role="group" aria-label="Suggested markup">
+          <label class="field-label" for="price-rate-mode">Pricing mode</label>
+          <select id="price-rate-mode" class="field price-input">
+           <option value="markup">Markup (% on cost)</option>
+           <option value="margin">Target Profit Margin (% of price)</option>
+          </select>
+         </div>
+         <div>
+          <label class="field-label" for="price-margin">Rate (%)</label><input id="price-margin" class="field price-input" type="number" min="0" max="99.99" step="0.01" value="30" required="">
+          <p class="text-xs muted mt-1">Markup adds % above cost; Profit Margin sets profit as a % of selling price.</p>
+          <div class="flex flex-wrap gap-2 mt-2" role="group" aria-label="Suggested rate">
            <button type="button" class="secondary markup-preset" data-markup="20">20%</button><button type="button" class="secondary markup-preset" data-markup="30">30%</button><button type="button" class="secondary markup-preset" data-markup="50">50%</button><button type="button" class="secondary markup-preset" data-markup="custom">Custom</button>
           </div>
          </div>
-         <div><label class="field-label" for="cost-paper">Paper / substrate cost (whole job)</label><input id="cost-paper" class="field price-input" type="number" min="0" step="0.01" value="120"><p class="text-xs muted mt-1">Paper, photo paper, sticker sheet, cardstock, or blank material.</p></div>
-         <div><label class="field-label" for="cost-ink">Ink, toner &amp; materials (whole job)</label><input id="cost-ink" class="field price-input" type="number" min="0" step="0.01" value="90"><p class="text-xs muted mt-1">Estimate the ink/toner and consumables used for this batch.</p></div>
-         <div><label class="field-label" for="cost-material">Other direct materials (whole job)</label><input id="cost-material" class="field price-input" type="number" min="0" step="0.01" value="200"><p class="text-xs muted mt-1">Include blanks, adhesive, laminate, or craft components not listed above.</p></div>
-         <div><label class="field-label" for="cost-labor">Labor cost (whole job)</label><input id="cost-labor" class="field price-input" type="number" min="0" step="0.01" value="100"><p class="text-xs muted mt-1">Estimate: hourly rate × hours spent printing, cutting, packing, and assisting the customer.</p></div>
-         <div class="sm:col-span-2"><label class="field-label" for="cost-packaging">Packaging cost (whole job)</label><input id="cost-packaging" class="field price-input" type="number" min="0" step="0.01" value="15"><p class="text-xs muted mt-1">Envelopes, sleeves, boxes, backing cards, or other packaging for the batch.</p></div>
+         <div>
+          <label class="field-label" for="price-tier-discount">Quantity tier discount (%)</label>
+          <input id="price-tier-discount" class="field price-input" type="number" min="0" max="90" step="0.01" value="0">
+          <p class="text-xs muted mt-1">Applied after markup/margin, protected by a minimum 5% margin floor.</p>
+         </div>
+         <div><label class="field-label" for="cost-paper">Paper / substrate cost</label><input id="cost-paper" class="field price-input" type="number" min="0" step="0.0001" value="120"><p class="text-xs muted mt-1">Paper, photo paper, sticker sheet, cardstock, or blank material.</p></div>
+         <div><label class="field-label" for="cost-ink">Ink, toner &amp; materials</label><input id="cost-ink" class="field price-input" type="number" min="0" step="0.0001" value="90"><p class="text-xs muted mt-1">Ink/toner and consumables used for this batch.</p></div>
+         <div><label class="field-label" for="cost-material">Other direct materials &amp; equipment wear</label><input id="cost-material" class="field price-input" type="number" min="0" step="0.0001" value="200"><p class="text-xs muted mt-1">Blanks, adhesive, laminate, craft parts, or equipment wear allowance.</p></div>
+         <div><label class="field-label" for="cost-packaging">Packaging cost</label><input id="cost-packaging" class="field price-input" type="number" min="0" step="0.0001" value="15"><p class="text-xs muted mt-1">Sleeves, boxes, envelopes, or backing cards for the batch.</p></div>
+         <div><label class="field-label" for="cost-waste">Waste allowance (%)</label><input id="cost-waste" class="field price-input" type="number" min="0" max="99" step="0.01" value="0"><p class="text-xs muted mt-1">Step 2: Spoilage/trim allowance on direct materials &amp; packaging.</p></div>
+         <div><label class="field-label" for="price-min-override">Minimum charge override (optional)</label><input id="price-min-override" class="field price-input" type="number" min="0" step="0.01" placeholder="Use shop default"><p class="text-xs muted mt-1">Leave blank to use Business Settings minimum charge; enter 0 to waive.</p></div>
         </div>
-        <details class="mt-5 rounded-xl p-4" style="border:1px solid var(--border,#dce4d8)">
-         <summary class="font-semibold cursor-pointer">＋ Add overhead &amp; machine wear (optional)</summary>
-         <p class="text-xs muted mt-2 mb-4">You can leave these at zero if you are not sure yet. Add a reasonable batch estimate when you have one.</p>
-         <div class="grid sm:grid-cols-2 gap-4">
-          <div><label class="field-label" for="cost-electricity">Electricity (whole job)</label><input id="cost-electricity" class="field price-input" type="number" min="0" step="0.01" value="25"><p class="text-xs muted mt-1">A simple estimate is machine power (kW) × hours used × your electricity rate.</p></div>
-          <div><label class="field-label" for="cost-machine">Machine wear &amp; maintenance (whole job)</label><input id="cost-machine" class="field price-input" type="number" min="0" step="0.01" value="25"><p class="text-xs muted mt-1">Use a small per-print or per-sheet allowance, multiplied by the batch quantity.</p></div>
-          <div class="sm:col-span-2"><label class="field-label" for="cost-other">Other overhead (whole job)</label><input id="cost-other" class="field price-input" type="number" min="0" step="0.01" value="0"><p class="text-xs muted mt-1">Any other job-related expense not counted above.</p></div>
+
+        <div class="mt-5 rounded-xl p-4" style="background:var(--subtle);border:1px solid var(--line)">
+         <div class="flex flex-wrap items-center justify-between gap-2">
+          <label class="flex items-center gap-2 font-bold cursor-pointer" for="include-owner-labor">
+           <input id="include-owner-labor" type="checkbox" class="price-input">
+           <span>Include my own time in pricing</span>
+          </label>
+          <span class="pill">Step 3 · Labor</span>
+         </div>
+         <p class="text-xs muted mt-1">Toggle on to factor your time into this job. Solo owners who keep this off are never blocked.</p>
+         <div id="owner-labor-fields" class="grid sm:grid-cols-2 gap-4 mt-4" hidden="">
+          <div>
+           <label class="field-label" for="owner-hourly-rate">Owner hourly rate (required when labor is on)</label>
+           <input id="owner-hourly-rate" class="field price-input" type="number" min="0.01" step="0.01" placeholder="e.g. 125.00">
+           <p class="text-xs muted mt-1">Formula: Monthly income you want ÷ hours you work per month (e.g., ₱20,000 ÷ 160 hrs = ₱125/hr).</p>
+          </div>
+          <div>
+           <label class="field-label" for="owner-labor-hours">Owner hours for this job</label>
+           <input id="owner-labor-hours" class="field price-input" type="number" min="0" step="0.01" value="1">
+           <p class="text-xs muted mt-1">Total owner hours spent prepping, printing, cutting, and packing.</p>
+          </div>
+          <div class="sm:col-span-2">
+           <label class="field-label" for="staff-labor-cost">Hired staff labor (optional, separate from owner rate)</label>
+           <input id="staff-labor-cost" class="field price-input" type="number" min="0" step="0.01" value="0">
+           <p class="text-xs muted mt-1">Optional batch cost for hired assistants/staff, kept separate from owner rate.</p>
+          </div>
+         </div>
+        </div>
+
+        <details class="mt-5 rounded-xl p-4" style="border:1px solid var(--line)">
+         <summary class="font-semibold cursor-pointer">＋ Step 4: Overhead &amp; fees (optional)</summary>
+         <p class="text-xs muted mt-2 mb-4">Applied after labor in the calculation order. Leave at zero if not needed for this job.</p>
+         <div class="grid sm:grid-cols-3 gap-4">
+          <div><label class="field-label" for="cost-electricity">Electricity</label><input id="cost-electricity" class="field price-input" type="number" min="0" step="0.01" value="25"></div>
+          <div><label class="field-label" for="cost-machine">Machine &amp; fees</label><input id="cost-machine" class="field price-input" type="number" min="0" step="0.01" value="25"></div>
+          <div><label class="field-label" for="cost-other">Other overhead</label><input id="cost-other" class="field price-input" type="number" min="0" step="0.01" value="0"></div>
          </div>
         </details>
         <p id="pricing-error" role="alert" class="error text-sm mt-3" hidden=""></p><div class="flex flex-wrap gap-2 mt-6"><button type="submit" class="primary">Save calculation</button><button type="button" id="pricing-to-product" class="secondary">Use this price for a product →</button></div><p class="text-xs muted mt-2">After saving it as a product, you can select it in the Quotations tab.</p>
@@ -154,7 +196,7 @@
        <aside class="panel p-6">
         <p class="eyebrow mb-2">YOUR PRICE BREAKDOWN</p><h2 class="section-title mb-3">The big picture</h2>
         <div id="pricing-results"></div>
-        <p class="text-xs muted mt-5">Exact unit price is rounded up to the nearest cent. Suggested retail price rounds up to a friendly ₱0.50 step.</p>
+        <p class="text-xs muted mt-5">Unrounded costs are kept internally; batch totals round up to your configured increment (default ₱1) before applying any minimum charge.</p>
        </aside>
       </div>
      </section>
@@ -175,7 +217,7 @@
           <label class="field-label" for="product-category">Category</label><select id="product-category" class="field" required=""></select>
          </div>
          <div>
-          <label class="field-label" for="product-cost">Default material cost per unit</label><input id="product-cost" class="field" type="number" min="0" step="0.01" required="">
+          <label class="field-label" for="product-cost">Default material cost per unit</label><input id="product-cost" class="field" type="number" min="0" step="0.0001" required="">
          </div>
          <div>
           <label class="field-label" for="product-price">Default selling price per unit</label><input id="product-price" class="field" type="number" min="0" step="0.01" required="">
@@ -260,7 +302,7 @@
 
      <section id="view-transactions" class="view" hidden>
       <header class="mb-7"><p class="eyebrow">PAYMENTS & CASH FLOW</p><h1 class="page-heading">Transactions</h1><p class="muted">Record customer payments, deposits, and other money received.</p></header>
-      <div class="panel p-6 mb-5"><h2 class="section-title mb-4">Add transaction</h2><form id="transaction-form" class="grid md:grid-cols-3 gap-4"><div><label class="field-label">Date</label><input class="field" id="tx-date" type="date" required></div><div><label class="field-label">Customer / payer</label><input class="field" id="tx-customer" maxlength="100" required></div><div><label class="field-label">Order reference (optional)</label><input class="field" id="tx-order" maxlength="100"></div><div><label class="field-label">Amount</label><input class="field" id="tx-amount" class="field" type="number" min="0.01" step="0.01" required></div><div><label class="field-label">Payment method</label><select class="field" id="tx-method"><option>Cash</option><option>GCash</option><option>Bank transfer</option><option>Other</option></select></div><div><label class="field-label">Reference / notes</label><input class="field" id="tx-notes" maxlength="250"></div><div class="md:col-span-3"><button class="primary" type="submit">Save transaction</button></div></form></div>
+      <div class="panel p-6 mb-5"><h2 class="section-title mb-4">Add transaction</h2><form id="transaction-form" class="grid md:grid-cols-3 gap-4"><div><label class="field-label">Date</label><input class="field" id="tx-date" type="date" required></div><div><label class="field-label">Customer / payer</label><input class="field" id="tx-customer" maxlength="100" required></div><div><label class="field-label">Order reference (optional)</label><input class="field" id="tx-order" maxlength="100"></div><div><label class="field-label">Amount</label><input id="tx-amount" class="field" type="number" min="0.01" step="0.01" required></div><div><label class="field-label">Payment method</label><select class="field" id="tx-method"><option>Cash</option><option>GCash</option><option>Bank transfer</option><option>Other</option></select></div><div><label class="field-label">Reference / notes</label><input class="field" id="tx-notes" maxlength="250"></div><div class="md:col-span-3"><button class="primary" type="submit">Save transaction</button></div></form></div>
       <div class="panel p-6"><div class="flex justify-between flex-wrap gap-3 mb-4"><h2 class="section-title">Transaction history</h2><strong id="tx-total"></strong></div><div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr><th class="text-left p-2">Date</th><th class="text-left p-2">Payer</th><th class="text-left p-2">Order</th><th class="text-left p-2">Method</th><th class="text-right p-2">Amount</th><th></th></tr></thead><tbody id="tx-list"></tbody></table></div></div>
      </section>
      <section id="view-expenses" class="view" hidden>
@@ -470,10 +512,40 @@
          <label class="field-label" for="default-margin">Default profit markup (%)</label><input id="default-margin" class="field" type="number" min="0" step="0.01" required="">
         </div>
         <div>
-         <label class="field-label" for="default-labor">Default labor cost per job</label><input id="default-labor" class="field" type="number" min="0" step="0.01" required="">
+         <label class="field-label" for="default-labor">Default hired labor cost per job</label><input id="default-labor" class="field" type="number" min="0" step="0.01" required="">
         </div>
         <div>
          <label class="field-label" for="default-overhead">Default overhead per job</label><input id="default-overhead" class="field" type="number" min="0" step="0.01" required="">
+        </div>
+        <div>
+         <label class="field-label" for="rounding-increment">Price rounding increment</label>
+         <select id="rounding-increment" class="field">
+          <option value="1">Round up to nearest ₱1 (default)</option>
+          <option value="5">Round up to nearest ₱5</option>
+          <option value="10">Round up to nearest ₱10</option>
+         </select>
+        </div>
+        <div class="sm:col-span-2 rounded-xl p-4" style="background:var(--subtle);border:1px solid var(--line)">
+         <label class="flex items-center gap-2 font-bold cursor-pointer" for="setting-include-owner-labor">
+          <input id="setting-include-owner-labor" type="checkbox">
+          <span>Default: Include my own time in pricing</span>
+         </label>
+         <div id="setting-owner-rate-wrap" class="mt-3" hidden="">
+          <label class="field-label" for="default-owner-hourly-rate">Default owner hourly rate (required when default labor is on)</label>
+          <input id="default-owner-hourly-rate" class="field" type="number" min="0.01" step="0.01" placeholder="e.g. 125.00">
+          <p class="text-xs muted mt-1">Helper: Monthly income you want ÷ hours you work per month (e.g., ₱20,000 ÷ 160 hrs = ₱125/hr).</p>
+         </div>
+        </div>
+        <div class="sm:col-span-2 rounded-xl p-4" style="background:var(--subtle);border:1px solid var(--line)">
+         <label class="flex items-center gap-2 font-bold cursor-pointer" for="setting-min-charge-enabled">
+          <input id="setting-min-charge-enabled" type="checkbox">
+          <span>Enable minimum charge (optional, applied last at order total)</span>
+         </label>
+         <div id="setting-min-charge-wrap" class="mt-3" hidden="">
+          <label class="field-label" for="default-min-charge">Default minimum charge (₱)</label>
+          <input id="default-min-charge" class="field" type="number" min="0" step="0.01" placeholder="e.g. 50">
+          <p class="text-xs muted mt-1">Applied at the order/batch total after rounding unless overridden per product/job.</p>
+         </div>
         </div>
        </div>
        <p id="settings-error" class="error text-sm mt-3" role="alert" hidden=""></p><button type="submit" class="primary mt-6">Save settings</button>
@@ -692,7 +764,21 @@
     {id:'sample-8',name:'Tarpaulin print per sq. ft.',category:'Tarpaulin Printing',cost:25,price:55},
     {id:'sample-9',name:'Spiral binding',category:'Binding',cost:28,price:65}
   ];
-  const defaults = {name:'My Printing Shop',address:'',contact:'',currency:'₱',dateFormat:'short',margin:30,labor:100,overhead:0};
+  const defaults = {
+    name:'My Printing Shop',
+    address:'',
+    contact:'',
+    currency:'₱',
+    dateFormat:'short',
+    margin:30,
+    labor:0,
+    overhead:0,
+    includeOwnerLabor:false,
+    ownerHourlyRate:null,
+    roundingIncrement:1,
+    minChargeEnabled:false,
+    minChargeAmount:50
+  };
   const defaultTemplates = {
     confirmMessenger:'Hello, [Customer Name]! 😊\n\nThank you for placing your order with [Shop Name]!\n\nHere are your order details:\n\nOrder Reference: [Order Reference Number]\nServices: [Services Ordered]\nTotal Amount: [Total Amount]\nDown Payment: [Down Payment]\nRemaining Balance: [Remaining Balance]\nExpected Pickup: [Expected Pickup Date]\n\nPlease keep your reference number so you can easily inquire about your order.\n\nThank you for choosing [Shop Name]! 💚',
     confirmSms:'Hi [Customer Name]! Your order at [Shop Name] has been received. Reference: [Order Reference Number]. Total: [Total Amount]. Down payment: [Down Payment]. Balance: [Remaining Balance]. Expected pickup: [Expected Pickup Date]. Thank you!',
@@ -703,7 +789,7 @@
   const STORE = 'printbiz-workspace-v3', LEGACY = 'printbiz-orders-v2', PREFIX = 'printbiz-v1-';
   const esc = s => String(s ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
   const cents = n => Math.round(Number(n) * 100);
-  const validAmount = v => v !== '' && Number.isFinite(Number(v)) && Number(v) >= 0 && Math.round(Number(v)*100) / 100 === Number(v);
+  const validAmount = v => v !== '' && Number.isFinite(Number(v)) && Number(v) >= 0;
   const phoneKey = s => String(s||'').replace(/\D/g,'').replace(/^63(?=9\d{9}$)/,'0');
   const now = () => new Date().toISOString();
   const localDate = () => {const d=new Date(), offset=d.getTimezoneOffset();return new Date(d.getTime()-offset*60000).toISOString().slice(0,10)};
@@ -721,6 +807,7 @@
   let trackingPreview={title:'Track your print order',instructions:'Enter your order reference and registered contact number.',showBalance:false,descriptions:''};
   let repo={version:3,customers:[],orders:[],counters:{}}, repoBlocked='', selectedId=null, editingOrderId=null, editingProductId=null, orderLines=[], quoteLines=[], modalOrderId=null, modalKind='confirm';
   const money=n=>`${settings.currency||'₱'}${(Number(n)||0).toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+  const exactMoney=n=>{const v=Number(n)||0;return `${settings.currency||'₱'}${v.toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:4})}`};
   const dateText=s=>{if(!isDate(s))return '—';const d=new Date(s+'T12:00:00');return settings.dateFormat==='iso'?s:d.toLocaleDateString('en-PH',settings.dateFormat==='long'?{year:'numeric',month:'long',day:'numeric'}:{year:'numeric',month:'2-digit',day:'2-digit'})};
   const timeText=s=>{const d=new Date(s);return Number.isNaN(d.getTime())?'—':d.toLocaleString('en-PH')};
   const paid=d=>Math.round((d.payments||[]).reduce((sum,p)=>sum+cents(p.amount||0),0))/100;
@@ -1061,27 +1148,167 @@
   $('public-form').onsubmit=e=>{e.preventDefault();showError('public-error','Customer tracking is not connected to a live order service. No order was verified.')};
   window.addEventListener('hashchange',()=>{if(window.location.hash==='#track')showPublic()});
 
-  const costs=['cost-paper','cost-ink','cost-material','cost-labor','cost-packaging','cost-electricity','cost-machine','cost-other'];
+  function roundUpStep(amount, step){
+    const s = Number(step) > 0 ? Number(step) : 1;
+    const factor = 10000;
+    const scaled = Math.round(Number(amount) * factor);
+    const stepScaled = Math.round(s * factor);
+    return (Math.ceil((scaled - 1e-6) / stepScaled) * stepScaled) / factor;
+  }
+
+  function syncLaborFields(){
+    const on = $('include-owner-labor').checked;
+    $('owner-labor-fields').hidden = !on;
+  }
+  $('include-owner-labor').addEventListener('change',()=>{
+    syncLaborFields();
+    calculatePricing();
+  });
+
   function calculatePricing(){
-    const qty=Number($('price-quantity').value),markup=Number($('price-margin').value),values=costs.map(id=>Number($(id).value));
-    const valid=Number.isInteger(qty)&&qty>0&&Number.isFinite(markup)&&markup>=0&&markup<=9999&&costs.every(id=>validAmount($(id).value));
-    const cost=values.reduce((a,b)=>a+b,0),baseUnit=valid?cost/qty:0,unit=valid?Math.ceil((baseUnit*(1+markup/100)-1e-10)*100)/100:0,total=unit*qty,profit=total-cost,margin=total>0?profit/total*100:0;
-    const retail=valid?Math.ceil((baseUnit*(1+markup/100)-1e-10)*2)/2:0,retailTotal=retail*qty,retailProfit=retailTotal-cost;
-    $('pricing-results').innerHTML=[['Break-even price / unit',money(baseUnit)],['Cost per unit',money(baseUnit)],['Selling price / unit (exact)',money(unit)],['Total selling price',money(total)],['Estimated profit',money(profit)],['Markup',valid?markup.toFixed(2)+'%':'—'],['Profit margin',valid?margin.toFixed(2)+'%':'—'],['Suggested retail price / unit',money(retail)],['Profit at suggested retail',money(retailProfit)]].map(([a,b])=>lineRow(a,valid?b:'—')).join('');
-    showError('pricing-error',valid?'':'Enter a positive whole-number quantity and non-negative amounts in every cost field.');
-    return {valid,cost,total,profit,unit,retail,retailTotal,retailProfit,markup,margin,quantity:qty};
+    syncLaborFields();
+    const qty = Number($('price-quantity').value);
+    const rateVal = Number($('price-margin').value);
+    const mode = $('price-rate-mode').value || 'markup';
+    const tierDiscountPct = Number($('price-tier-discount').value || 0);
+    const laborOn = $('include-owner-labor').checked;
+    const ownerRateRaw = $('owner-hourly-rate').value;
+    const ownerRate = Number(ownerRateRaw);
+    const ownerHours = Number($('owner-labor-hours').value || 0);
+    const staffLabor = Number($('staff-labor-cost').value || 0);
+    const wastePct = Number($('cost-waste').value || 0);
+
+    const directBaseIds = ['cost-paper','cost-ink','cost-material','cost-packaging'];
+    const overheadIds = ['cost-electricity','cost-machine','cost-other'];
+    const allNumInputsValid =
+      Number.isInteger(qty) && qty > 0 &&
+      Number.isFinite(rateVal) && rateVal >= 0 && (mode === 'markup' ? rateVal <= 9999 : rateVal < 100) &&
+      validAmount($('price-tier-discount').value) && tierDiscountPct <= 90 &&
+      validAmount($('cost-waste').value) && wastePct < 100 &&
+      [...directBaseIds, ...overheadIds].every(id => validAmount($(id).value)) &&
+      (!laborOn || (ownerRateRaw.trim() !== '' && Number.isFinite(ownerRate) && ownerRate > 0 && validAmount($('owner-labor-hours').value) && validAmount($('staff-labor-cost').value)));
+
+    const overrideRaw = $('price-min-override').value.trim();
+    const hasOverride = overrideRaw !== '';
+    const overrideValid = !hasOverride || validAmount(overrideRaw);
+    const valid = allNumInputsValid && overrideValid;
+
+    let errorMsg = '';
+    if (!Number.isInteger(qty) || qty <= 0) {
+      errorMsg = 'Enter a positive whole-number quantity.';
+    } else if (laborOn && (!ownerRateRaw.trim() || !Number.isFinite(ownerRate) || ownerRate <= 0)) {
+      errorMsg = 'Enter your hourly rate to include labor.';
+    } else if (!allNumInputsValid || !overrideValid) {
+      errorMsg = 'Enter valid non-negative numbers in all active fields.';
+    }
+    showError('pricing-error', valid ? '' : errorMsg);
+
+    // 1. Direct materials, ink, equipment wear, and packaging (unrounded internal batch total)
+    const step1Direct = directBaseIds.reduce((sum, id) => sum + Number($(id).value || 0), 0);
+    // 2. Waste % on direct materials/packaging
+    const step2Waste = step1Direct * (wastePct / 100);
+    const afterWaste = step1Direct + step2Waste;
+    // 3. Labor (if on): owner rate * hours + optional hired staff labor
+    const step3Labor = laborOn ? (ownerRate * ownerHours) + staffLabor : 0;
+    // 4. Overhead and fees
+    const step4Overhead = overheadIds.reduce((sum, id) => sum + Number($(id).value || 0), 0);
+
+    const totalCostExact = afterWaste + step3Labor + step4Overhead;
+    const unitCostExact = qty > 0 ? totalCostExact / qty : 0;
+
+    // 5. Markup or margin (on batch before tier discount)
+    const pricedBeforeTier = mode === 'margin'
+      ? totalCostExact / (1 - (rateVal / 100))
+      : totalCostExact * (1 + (rateVal / 100));
+
+    // 6. Quantity tier discount (with 5% profit margin floor)
+    const discountedExact = pricedBeforeTier * (1 - (tierDiscountPct / 100));
+    const minMarginFloorPrice = totalCostExact / (1 - 0.05);
+    const afterTierExact = tierDiscountPct > 0 ? Math.max(discountedExact, minMarginFloorPrice) : pricedBeforeTier;
+    const tierFloorApplied = tierDiscountPct > 0 && discountedExact < minMarginFloorPrice;
+
+    // 7. Round up to configured increment (default ₱1) at the batch/order total level
+    const increment = Number(settings.roundingIncrement) > 0 ? Number(settings.roundingIncrement) : 1;
+    const roundedBatchTotal = roundUpStep(afterTierExact, increment);
+
+    // 8. Minimum charge (if on, with optional per-product/job override), applied last at order total
+    const effectiveMinCharge = hasOverride
+      ? Number(overrideRaw)
+      : (settings.minChargeEnabled ? Number(settings.minChargeAmount || 0) : 0);
+    const minChargeApplied = effectiveMinCharge > 0 && roundedBatchTotal < effectiveMinCharge;
+    const finalBatchTotal = minChargeApplied ? roundUpStep(effectiveMinCharge, 0.01) : roundedBatchTotal;
+    const finalUnitPrice = qty > 0 ? finalBatchTotal / qty : 0;
+    const profitExact = finalBatchTotal - totalCostExact;
+    const actualMarginPct = finalBatchTotal > 0 ? (profitExact / finalBatchTotal) * 100 : 0;
+    const actualMarkupPct = totalCostExact > 0 ? (profitExact / totalCostExact) * 100 : 0;
+
+    const minChargeRowLabel = minChargeApplied
+      ? `Minimum charge applied: ${money(roundedBatchTotal)} → ${money(finalBatchTotal)}`
+      : (effectiveMinCharge > 0 ? `Minimum charge threshold (${money(effectiveMinCharge)})` : 'Minimum charge');
+    const minChargeRowValue = minChargeApplied
+      ? `Applied (${money(finalBatchTotal)})`
+      : (effectiveMinCharge > 0 ? `Not needed (${money(roundedBatchTotal)} ≥ ${money(effectiveMinCharge)})` : 'Off');
+
+    $('pricing-results').innerHTML = [
+      ['1. Direct materials & wear (exact)', exactMoney(step1Direct)],
+      ['2. Waste allowance (' + wastePct + '%)', exactMoney(step2Waste)],
+      ['3. Labor' + (laborOn ? '' : ' (off)'), laborOn ? money(step3Labor) : 'Off (skipped)'],
+      ['4. Overhead & fees', money(step4Overhead)],
+      ['Total cost (exact / per unit)', `${exactMoney(totalCostExact)} (${exactMoney(unitCostExact)}/ea)`],
+      ['5–6. After ' + (mode === 'margin' ? 'margin' : 'markup') + ' & tier discount', `${exactMoney(afterTierExact)}${tierFloorApplied ? ' · 5% floor' : ''}`],
+      ['7. Rounded up (step ₱' + increment + ')', money(roundedBatchTotal)],
+      ['8. ' + minChargeRowLabel, minChargeRowValue],
+      ['Final batch / order total', money(finalBatchTotal)],
+      ['Final per-unit price', money(finalUnitPrice)],
+      ['Estimated profit', money(profitExact)],
+      ['Actual margin / markup', `${actualMarginPct.toFixed(2)}% / ${actualMarkupPct.toFixed(2)}%`]
+    ].map(([a,b]) => lineRow(a, valid ? b : '—')).join('');
+
+    return {
+      valid,
+      cost: totalCostExact,
+      total: finalBatchTotal,
+      profit: profitExact,
+      unit: finalUnitPrice,
+      retail: finalUnitPrice,
+      quantity: qty,
+      minChargeApplied,
+      roundedBatchTotal,
+      finalBatchTotal
+    };
   }
   document.querySelectorAll('.price-input').forEach(el=>el.addEventListener('input',calculatePricing));
   document.querySelectorAll('.markup-preset').forEach(btn=>btn.addEventListener('click',()=>{if(btn.dataset.markup==='custom'){$('price-margin').focus();$('price-margin').select();return}$('price-margin').value=btn.dataset.markup;calculatePricing()}));
-  const pricingExamples={flyers:{name:'Flyers / Handouts',quantity:100,values:{'cost-paper':120,'cost-ink':90,'cost-material':0,'cost-labor':100,'cost-packaging':15,'cost-electricity':20,'cost-machine':15,'cost-other':0}},stickers:{name:'Die-Cut Stickers',quantity:50,values:{'cost-paper':150,'cost-ink':70,'cost-material':35,'cost-labor':120,'cost-packaging':20,'cost-electricity':15,'cost-machine':20,'cost-other':0}},photos:{name:'Photo Prints',quantity:20,values:{'cost-paper':100,'cost-ink':45,'cost-material':0,'cost-labor':35,'cost-packaging':10,'cost-electricity':8,'cost-machine':8,'cost-other':0}},craft:{name:'Custom Craft / Gift Set',quantity:1,values:{'cost-paper':0,'cost-ink':0,'cost-material':250,'cost-labor':150,'cost-packaging':35,'cost-electricity':10,'cost-machine':10,'cost-other':0}}};
+  const pricingExamples={
+    flyers:{name:'Flyers / Handouts',quantity:100,values:{'cost-paper':120,'cost-ink':90,'cost-material':0,'cost-packaging':15,'cost-waste':2,'cost-electricity':20,'cost-machine':15,'cost-other':0}},
+    stickers:{name:'Die-Cut Stickers',quantity:50,values:{'cost-paper':150,'cost-ink':70,'cost-material':35,'cost-packaging':20,'cost-waste':5,'cost-electricity':15,'cost-machine':20,'cost-other':0}},
+    photos:{name:'Photo Prints',quantity:20,values:{'cost-paper':100,'cost-ink':45,'cost-material':0,'cost-packaging':10,'cost-waste':2,'cost-electricity':8,'cost-machine':8,'cost-other':0}},
+    craft:{name:'Custom Craft / Gift Set',quantity:1,values:{'cost-paper':0,'cost-ink':0,'cost-material':250,'cost-packaging':35,'cost-waste':0,'cost-electricity':10,'cost-machine':10,'cost-other':0}}
+  };
   $('pricing-template').addEventListener('change',()=>{const example=pricingExamples[$('pricing-template').value];if(!example)return;$('price-name').value=example.name;$('price-quantity').value=example.quantity;Object.entries(example.values).forEach(([id,value])=>$(id).value=value);calculatePricing()});
-  $('pricing-form').onsubmit=e=>{e.preventDefault();const r=calculatePricing(),name=$('price-name').value.trim();if(!name){showError('pricing-error','Enter a product or service name.');return}if(!r.valid)return;const next=[{id:uid(),name,sales:r.total,expenses:r.cost,profit:r.profit,at:now()},...recent].slice(0,20);if(saveLegacy('recent',next)){recent=next;renderDashboard();notify('Calculation saved.')}};
-  $('pricing-to-product').onclick=()=>{const r=calculatePricing(),name=$('price-name').value.trim();if(!r.valid||!name){showError('pricing-error','Enter a product name and valid costs before continuing.');return}$('product-name').value=name;$('product-cost').value=(r.cost/r.quantity).toFixed(2);$('product-price').value=r.retail.toFixed(2);if(!$('product-category').value&&$('product-category').options.length)$('product-category').selectedIndex=0;setView('products');$('product-name').focus();notify('Price copied to the product form. Choose a category, then save it. You can use it in Quotations afterward.')};
+  $('pricing-form').onsubmit=e=>{
+    e.preventDefault();
+    const r=calculatePricing(),name=$('price-name').value.trim();
+    if(!name){showError('pricing-error','Enter a product or service name.');return}
+    if(!r.valid)return;
+    const next=[{id:uid(),name,sales:r.total,expenses:r.cost,profit:r.profit,at:now()},...recent].slice(0,20);
+    if(saveLegacy('recent',next)){recent=next;renderDashboard();notify('Calculation saved.')}
+  };
+  $('pricing-to-product').onclick=()=>{
+    const r=calculatePricing(),name=$('price-name').value.trim();
+    if(!r.valid||!name){showError('pricing-error',r.valid?'Enter a product name before continuing.':$('pricing-error').textContent||'Enter valid costs before continuing.');return}
+    $('product-name').value=name;
+    $('product-cost').value=(r.cost/r.quantity).toFixed(4);
+    $('product-price').value=r.unit.toFixed(2);
+    if(!$('product-category').value&&$('product-category').options.length)$('product-category').selectedIndex=0;
+    setView('products');$('product-name').focus();
+    notify('Price copied to the product form. Choose a category, then save it. You can use it in Quotations afterward.')
+  };
   categories.forEach(c=>$('product-category').add(new Option(c,c)));
   function renderProducts(){
     const query=$('product-search').value.toLowerCase().trim(),shown=products.filter(p=>`${p.name} ${p.category}`.toLowerCase().includes(query));
     $('catalogue-count').textContent=`${shown.length} item${shown.length===1?'':'s'}`;
-    $('product-list').innerHTML=shown.length?shown.map(p=>`<article class="item-row mb-2" data-product-id="${esc(p.id)}"><strong>${esc(p.name)}</strong><span class="pill ml-2">${esc(p.category)}</span><p class="text-xs muted my-2">Material ${esc(money(p.cost))} · Selling ${esc(money(p.price))} / unit</p><div class="flex flex-wrap gap-2"><button type="button" data-product-action="edit" class="secondary">Edit</button><button type="button" data-product-action="delete" class="danger">Delete</button></div></article>`).join(''):'<p class="text-sm muted py-5">No matching products. Add one using the form.</p>'
+    $('product-list').innerHTML=shown.length?shown.map(p=>`<article class="item-row mb-2" data-product-id="${esc(p.id)}"><strong>${esc(p.name)}</strong><span class="pill ml-2">${esc(p.category)}</span><p class="text-xs muted my-2">Material ${esc(exactMoney(p.cost))} · Selling ${esc(money(p.price))} / unit</p><div class="flex flex-wrap gap-2"><button type="button" data-product-action="edit" class="secondary">Edit</button><button type="button" data-product-action="delete" class="danger">Delete</button></div></article>`).join(''):'<p class="text-sm muted py-5">No matching products. Add one using the form.</p>'
   }
   function resetProduct(){editingProductId=null;$('product-form').reset();$('product-form-title').textContent='Add a product';$('product-submit').textContent='Save product';$('product-cancel').hidden=true;showError('product-error','')}
   $('product-cancel').onclick=resetProduct;
@@ -1142,10 +1369,68 @@
   $('tx-list').onclick=async e=>{const b=e.target.closest('[data-delete-tx]');if(!b||!confirm('Delete this transaction?'))return;moduleData.transactions=moduleData.transactions.filter(x=>x.id!==b.dataset.deleteTx);await saveModuleData('transactions')};
   $('ex-list').onclick=async e=>{const b=e.target.closest('[data-delete-ex]');if(!b||!confirm('Delete this expense?'))return;moduleData.expenses=moduleData.expenses.filter(x=>x.id!==b.dataset.deleteEx);await saveModuleData('expenses')};
   $('iv-list').onclick=async e=>{const del=e.target.closest('[data-delete-iv]');if(del){if(!confirm('Delete this inventory item?'))return;moduleData.inventory=moduleData.inventory.filter(x=>x.id!==del.dataset.deleteIv);await saveModuleData('inventory');return}const b=e.target.closest('[data-stock-in],[data-stock-out]');if(!b)return;const item=moduleData.inventory.find(x=>x.id===(b.dataset.stockIn||b.dataset.stockOut));const input=$('iv-list').querySelector(`[data-adjust-value="${CSS.escape(item.id)}"]`),qty=Number(input.value);if(!Number.isFinite(qty)||qty<=0)return notify('Enter an adjustment quantity greater than zero.');const next=Number(item.quantity)+(b.hasAttribute('data-stock-in')?qty:-qty);if(next<0)return notify('Not enough stock for this adjustment.');item.quantity=next;item.updatedAt=now();await saveModuleData('inventory')};
-  const originalSetView=setView;
 
-  function fillSettings(){for(const [id,value] of Object.entries({'business-name':settings.name,'business-address':settings.address,'business-contact':settings.contact,'currency-symbol':settings.currency,'business-date-format':settings.dateFormat,'default-margin':settings.margin,'default-labor':settings.labor,'default-overhead':settings.overhead}))$(id).value=value;for(const [id,key] of Object.entries({'template-confirm-messenger':'confirmMessenger','template-confirm-sms':'confirmSms','template-ready-messenger':'readyMessenger','template-ready-sms':'readySms'}))$(id).value=templates[key];$('tracking-title').value=trackingPreview.title;$('tracking-instructions').value=trackingPreview.instructions}
-  $('settings-form').onsubmit=e=>{e.preventDefault();const next={name:$('business-name').value.trim(),address:$('business-address').value.trim(),contact:$('business-contact').value.trim(),currency:$('currency-symbol').value.trim(),dateFormat:$('business-date-format').value,margin:Number($('default-margin').value),labor:Number($('default-labor').value),overhead:Number($('default-overhead').value)};if(!next.name||!next.currency||!['default-margin','default-labor','default-overhead'].every(id=>validAmount($(id).value))){showError('settings-error','Enter a business name, currency symbol, and non-negative defaults.');return}if(saveLegacy('settings',next)){settings=next;showError('settings-error','');renderAllOrders();renderProducts();renderQuote();renderOrderLines();calculatePricing();calculateProfit();notify('Business settings saved.')}};
+  function syncSettingsVisibility(){
+    $('setting-owner-rate-wrap').hidden = !$('setting-include-owner-labor').checked;
+    $('setting-min-charge-wrap').hidden = !$('setting-min-charge-enabled').checked;
+  }
+  $('setting-include-owner-labor').addEventListener('change',syncSettingsVisibility);
+  $('setting-min-charge-enabled').addEventListener('change',syncSettingsVisibility);
+
+  function fillSettings(){
+    for(const [id,value] of Object.entries({'business-name':settings.name,'business-address':settings.address,'business-contact':settings.contact,'currency-symbol':settings.currency,'business-date-format':settings.dateFormat,'default-margin':settings.margin,'default-labor':settings.labor,'default-overhead':settings.overhead}))$(id).value=value;
+    $('rounding-increment').value = String(settings.roundingIncrement || 1);
+    $('setting-include-owner-labor').checked = Boolean(settings.includeOwnerLabor);
+    $('default-owner-hourly-rate').value = settings.ownerHourlyRate != null ? String(settings.ownerHourlyRate) : '';
+    $('setting-min-charge-enabled').checked = Boolean(settings.minChargeEnabled);
+    $('default-min-charge').value = settings.minChargeAmount != null ? String(settings.minChargeAmount) : '50';
+    syncSettingsVisibility();
+    for(const [id,key] of Object.entries({'template-confirm-messenger':'confirmMessenger','template-confirm-sms':'confirmSms','template-ready-messenger':'readyMessenger','template-ready-sms':'readySms'}))$(id).value=templates[key];
+    $('tracking-title').value=trackingPreview.title;$('tracking-instructions').value=trackingPreview.instructions;
+  }
+  $('settings-form').onsubmit=e=>{
+    e.preventDefault();
+    const defLaborOn = $('setting-include-owner-labor').checked;
+    const defOwnerRateStr = $('default-owner-hourly-rate').value.trim();
+    const defOwnerRate = Number(defOwnerRateStr);
+    const minChargeOn = $('setting-min-charge-enabled').checked;
+    const defMinCharge = Number($('default-min-charge').value || 0);
+    if(!$('business-name').value.trim()||!$('currency-symbol').value.trim()||!['default-margin','default-labor','default-overhead'].every(id=>validAmount($(id).value))){
+      showError('settings-error','Enter a business name, currency symbol, and non-negative defaults.');return;
+    }
+    if(defLaborOn && (!defOwnerRateStr || !Number.isFinite(defOwnerRate) || defOwnerRate <= 0)){
+      showError('settings-error','Enter your hourly rate to include labor.');return;
+    }
+    if(minChargeOn && (!validAmount($('default-min-charge').value) || defMinCharge <= 0)){
+      showError('settings-error','Enter a positive minimum charge amount or turn off minimum charge.');return;
+    }
+    const next={
+      ...settings,
+      name:$('business-name').value.trim(),
+      address:$('business-address').value.trim(),
+      contact:$('business-contact').value.trim(),
+      currency:$('currency-symbol').value.trim(),
+      dateFormat:$('business-date-format').value,
+      margin:Number($('default-margin').value),
+      labor:Number($('default-labor').value),
+      overhead:Number($('default-overhead').value),
+      roundingIncrement:Number($('rounding-increment').value)||1,
+      includeOwnerLabor:defLaborOn,
+      ownerHourlyRate:defLaborOn ? defOwnerRate : (defOwnerRateStr ? defOwnerRate : null),
+      minChargeEnabled:minChargeOn,
+      minChargeAmount:defMinCharge
+    };
+    if(saveLegacy('settings',next)){
+      settings=next;showError('settings-error','');
+      $('include-owner-labor').checked = Boolean(settings.includeOwnerLabor);
+      if(settings.ownerHourlyRate != null && settings.ownerHourlyRate > 0){
+        $('owner-hourly-rate').value = String(settings.ownerHourlyRate);
+      }
+      $('staff-labor-cost').value = settings.labor;
+      $('cost-other').value = settings.overhead;
+      renderAllOrders();renderProducts();renderQuote();renderOrderLines();calculatePricing();calculateProfit();notify('Business settings saved.')
+    }
+  };
   $('message-settings-form').onsubmit=e=>{e.preventDefault();const next={confirmMessenger:$('template-confirm-messenger').value,confirmSms:$('template-confirm-sms').value,readyMessenger:$('template-ready-messenger').value,readySms:$('template-ready-sms').value};if(Object.values(next).some(v=>!v.trim())){showError('template-error','All four message templates need text.');return}if(saveLegacy('message-templates',next)){templates=next;showError('template-error','');notify('Message templates saved in this browser.')}};
   $('tracking-settings-form').onsubmit=e=>{e.preventDefault();trackingPreview={title:$('tracking-title').value.trim()||'Track your print order',instructions:$('tracking-instructions').value.trim()||'Enter your order reference and registered contact number.',showBalance:$('show-balance').checked,descriptions:$('status-descriptions').value.trim()};notify('Local tracking preview updated. Public tracking is still not connected.')};
 
@@ -1186,9 +1471,16 @@
       window.location.replace('/shop/login');
     }
   };
-  loadRepo();loadModuleData();fillSettings();applyAppearance(savedAppearance);renderAppearance();resetOrderForm();renderAllOrders();renderProducts();calculatePricing();calculateProfit();quoteLines.push({id:uid(),productId:'',quantity:1});renderQuote();
-  (async()=>{await initializeCloudRepository();for(const key of ['products','recent','settings','message_templates','appearance']){try{const value=await readCloudSetting(key);const localKey=key==='message_templates'?'message-templates':key;const fallback=key==='products'?products:key==='recent'?recent:key==='settings'?settings:key==='message_templates'?templates:savedAppearance;if(value!==null){localStorage.setItem(PREFIX+localKey,JSON.stringify(value));if(key==='products'&&Array.isArray(value))products=value;if(key==='recent'&&Array.isArray(value))recent=value;if(key==='settings'&&value&&typeof value==='object')settings={...defaults,...value};if(key==='message_templates'&&value)templates={...defaultTemplates,...value};if(key==='appearance'&&value)savedAppearance=value;}else{await cloudSetting(key,fallback);}}catch(e){/* Preserve local copy if a cloud setting is not available. */}}fillSettings();applyAppearance(savedAppearance);renderProducts();renderDashboard();renderAllOrders();})();
-  $('price-margin').value=settings.margin;$('cost-labor').value=settings.labor;$('cost-other').value=settings.overhead;calculatePricing();
+  loadRepo();loadModuleData();fillSettings();applyAppearance(savedAppearance);renderAppearance();resetOrderForm();renderAllOrders();renderProducts();
+  $('price-margin').value=settings.margin;
+  $('include-owner-labor').checked=Boolean(settings.includeOwnerLabor);
+  if(settings.ownerHourlyRate != null && settings.ownerHourlyRate > 0){
+    $('owner-hourly-rate').value=String(settings.ownerHourlyRate);
+  }
+  $('staff-labor-cost').value=settings.labor;
+  $('cost-other').value=settings.overhead;
+  calculatePricing();calculateProfit();quoteLines.push({id:uid(),productId:'',quantity:1});renderQuote();
+  (async()=>{await initializeCloudRepository();for(const key of ['products','recent','settings','message_templates','appearance']){try{const value=await readCloudSetting(key);const localKey=key==='message_templates'?'message-templates':key;const fallback=key==='products'?products:key==='recent'?recent:key==='settings'?settings:key==='message_templates'?templates:savedAppearance;if(value!==null){localStorage.setItem(PREFIX+localKey,JSON.stringify(value));if(key==='products'&&Array.isArray(value))products=value;if(key==='recent'&&Array.isArray(value))recent=value;if(key==='settings'&&value&&typeof value==='object')settings={...defaults,...value};if(key==='message_templates'&&value)templates={...defaultTemplates,...value};if(key==='appearance'&&value)savedAppearance=value;}else{await cloudSetting(key,fallback);}}catch(e){/* Preserve local copy if a cloud setting is not available. */}}fillSettings();applyAppearance(savedAppearance);renderProducts();renderDashboard();renderAllOrders();$('include-owner-labor').checked=Boolean(settings.includeOwnerLabor);if(settings.ownerHourlyRate!=null&&settings.ownerHourlyRate>0){$('owner-hourly-rate').value=String(settings.ownerHourlyRate)}$('staff-labor-cost').value=settings.labor;$('cost-other').value=settings.overhead;calculatePricing();})();
   if(window.lucide)lucide.createIcons();
   if(window.location.hash==='#track')showPublic();
 })();
