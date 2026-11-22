@@ -312,14 +312,24 @@
        <h1 class="page-heading">Product Costing &amp; Pricing</h1>
        <p class="muted">Build a price with confidence. Follows the 8-step calculation order from direct costs to final minimum charge.</p>
       </header>
+      <div class="panel p-4 mb-5" id="pricing-mode-panel">
+       <div class="flex flex-wrap items-center justify-between gap-3">
+        <div><p class="font-semibold">Product costing mode</p><p class="text-xs muted mt-1">Choose a simple estimate or detailed costing. You can switch anytime.</p></div>
+        <div class="flex flex-wrap gap-2" role="group" aria-label="Product costing mode">
+         <button type="button" id="cost-mode-basic" class="primary" aria-pressed="true">Basic Mode</button>
+         <button type="button" id="cost-mode-advanced" class="secondary" aria-pressed="false">Advanced Mode</button>
+        </div>
+       </div>
+       <p id="cost-mode-description" class="text-xs muted mt-3">Basic Mode uses estimated costs only. It does not connect to or change your inventory.</p>
+      </div>
       <div class="grid xl:grid-cols-[1.3fr_.7fr] gap-5 items-start">
        <form id="pricing-form" class="panel p-6">
-        <div class="mb-5 rounded-xl p-4" style="background:var(--subtle);border:1px solid var(--line)">
+        <div id="pricing-template-wrap" class="mb-5 rounded-xl p-4" style="background:var(--subtle);border:1px solid var(--line)">
          <label class="field-label" for="pricing-template">Start with an example (optional)</label>
          <select id="pricing-template" class="field"><option value="">Choose a starter example…</option><option value="atm">ATM-size Photo Magnet (recipe example)</option><option value="flyers">Flyers / Handouts</option><option value="stickers">Die-Cut Stickers</option><option value="photos">Photo Prints</option><option value="craft">Custom Craft / Gift Set</option></select>
          <p class="text-xs muted mt-2">Examples only—not fixed shop rates. Adjust every amount to match your actual costs.</p>
         </div>
-        <div class="mb-5 rounded-xl p-4" style="background:var(--subtle);border:1px solid var(--line)">
+        <div id="pricing-how-it-works" class="mb-5 rounded-xl p-4" style="background:var(--subtle);border:1px solid var(--line)">
          <strong class="text-sm">How this works</strong>
          <p class="text-sm muted mt-1">List each material you buy: the pack price, how many sheets come in a pack, and how many finished pieces one sheet makes. The calculator works out the cost per piece and for the whole job. Unrounded costs stay accurate internally and round up at the end of the calculation order.</p>
         </div>
@@ -329,7 +339,7 @@
          <div><label class="field-label" for="price-unit">Product unit</label><select id="price-unit" class="field"><option value="piece">Piece</option><option value="sheet">Sheet</option><option value="set">Set</option><option value="pack">Pack</option><option value="copy">Copy</option><option value="page">Page</option><option value="pair">Pair</option><option value="roll">Roll</option><option value="meter">Meter</option><option value="bundle">Bundle</option><option value="box">Box</option><option value="lot">Lot / Bulk order</option><option value="service">Service</option><option value="other">Other</option></select><input id="price-unit-custom" class="field mt-2" maxlength="30" placeholder="Enter your own unit" hidden></div>
          <div class="sm:col-span-2"><label class="field-label" for="price-remarks">Remarks / pricing notes (optional)</label><textarea id="price-remarks" class="field" rows="2" maxlength="500" placeholder="Special instructions, pricing assumptions, or notes"></textarea></div>
          <div><label class="field-label" for="price-quantity">Quantity in this job</label><input id="price-quantity" class="field price-input" type="number" min="1" step="1" value="100" required=""></div>
-         <div>
+         <div id="pricing-rate-mode-wrap">
           <label class="field-label" for="price-rate-mode">Pricing mode</label>
           <select id="price-rate-mode" class="field price-input">
            <option value="markup">Markup (% on cost)</option>
@@ -344,6 +354,16 @@
           </div>
          </div>
         </div>
+
+        <section id="basic-cost-fields" class="mt-6 rounded-xl p-4" style="border:1px solid var(--line)" hidden>
+         <div class="mb-3"><h2 class="section-title" style="font-size:19px">Estimated costs</h2><p class="text-xs muted mt-1">Enter your best estimates for this job. These amounts are for pricing only and will not change your stock.</p></div>
+         <div class="grid sm:grid-cols-2 gap-4">
+          <div><label class="field-label" for="basic-material-cost">Estimated materials &amp; supplies</label><input id="basic-material-cost" class="field basic-cost-input" type="number" min="0" step="0.01" value="0" placeholder="e.g. 150"></div>
+          <div><label class="field-label" for="basic-labor-cost">Estimated labor</label><input id="basic-labor-cost" class="field basic-cost-input" type="number" min="0" step="0.01" value="0" placeholder="e.g. 100"></div>
+          <div><label class="field-label" for="basic-other-cost">Other estimated costs</label><input id="basic-other-cost" class="field basic-cost-input" type="number" min="0" step="0.01" value="0" placeholder="e.g. 30"></div>
+         </div>
+         <p class="text-xs muted mt-3">You can change these estimates whenever you learn more about your actual costs.</p>
+        </section>
 
         <section id="recipe-section" class="mt-6" aria-labelledby="recipe-title">
          <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
@@ -1454,7 +1474,7 @@
     return {from,to,preset};
   }
   function renderDashboard(){
-    $('metric-products').textContent=products.filter(p=>p.active!==false).length;
+    $('metric-products').textContent=products.filter(p=>(p.status||'active')==='active').length;
     const range=dashboardRange(),{from,to}=range,within=date=>{const d=String(date||'').slice(0,10);return d>=from&&d<=to};
     const dateLabel=from===to?dateText(from):`${dateText(from)} – ${dateText(to)}`;
     $('dash-period').textContent=dateLabel+' · report figures';
@@ -1808,14 +1828,41 @@
   const SNAP_IDS = ['price-name','price-sku','price-unit','price-unit-custom','price-remarks','price-manual-unit-price','labor-calculation-mode','labor-print-rate','labor-print-minutes','labor-cut-rate','labor-cut-minutes','labor-pack-rate','labor-pack-minutes','labor-layout-rate','labor-layout-minutes','price-quantity','price-rate-mode','price-margin','price-tier-discount','cost-waste','price-min-override','owner-hourly-rate','owner-labor-hours','staff-labor-cost','cost-electricity','cost-machine','cost-other'];
   function getPriceUnit(){ return $('price-unit').value==='other' ? ($('price-unit-custom').value.trim()||'other') : $('price-unit').value; }
   $('price-unit').addEventListener('change',()=>{ $('price-unit-custom').hidden=$('price-unit').value!=='other'; if($('price-unit').value==='other') $('price-unit-custom').focus(); });
+  let costingMode = settings.costingMode === 'advanced' ? 'advanced' : 'basic';
+  function setCostingMode(mode, persist=true){
+    costingMode = mode === 'advanced' ? 'advanced' : 'basic';
+    const basic = costingMode === 'basic';
+    $('cost-mode-basic').className = basic ? 'primary' : 'secondary';
+    $('cost-mode-advanced').className = basic ? 'secondary' : 'primary';
+    $('cost-mode-basic').setAttribute('aria-pressed',String(basic));
+    $('cost-mode-advanced').setAttribute('aria-pressed',String(!basic));
+    $('cost-mode-description').textContent = basic
+      ? 'Basic Mode uses estimated costs only. It does not connect to or change your inventory.'
+      : 'Advanced Mode shows detailed material recipes, saved material prices, labor, waste, and overhead. Inventory is not changed by calculations.';
+    $('pricing-template-wrap').hidden = basic;
+    $('pricing-rate-mode-wrap').hidden = basic;
+    $('pricing-how-it-works').hidden = basic;
+    $('recipe-section').hidden = basic;
+    $('pricing-advanced').hidden = basic;
+    $('basic-cost-fields').hidden = !basic;
+    calculatePricing();
+    if(persist){settings={...settings,costingMode};saveLegacy('settings',settings)}
+  }
+  $('cost-mode-basic').addEventListener('click',()=>setCostingMode('basic'));
+  $('cost-mode-advanced').addEventListener('click',()=>setCostingMode('advanced'));
+
   function snapshotForm(){
     const v = {}; SNAP_IDS.forEach(id=>v[id]=$(id).value);
     v.laborOn = $('include-owner-labor').checked; v.wholeSheets = $('recipe-whole-sheets').checked;
+    v.costingMode = costingMode;
+    ['basic-material-cost','basic-labor-cost','basic-other-cost'].forEach(id=>v[id]=$(id).value);
     v.rows = recipeRows.map(r=>{ const c={...r}; if(c.type==='material'&&c.libId){ const m=materials.find(x=>x.id===c.libId); if(m){ c.name=m.name; c.packPrice=String(m.packPrice); c.packQty=String(m.packQty) } } return c });
     return v;
   }
   function applySnapshot(v){
     SNAP_IDS.forEach(id=>{ if(v[id]!==undefined) $(id).value=v[id] });
+    ['basic-material-cost','basic-labor-cost','basic-other-cost'].forEach(id=>{ if(v[id]!==undefined) $(id).value=v[id] });
+    setCostingMode(v.costingMode || 'advanced',false);
     if(v['price-unit'] && !Array.from($('price-unit').options).some(o=>o.value===v['price-unit'])){ $('price-unit').value='other'; $('price-unit-custom').value=v['price-unit']; }
     $('price-unit-custom').hidden=$('price-unit').value!=='other';
     $('include-owner-labor').checked = Boolean(v.laborOn); $('recipe-whole-sheets').checked = Boolean(v.wholeSheets); $('task-labor-fields').hidden=$('labor-calculation-mode').value!=='tasks'; $('owner-hourly-rate').closest('div').hidden=$('labor-calculation-mode').value==='tasks'; $('owner-labor-hours').closest('div').hidden=$('labor-calculation-mode').value==='tasks';
@@ -1846,6 +1893,30 @@
   document.querySelectorAll('[data-view="pricing"]').forEach(btn=>btn.addEventListener('click', renderSaved));
 
   function calculatePricing(){
+    if(costingMode === 'basic'){
+      const qty = Number($('price-quantity').value);
+      const materials = Number($('basic-material-cost').value || 0);
+      const labor = Number($('basic-labor-cost').value || 0);
+      const other = Number($('basic-other-cost').value || 0);
+      const rate = Number($('price-margin').value || 0);
+      const cost = materials + labor + other;
+      const valid = Number.isFinite(qty) && qty > 0 && Number.isFinite(cost) && cost >= 0 && Number.isFinite(rate) && rate >= 0 && rate <= 99.99;
+      const total = valid ? cost * (1 + rate / 100) : 0;
+      const unit = valid ? total / qty : 0;
+      const profit = valid ? total - cost : 0;
+      const perUnitCost = valid ? cost / qty : 0;
+      const margin = total > 0 ? profit / total * 100 : 0;
+      $('price-rate-label').textContent = 'Estimated markup (% on cost)';
+      $('pricing-results').innerHTML = [
+        ['Estimated materials & supplies',money(materials)],['Estimated labor',money(labor)],['Other estimated costs',money(other)],
+        ['Estimated total cost (job)',money(cost)],['Estimated cost per '+esc(getPriceUnit()||'unit'),money(perUnitCost)],
+        ['Estimated selling total',money(total)],['Suggested selling price per '+esc(getPriceUnit()||'unit'),money(unit)],
+        ['Estimated profit',money(profit)],['Estimated profit margin',margin.toFixed(2)+'%']
+      ].map(([a,b])=>lineRow(a,valid?b:'—')).join('') + '<div class="notice mt-4 text-sm" role="status"><strong>Estimate only.</strong> No inventory quantities or stock movements are changed.</div>';
+      const parts=[['Materials',materials],['Labor',labor],['Other',other]], max=Math.max(1,...parts.map(x=>x[1]));
+      $('pricing-cost-chart').innerHTML='<p class="text-sm font-semibold mb-2">Estimated cost breakdown</p>'+parts.map(([label,val])=>`<div class="mb-2"><div class="flex justify-between text-xs mb-1"><span>${label}</span><strong>${money(val)}</strong></div><div style="height:9px;background:var(--subtle);border-radius:99px;overflow:hidden"><div style="height:100%;width:${Math.max(0,val/max*100)}%;background:var(--accent);border-radius:99px"></div></div></div>`).join('');
+      return {valid,cost,total,profit,unit,retail:unit,quantity:qty,finalBatchTotal:total};
+    }
     syncLaborFields();
     syncRecipeTotals();
     const qty = Number($('price-quantity').value);
@@ -1990,7 +2061,7 @@
       finalBatchTotal
     };
   }
-  document.querySelectorAll('.price-input').forEach(el=>el.addEventListener('input',calculatePricing));
+  document.querySelectorAll('.price-input,.basic-cost-input').forEach(el=>el.addEventListener('input',calculatePricing));
   document.querySelectorAll('.markup-preset').forEach(btn=>btn.addEventListener('click',()=>{if(btn.dataset.markup==='custom'){$('price-margin').focus();$('price-margin').select();return}$('price-margin').value=btn.dataset.markup;calculatePricing()}));
   const pricingExamples={
     flyers:{name:'Flyers / Handouts',quantity:100,values:{'cost-paper':120,'cost-ink':90,'cost-material':0,'cost-packaging':15,'cost-waste':2,'cost-electricity':20,'cost-machine':15,'cost-other':0}},
@@ -2017,12 +2088,13 @@
     });
     recipeRows=rows;renderRecipe();calculatePricing();
   });
+  setCostingMode(costingMode,false);
   $('pricing-form').onsubmit=e=>{
     e.preventDefault();
     const r=calculatePricing(),name=$('price-name').value.trim();
     if(!name){showError('pricing-error','Enter a product or service name.');return}
     if(!r.valid)return;
-    const next=[{id:uid(),name,sku:$('price-sku').value.trim(),unitLabel:getPriceUnit()||'piece',remarks:$('price-remarks').value.trim(),sales:r.total,expenses:r.cost,profit:r.profit,at:now(),unit:r.unit,quantity:r.quantity,snap:snapshotForm()},...recent].slice(0,20);
+    const next=[{id:uid(),name,sku:$('price-sku').value.trim(),unitLabel:getPriceUnit()||'piece',remarks:$('price-remarks').value.trim(),sales:r.total,expenses:r.cost,profit:r.profit,at:now(),unit:r.unit,quantity:r.quantity,costingMode,snap:snapshotForm()},...recent].slice(0,20);
     if(saveLegacy('recent',next)){recent=next;renderDashboard();renderSaved();notify('Calculation saved.')}
   };
   $('pricing-to-product').onclick=()=>{
