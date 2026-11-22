@@ -101,6 +101,26 @@
       .workspace-toolbar{margin-bottom:10px}
       .workspace-signout{min-height:38px;padding:8px 12px}
     }
+
+    /* Fluid sizing: let the interface and its text adapt to the available screen width. */
+    html{font-size:clamp(14px,calc(13px + .22vw),16px);-webkit-text-size-adjust:100%;text-size-adjust:100%}
+    body{font-size:1rem}
+    .sidebar{width:clamp(210px,19vw,250px)}
+    @media(min-width:851px){
+      .sidebar{width:clamp(210px,19vw,250px);min-width:clamp(210px,19vw,250px);flex-basis:clamp(210px,19vw,250px)}
+      .workspace{padding-left:clamp(16px,2.5vw,40px);padding-right:clamp(16px,2.5vw,40px)}
+    }
+    .page-heading{font-size:clamp(25px,2.5vw,38px)!important;line-height:1.15}
+    .section-title{font-size:clamp(18px,1.65vw,23px)!important}
+    .field,.field-label,.primary,.secondary,.danger,.nav-button,.workspace-signout{font-size:clamp(13px,calc(12px + .22vw),15px)}
+    .nav-group-label,.eyebrow,.pill,.site-footer{font-size:clamp(10px,calc(9px + .12vw),12px)}
+    @media(max-width:650px){
+      html{font-size:14px}
+      .workspace{padding-left:clamp(12px,3vw,18px);padding-right:clamp(12px,3vw,18px)}
+      .page-heading{font-size:clamp(23px,6vw,30px)!important}
+      .section-title{font-size:clamp(18px,4.5vw,21px)!important}
+      .field,.field-label,.primary,.secondary,.danger{font-size:14px}
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.577.0/dist/umd/lucide.min.js" type="text/javascript"></script>
   <script src="https://cdn.tailwindcss.com/3.4.17" type="text/javascript"></script>
