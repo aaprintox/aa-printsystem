@@ -5,13 +5,6 @@
   <title>AA PrintSystem | Printing Shop Management</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&amp;family=Fraunces:wght@600;700&amp;display=swap" rel="stylesheet">
   <style>
-
-    .main-topbar{width:100%;max-width:1230px;margin:0 auto 18px;display:flex;align-items:center;justify-content:flex-end;gap:16px;flex:none}
-    .main-tagline{margin:0;color:var(--muted);font-size:12px;line-height:1.4}
-    .main-signout{display:inline-flex;align-items:center;gap:8px;white-space:nowrap;padding:9px 13px;border-radius:10px}
-    .main-signout svg{width:16px;height:16px}
-    @media (min-width:851px){.sidebar{width:242px;min-width:242px;flex:0 0 242px;overflow-y:auto}.sidebar-navigation{overflow:visible;flex:none}.workspace{min-width:0}.main-topbar{margin-bottom:18px}}
-    @media (max-width:850px){.main-topbar{margin-bottom:14px;gap:10px}.main-tagline{font-size:11px}.main-signout{padding:8px 10px}}
     :root{--page:#f7f4ed;--surface:#fff;--sidebar:#e8eee3;--ink:#24352e;--muted:#586b63;--line:#e3e7de;--field:#fcfcf9;--accent:#456c5a;--accent-text:#fff;--accent-deep:#254739;--subtle:#edf2e9;--highlight:#e8eee3;--danger:#a64037;--focus:#af8b47}
     *{box-sizing:border-box}html,body{width:100%;margin:0}html:not(.authenticated) body{visibility:hidden}body{background:var(--page);color:var(--ink);font-family:"DM Sans",sans-serif}h1,h2,h3,.brand,.metric{font-family:Fraunces,serif;letter-spacing:-.035em}button{cursor:pointer}button:disabled{opacity:.55;cursor:not-allowed}[hidden]{display:none!important}
     button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
@@ -71,9 +64,28 @@
       .sidebar{width:242px;flex:0 0 242px;min-width:242px;position:sticky;top:0;height:100dvh;max-height:100dvh;overflow:hidden;display:flex;gap:14px;padding:18px 12px}
       .sidebar>div:first-child{flex:none;min-height:42px}
       .sidebar-navigation{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;gap:10px;padding:0 2px}
+      .sidebar #logout-button{flex:none;margin-top:auto!important}
+      .sidebar>p{flex:none;margin-top:0!important;padding-bottom:4px}
       #menu-close{display:none}
       .workspace{width:auto;flex:1 1 auto;min-width:0;height:auto;min-height:100dvh;overflow:visible}
       .content-width{height:auto;min-height:0;overflow:visible;flex:1 0 auto}
+    }
+    /* At browser zoom or smaller laptop widths, use a slim icon menu. */
+    @media (min-width:851px) and (max-width:1100px){
+      .sidebar{width:76px;min-width:76px;flex-basis:76px;padding:14px 8px;gap:12px;align-items:stretch}
+      .sidebar>div:first-child{justify-content:center!important;padding:0!important}
+      .sidebar>div:first-child .brand{font-size:0;letter-spacing:0}
+      .sidebar>div:first-child .brand:before{content:'AA';font-size:25px;letter-spacing:-1px}
+      .sidebar>div:first-child .brand-dot{display:none}
+      .sidebar #menu-close{display:none}
+      .sidebar-navigation{gap:9px}
+      .nav-group-label{display:none}
+      .nav-button{width:48px;min-height:44px;height:44px;margin:0 auto;padding:0;justify-content:center;gap:0;font-size:0;border-radius:12px}
+      .nav-button svg{width:20px;height:20px}
+      .nav-button span{display:none}
+      .sidebar #logout-button{width:48px!important;min-height:44px;padding:0!important;justify-content:center!important;font-size:0}
+      .sidebar #logout-button span{display:none}
+      .sidebar>p{display:none}
     }
     /* Phones and very narrow windows use a slide-out menu. */
     @media (max-width:650px){
@@ -83,6 +95,8 @@
       .sidebar{position:fixed;top:0;bottom:0;left:0;width:min(290px,86vw);height:100dvh;max-height:100dvh;overflow:hidden;display:flex;gap:14px;padding:18px 14px;transform:translateX(-105%);z-index:25}
       .sidebar.open{transform:translateX(0)}
       .sidebar-navigation{flex:1 1 auto;min-height:0;overflow-y:auto;gap:12px}
+      .sidebar #logout-button{flex:none;margin-top:auto!important}
+      .sidebar>p{flex:none;margin-top:0!important}
       .workspace{width:100%;height:auto;min-height:calc(100dvh - 56px);overflow:visible;padding:18px 14px 10px}
       .content-width{height:auto;min-height:0;overflow:visible;padding-bottom:20px}
     }
@@ -91,6 +105,7 @@
       .sidebar-navigation{gap:5px}
       .nav-button{min-height:30px;padding-top:5px;padding-bottom:5px}
       .nav-group-label{margin-bottom:1px}
+      .sidebar>p{display:none}
     }
 </style>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.577.0/dist/umd/lucide.min.js" type="text/javascript"></script>
@@ -135,12 +150,10 @@
       <button type="button" class="nav-button" data-view="appearance"><i data-lucide="palette"></i><span data-template-id="nav-appearance" class="canva-text" style="font-weight: 400; font-style: normal; font-size: 15px;">Appearance &amp; Themes</span></button>
      </div>
     </nav>
+    <button id="logout-button" type="button" class="nav-button" style="width:100%;margin-top:8px;justify-content:flex-start"><i data-lucide="log-out"></i><span>Sign Out</span></button>
+    <p class="mt-auto px-3 text-xs muted">A little more clarity for every print job.</p>
    </aside>
    <main class="workspace">
-    <div class="main-topbar">
-     <p class="main-tagline">A little more clarity for every print job.</p>
-     <button id="logout-button" type="button" class="secondary main-signout"><i data-lucide="log-out"></i><span>Sign Out</span></button>
-    </div>
     <div class="content-width">
      <section id="view-dashboard" class="view">
       <header class="mb-8">
@@ -381,7 +394,7 @@
         <div class="flex justify-between gap-3 mb-5">
          <h2 class="section-title">Your catalogue</h2><span id="catalogue-count" class="pill"></span>
         </div><label for="product-search" class="field-label">Search products or categories</label><input id="product-search" class="field mb-5" type="search">
-        <div id="product-list"></div>
+        <div id="product-list"></div><div id="product-pagination" class="mt-4"></div>
        </section>
       </div>
      </section>
@@ -514,8 +527,8 @@
       <header class="mb-7"><p class="eyebrow">SUPPLIES CONTROL</p><h1 class="page-heading">Inventory</h1><p class="muted">Manage paper, ink, laminating film, and other shop supplies.</p></header>
       <div class="panel p-6 mb-5"><h2 class="section-title mb-4">Add inventory item</h2><form id="inventory-form" class="grid md:grid-cols-3 gap-4"><div><label class="field-label" for="iv-name">Item name</label><input class="field" id="iv-name" maxlength="100" placeholder="e.g. A4 sticker paper" required></div><div><label class="field-label" for="iv-category">Category</label><input class="field" id="iv-category" maxlength="60" placeholder="Paper, Ink, Packaging"></div><div><label class="field-label" for="iv-unit">Counted as</label><input class="field" id="iv-unit" maxlength="20" list="iv-unit-options" placeholder="Sheets, bottles, rolls, pieces" required><datalist id="iv-unit-options"><option value="sheets"><option value="reams"><option value="rolls"><option value="bottles"><option value="pieces"><option value="packs"><option value="boxes"><option value="sets"></datalist><p class="muted text-xs mt-1">Choose the unit you normally use to count this item.</p></div><div><label class="field-label" for="iv-quantity">Starting quantity</label><input class="field" id="iv-quantity" type="number" min="0" step="0.01" placeholder="e.g. 100" required></div><div><label class="field-label" for="iv-reorder">Alert me when stock reaches</label><input class="field" id="iv-reorder" type="number" min="0" step="0.01" value="5" required></div><div><label class="field-label" for="iv-cost">Cost per unit (₱)</label><input class="field" id="iv-cost" type="number" min="0" step="0.01" value="0" required></div><div class="md:col-span-3"><button class="primary" type="submit">Add item</button></div></form></div>
       <div class="panel p-6 mb-5"><h2 class="section-title mb-1">Update stock quantity</h2><p class="muted text-sm mb-4">Use Stock In when supplies arrive. Use Stock Out when supplies are used. Stock is not deducted automatically from orders.</p><form id="iv-adjust-form" class="grid md:grid-cols-2 gap-4"><div class="md:col-span-2"><label class="field-label" for="iv-adjust-item">Which item are you updating?</label><select class="field" id="iv-adjust-item" required><option value="">Select an inventory item</option></select></div><div class="md:col-span-2"><span class="field-label">What happened?</span><div class="flex gap-2 flex-wrap"><button class="primary" type="button" id="iv-stock-in">＋ Stock In</button><button class="secondary" type="button" id="iv-stock-out">− Stock Out</button></div><input id="iv-adjust-type" type="hidden" value="in"></div><div class="md:col-span-2 grid sm:grid-cols-2 gap-3"><div class="panel p-3"><span class="muted text-xs">CURRENT STOCK</span><div id="iv-current-stock" class="text-xl font-semibold">Select an item</div></div><div class="panel p-3"><span class="muted text-xs">NEW STOCK AFTER UPDATE</span><div id="iv-new-stock" class="text-xl font-semibold">—</div></div></div><div><label class="field-label" for="iv-adjust-qty">How many units?</label><input class="field" id="iv-adjust-qty" type="number" min="0.01" step="0.01" placeholder="Enter quantity" required><p id="iv-quantity-help" class="muted text-xs mt-1">Enter the number of units to add.</p></div><div><label class="field-label" for="iv-adjust-reason">Reason</label><select class="field" id="iv-adjust-reason" required><option value="">Choose a reason</option><option>New supply purchase / Restock</option><option>Used for customer order</option><option>Damaged / Expired</option><option>Personal / Internal use</option><option>Stock count correction</option><option>Other</option></select></div><div id="iv-other-reason-wrap" class="md:col-span-2" hidden><label class="field-label" for="iv-other-reason">Please specify</label><input class="field" id="iv-other-reason" maxlength="200" placeholder="Enter the reason"></div><div id="iv-order-wrap" class="md:col-span-2" hidden><label class="field-label" for="iv-adjust-order">Link to customer order (optional)</label><select class="field" id="iv-adjust-order"><option value="">No linked order</option></select></div><div class="md:col-span-2"><button class="primary" type="submit">Save stock update</button></div></form></div>
-      <div class="panel p-6 mb-5"><h2 class="section-title mb-4">Current stock</h2><div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr><th class="text-left p-2">Item</th><th class="text-right p-2">Current quantity</th><th class="text-left p-2">Status</th><th class="text-right p-2">Quick update</th><th></th></tr></thead><tbody id="iv-list"></tbody></table></div></div>
-      <details class="panel p-6"><summary class="section-title cursor-pointer">Stock movement history</summary><p class="muted text-sm mt-2 mb-4">A record of every stock-in and stock-out update.</p><div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr><th class="text-left p-2">Date</th><th class="text-left p-2">Item</th><th class="text-left p-2">Movement</th><th class="text-right p-2">Quantity</th><th class="text-left p-2">Order</th><th class="text-left p-2">Reason</th></tr></thead><tbody id="iv-movement-list"></tbody></table></div></details>
+      <div class="panel p-6 mb-5"><h2 class="section-title mb-4">Current stock</h2><div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr><th class="text-left p-2">Item</th><th class="text-right p-2">Current quantity</th><th class="text-left p-2">Status</th><th class="text-right p-2">Quick update</th><th></th></tr></thead><tbody id="iv-list"></tbody></table></div><div id="iv-pagination" class="mt-4"></div></div>
+      <details class="panel p-6"><summary class="section-title cursor-pointer">Stock movement history</summary><p class="muted text-sm mt-2 mb-4">A record of every stock-in and stock-out update.</p><div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr><th class="text-left p-2">Date</th><th class="text-left p-2">Item</th><th class="text-left p-2">Movement</th><th class="text-right p-2">Quantity</th><th class="text-left p-2">Order</th><th class="text-left p-2">Reason</th></tr></thead><tbody id="iv-movement-list"></tbody></table></div><div id="iv-movement-pagination" class="mt-4"></div></details>
      </section>
      <section id="view-orders" class="view" hidden="">
       <header class="mb-7">
@@ -613,7 +626,7 @@
            <label class="field-label" for="order-to">Order date to</label><input id="order-to" class="field" type="date">
           </div>
          </div>
-         <div id="order-list" class="table-scroll"></div>
+         <div id="order-list" class="table-scroll"></div><div id="order-pagination" class="mt-4"></div>
         </section>
        </div>
 
@@ -1254,9 +1267,11 @@
     const term=$('order-search').value.toLowerCase().trim(),status=$('order-filter').value,from=$('order-from').value,to=$('order-to').value;
     let shown=repo.orders.filter(d=>(!status||d.status===status)&&(!from||d.orderDate>=from)&&(!to||d.orderDate<=to)&&`${d.reference} ${displayName(d)} ${displayPhone(d)} ${d.items.map(i=>i.name).join(' ')}`.toLowerCase().includes(term));
     const sort=$('order-sort').value;shown.sort((a,b)=>sort==='oldest'?a.createdAt.localeCompare(b.createdAt):sort==='pickup'?a.pickupDate.localeCompare(b.pickupDate):sort==='total'?b.total-a.total:b.createdAt.localeCompare(a.createdAt));
-    $('order-list').innerHTML=shown.length?`<table class="order-table"><thead><tr><th>Reference / customer</th><th>Services</th><th>Order / pickup</th><th>Total / balance</th><th>Status / payment</th><th>Details</th></tr></thead><tbody>${shown.map(d=>`<tr><td><strong>${esc(d.reference)}</strong><br>${esc(displayName(d))}</td><td>${esc(d.items.map(i=>`${i.name} × ${i.quantity}`).join(', '))}</td><td>${esc(dateText(d.orderDate))}<br>${esc(dateText(d.pickupDate))}</td><td>${esc(money(d.total))}<br>${esc(money(balance(d)))} balance</td><td><span class="pill">${esc(d.status)}</span><br><span class="text-xs">${esc(paymentStatus(d))}</span></td><td><button class="secondary" type="button" data-open-order="${esc(d.id)}">Open</button></td></tr>`).join('')}</tbody></table>`:'<p class="text-sm muted py-5">No matching orders. Adjust the filters or create an order above.</p>'
+    const page=pageSlice(shown,'orders');
+    $('order-list').innerHTML=page.items.length?`<table class="order-table"><thead><tr><th>Reference / customer</th><th>Services</th><th>Order / pickup</th><th>Total / balance</th><th>Status / payment</th><th>Details</th></tr></thead><tbody>${page.items.map(d=>`<tr><td><strong>${esc(d.reference)}</strong><br>${esc(displayName(d))}</td><td>${esc(d.items.map(i=>`${i.name} × ${i.quantity}`).join(', '))}</td><td>${esc(dateText(d.orderDate))}<br>${esc(dateText(d.pickupDate))}</td><td>${esc(money(d.total))}<br>${esc(money(balance(d)))} balance</td><td><span class="pill">${esc(d.status)}</span><br><span class="text-xs">${esc(paymentStatus(d))}</span></td><td><button class="secondary" type="button" data-open-order="${esc(d.id)}">Open</button></td></tr>`).join('')}</tbody></table>`:'<p class="text-sm muted py-5">No matching orders. Adjust the filters or create an order above.</p>';
+    renderPagination('order-pagination','orders',page.total,page.page,page.pages);
   }
-  ['order-search','order-filter','order-sort','order-from','order-to'].forEach(id=>$(id).addEventListener(['order-search'].includes(id)?'input':'change',renderOrderList));
+  ['order-search','order-filter','order-sort','order-from','order-to'].forEach(id=>$(id).addEventListener(['order-search'].includes(id)?'input':'change',()=>{listPages.orders=1;renderOrderList()}));
   $('order-list').onclick=e=>{const b=e.target.closest('[data-open-order]');if(b){selectedId=b.dataset.openOrder;renderDetail();setView('order-detail')}};
   function renderDetail(){
     const d=selected();$('detail-empty').hidden=!!d;$('order-detail').hidden=!d;if(!d)return;
@@ -1833,10 +1848,36 @@
     const m=(price-cost)/price*100;
     return m<targetMargin()?`<span class="error font-bold">Margin ${pctText(m)} · below ${targetMargin()}% target</span>`:`<span class="font-bold">Margin ${pctText(m)}</span>`;
   }
+  const PAGE_SIZE=15;
+  const listPages={products:1,orders:1,inventory:1,movements:1};
+  function pageSlice(items,key){
+    const pages=Math.max(1,Math.ceil(items.length/PAGE_SIZE));
+    listPages[key]=Math.min(Math.max(1,listPages[key]||1),pages);
+    const start=(listPages[key]-1)*PAGE_SIZE;
+    return {items:items.slice(start,start+PAGE_SIZE),total:items.length,page:listPages[key],pages};
+  }
+  function renderPagination(target,key,total,page,pages){
+    const el=$(target);if(!el)return;
+    if(total<=PAGE_SIZE){el.innerHTML='';return;}
+    const start=(page-1)*PAGE_SIZE+1,end=Math.min(page*PAGE_SIZE,total);
+    el.innerHTML=`<div class="flex flex-wrap items-center justify-between gap-3 text-sm"><span class="muted">Showing ${start}–${end} of ${total}</span><div class="flex items-center gap-2"><button type="button" class="secondary" data-page-list="${key}" data-page="${page-1}" ${page===1?'disabled':''}>Previous</button><span class="muted">Page ${page} of ${pages}</span><button type="button" class="secondary" data-page-list="${key}" data-page="${page+1}" ${page===pages?'disabled':''}>Next</button></div></div>`;
+  }
+  document.addEventListener('click',e=>{
+    const button=e.target.closest('[data-page-list]');if(!button)return;
+    const key=button.dataset.pageList,next=Number(button.dataset.page);
+    if(!Number.isFinite(next)||next<1)return;
+    listPages[key]=next;
+    if(key==='products')renderProducts();
+    else if(key==='orders')renderOrderList();
+    else if(key==='inventory'||key==='movements')renderInventory();
+  });
+
   function renderProducts(){
     const query=$('product-search').value.toLowerCase().trim(),shown=products.filter(p=>`${p.name} ${p.category} ${p.sku||''}`.toLowerCase().includes(query));
     $('catalogue-count').textContent=`${shown.length} item${shown.length===1?'':'s'}`;
-    $('product-list').innerHTML=shown.length?shown.map(p=>`<article class="item-row mb-2" data-product-id="${esc(p.id)}"><strong>${esc(p.name)}</strong>${p.sku?`<span class="pill ml-2">${esc(p.sku)}</span>`:''}<span class="pill ml-2">${esc(p.category)}</span><p class="text-xs muted my-2">Total cost ${esc(exactMoney(p.cost))} · Selling ${esc(money(p.price))} / ${esc(p.unit||'unit')} · ${marginBadge(p)}</p><div class="flex flex-wrap gap-2"><button type="button" data-product-action="edit" class="secondary">Edit</button><button type="button" data-product-action="delete" class="danger">Delete</button></div></article>`).join(''):'<p class="text-sm muted py-5">No matching products. Add one using the form.</p>';
+    const page=pageSlice(shown,'products');
+    $('product-list').innerHTML=page.items.length?page.items.map(p=>`<article class="item-row mb-2" data-product-id="${esc(p.id)}"><strong>${esc(p.name)}</strong>${p.sku?`<span class="pill ml-2">${esc(p.sku)}</span>`:''}<span class="pill ml-2">${esc(p.category)}</span><p class="text-xs muted my-2">Total cost ${esc(exactMoney(p.cost))} · Selling ${esc(money(p.price))} / ${esc(p.unit||'unit')} · ${marginBadge(p)}</p><div class="flex flex-wrap gap-2"><button type="button" data-product-action="edit" class="secondary">Edit</button><button type="button" data-product-action="delete" class="danger">Delete</button></div></article>`).join(''):'<p class="text-sm muted py-5">No matching products. Add one using the form.</p>';
+    renderPagination('product-pagination','products',page.total,page.page,page.pages);
     renderCatalogueHealth();
   }
   function updateProductMarginPreview(){
@@ -1888,7 +1929,7 @@
     if(existing)Object.assign(existing,{name,sku,unit,category,cost,price});else next.unshift({id:uid(),name,sku,unit,category,cost,price});
     if(saveLegacy('products',next)){products=next;resetProduct();renderProducts();renderDashboard();renderQuote();renderOrderLines();notify(existing?'Product updated.':'Product saved.')}
   };
-  $('product-search').oninput=renderProducts;
+  $('product-search').oninput=()=>{listPages.products=1;renderProducts()};
   $('product-list').onclick=e=>{
     const b=e.target.closest('[data-product-action]');if(!b)return;const p=products.find(p=>p.id===b.closest('[data-product-id]').dataset.productId);if(!p)return;
     if(b.dataset.productAction==='edit')startEditProduct(p);
@@ -1920,9 +1961,13 @@
     const itemOptions=moduleData.inventory.map(x=>`<option value="${esc(x.id)}">${esc(x.name)} · ${Number(x.quantity)} ${esc(x.unit)}</option>`).join('');
     const itemSelect=$('iv-adjust-item'),selectedItem=itemSelect.value;itemSelect.innerHTML='<option value="">Select an inventory item</option>'+itemOptions;if(moduleData.inventory.some(x=>x.id===selectedItem))itemSelect.value=selectedItem;
     const orderSelect=$('iv-adjust-order'),selectedOrder=orderSelect.value;orderSelect.innerHTML='<option value="">No linked order</option>'+repo.orders.filter(o=>o.status!=='Cancelled').map(o=>`<option value="${esc(o.id)}">${esc(o.reference)} · ${esc(displayName(o))}</option>`).join('');if(repo.orders.some(o=>o.id===selectedOrder&&o.status!=='Cancelled'))orderSelect.value=selectedOrder;
-    $('iv-list').innerHTML=moduleData.inventory.map(x=>`<tr class="border-t"><td class="p-2"><div class="font-semibold">${esc(x.name)}</div><div class="muted text-xs">${esc(x.category||'')}</div></td><td class="p-2 text-right font-semibold">${Number(x.quantity)} ${esc(x.unit)}</td><td class="p-2">${Number(x.quantity)<=Number(x.reorder)?'<span class="text-xs" style="color:var(--danger)">Low stock</span>':'<span class="text-xs" style="color:var(--success)">In stock</span>'}</td><td class="p-2 text-right"><button class="secondary" data-quick-stock="in" data-item="${esc(x.id)}">＋ In</button> <button class="secondary" data-quick-stock="out" data-item="${esc(x.id)}">− Out</button></td><td class="p-2 text-right"><button class="danger" data-delete-iv="${esc(x.id)}">Delete</button></td></tr>`).join('')||'<tr><td colspan="5" class="p-4 muted">No inventory items yet.</td></tr>';
+    const inventoryPage=pageSlice(moduleData.inventory,'inventory');
+    $('iv-list').innerHTML=inventoryPage.items.map(x=>`<tr class="border-t"><td class="p-2"><div class="font-semibold">${esc(x.name)}</div><div class="muted text-xs">${esc(x.category||'')}</div></td><td class="p-2 text-right font-semibold">${Number(x.quantity)} ${esc(x.unit)}</td><td class="p-2">${Number(x.quantity)<=Number(x.reorder)?'<span class="text-xs" style="color:var(--danger)">Low stock</span>':'<span class="text-xs" style="color:var(--success)">In stock</span>'}</td><td class="p-2 text-right"><button class="secondary" data-quick-stock="in" data-item="${esc(x.id)}">＋ In</button> <button class="secondary" data-quick-stock="out" data-item="${esc(x.id)}">− Out</button></td><td class="p-2 text-right"><button class="danger" data-delete-iv="${esc(x.id)}">Delete</button></td></tr>`).join('')||'<tr><td colspan="5" class="p-4 muted">No inventory items yet.</td></tr>';
+    renderPagination('iv-pagination','inventory',inventoryPage.total,inventoryPage.page,inventoryPage.pages);
     const movements=moduleData.inventory.flatMap(x=>(Array.isArray(x.movements)?x.movements:[]).map(m=>({...m,itemName:x.name,itemUnit:x.unit,itemId:x.id}))).sort((a,b)=>String(b.at||'').localeCompare(String(a.at||'')));
-    $('iv-movement-list').innerHTML=movements.map(m=>`<tr class="border-t"><td class="p-2">${esc(dateText(paymentDate({at:m.at})))}</td><td class="p-2">${esc(m.itemName)}</td><td class="p-2">${m.type==='in'?'Stock in':'Stock out'}</td><td class="p-2 text-right">${m.type==='in'?'+':'−'}${Number(m.quantity)} ${esc(m.itemUnit)}</td><td class="p-2">${esc(m.orderReference||'—')}</td><td class="p-2">${esc(m.reason)}</td></tr>`).join('')||'<tr><td colspan="6" class="p-4 muted">No stock movements recorded yet.</td></tr>';
+    const movementPage=pageSlice(movements,'movements');
+    $('iv-movement-list').innerHTML=movementPage.items.map(m=>`<tr class="border-t"><td class="p-2">${esc(dateText(paymentDate({at:m.at})))}</td><td class="p-2">${esc(m.itemName)}</td><td class="p-2">${m.type==='in'?'Stock in':'Stock out'}</td><td class="p-2 text-right">${m.type==='in'?'+':'−'}${Number(m.quantity)} ${esc(m.itemUnit)}</td><td class="p-2">${esc(m.orderReference||'—')}</td><td class="p-2">${esc(m.reason)}</td></tr>`).join('')||'<tr><td colspan="6" class="p-4 muted">No stock movements recorded yet.</td></tr>';
+    renderPagination('iv-movement-pagination','movements',movementPage.total,movementPage.page,movementPage.pages);
     updateInventoryPreview();
   }
   function updateInventoryPreview(){const item=moduleData.inventory.find(x=>x.id===$('iv-adjust-item').value),qty=Number($('iv-adjust-qty').value),type=$('iv-adjust-type').value;if(!item){$('iv-current-stock').textContent='Select an item';$('iv-new-stock').textContent='—';$('iv-quantity-help').textContent=type==='in'?'Enter the number of units to add.':'Enter the number of units to remove.';return}const current=Number(item.quantity)||0,valid=Number.isFinite(qty)&&qty>0,newQty=current+(type==='in'?qty:-qty);$('iv-current-stock').textContent=`${current} ${item.unit}`;$('iv-new-stock').textContent=valid?`${newQty} ${item.unit}`:`${current} ${item.unit}`;$('iv-quantity-help').textContent=type==='in'?`This will add to your ${item.unit}.`:`This will remove from your ${item.unit}.`;}
