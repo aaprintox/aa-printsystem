@@ -568,30 +568,29 @@
          <div class="result-row mt-3"><span>Total refunds</span><strong id="detail-refunded">₱0.00</strong></div>
          <div class="result-row"><span>Net amount received</span><strong id="detail-net-received">₱0.00</strong></div>
          <div id="refund-history" class="text-sm muted mt-3">No refunds recorded.</div>
-         <button id="show-refund-form" type="button" class="secondary mt-3">Record Refund</button>
-         <div id="refund-form" class="notice mt-3" hidden>
-          <h3 class="font-bold mb-3">Record partial refund</h3>
-          <div class="grid sm:grid-cols-2 gap-3">
-           <div><label class="field-label" for="refund-amount">Refund amount</label><input id="refund-amount" class="field" type="number" min="0.01" step="0.01" inputmode="decimal"></div>
-           <div><label class="field-label" for="refund-method">Refund method</label><select id="refund-method" class="field"><option>Cash</option><option>GCash</option><option>Bank Transfer</option><option>Other</option></select></div>
-           <div class="sm:col-span-2"><label class="field-label" for="refund-reason">Reason / notes</label><input id="refund-reason" class="field" maxlength="250" placeholder="Reason for refund"></div>
-          </div>
-          <div class="flex flex-wrap gap-2 mt-3"><button id="record-refund" type="button" class="primary">Confirm and save refund</button><button id="cancel-refund" type="button" class="secondary">Cancel</button></div>
-          <p class="text-xs muted mt-2">Refunds are recorded separately. Cancelling an order does not automatically issue a refund.</p>
-         </div>
          <p id="detail-instructions" class="text-sm mt-4"></p>
          <p id="detail-notes" class="text-sm muted mt-2"></p>
          <p id="detail-error" class="error text-sm mt-3" role="alert" hidden=""></p>
          <h3 class="font-bold mt-6 mb-2">Tracking timeline</h3>
          <ol id="detail-timeline" class="border-l-2 pl-5 space-y-3 text-sm" style="border-color:var(--line)"></ol>
          <div class="flex flex-wrap gap-2 mt-6">
-          <button id="edit-order" type="button" class="secondary">Edit order</button><button id="share-order" type="button" class="secondary">Share Order</button><button id="generate-notification" type="button" class="secondary">Generate Notification Again</button><button id="copy-order-ref" type="button" class="secondary">Copy Order Reference</button><button id="print-order" type="button" class="secondary">Print receipt</button><button id="delete-order" type="button" class="danger">Delete order</button>
+          <button id="edit-order" type="button" class="secondary">Edit order</button><button id="share-order" type="button" class="secondary">Share Order</button><button id="generate-notification" type="button" class="secondary">Generate Notification Again</button><button id="copy-order-ref" type="button" class="secondary">Copy Order Reference</button><button id="print-order" type="button" class="secondary">Print receipt</button><button id="cancel-order" type="button" class="secondary">Cancel order</button><button id="delete-order" type="button" class="danger">Delete order</button>
          </div>
          <div id="delete-confirmation" class="notice mt-4" hidden="">
-          <p class="mb-3">Permanently delete this selected order?</p>
-          <div class="flex gap-2">
-           <button id="confirm-delete" type="button" class="danger">Confirm delete</button><button id="keep-order" type="button" class="secondary">Keep order</button>
+          <p id="order-action-prompt" class="mb-3">Confirm this order action.</p>
+          <div id="cancellation-fields" class="space-y-3" hidden>
+           <div><label class="field-label" for="cancelled-by">Who initiated the cancellation? <span class="error">*</span></label><select id="cancelled-by" class="field"><option value="">Choose one</option><option value="Customer">Customer</option><option value="Owner">Owner</option></select></div>
+           <div><label class="field-label" for="cancellation-reason">Reason for cancellation <span class="error">*</span></label><select id="cancellation-reason" class="field"><option value="">Choose a reason</option><option>Customer changed their mind</option><option>Customer no longer needs the order</option><option>Customer requested cancellation due to delay</option><option>Payment or downpayment issue</option><option>Incorrect order details</option><option>Materials or supplies unavailable</option><option>Production or operational issue</option><option>Owner unable to fulfill the order</option><option value="Other">Other</option></select></div>
+           <div id="cancellation-other-wrap" hidden><label class="field-label" for="cancellation-other">Please explain <span class="error">*</span></label><textarea id="cancellation-other" class="field" rows="2" maxlength="500" placeholder="Explain the cancellation reason"></textarea></div>
+           <div><label class="field-label" for="cancel-refund-choice">Will the customer receive a refund?</label><select id="cancel-refund-choice" class="field"><option value="No">No</option><option value="Yes">Yes</option></select></div>
+           <div id="cancellation-refund-fields" class="grid sm:grid-cols-2 gap-3" hidden>
+            <div><label class="field-label" for="refund-amount">Refund amount</label><input id="refund-amount" class="field" type="number" min="0.01" step="0.01" inputmode="decimal"></div>
+            <div><label class="field-label" for="refund-method">Refund method</label><select id="refund-method" class="field"><option>Cash</option><option>GCash</option><option>Bank Transfer</option><option>Other</option></select></div>
+            <div class="sm:col-span-2"><label class="field-label" for="refund-reason">Refund notes</label><input id="refund-reason" class="field" maxlength="250" placeholder="Optional refund details"></div>
+           </div>
           </div>
+          <p id="order-action-error" class="error text-sm mt-2" role="alert" hidden></p>
+          <div class="flex gap-2 mt-3"><button id="confirm-delete" type="button" class="danger">Confirm</button><button id="keep-order" type="button" class="secondary">Go back</button></div>
          </div>
         </div>
       </div>
@@ -960,7 +959,7 @@
     const subtotal=items.reduce((sum,i)=>sum+cents(i.quantity*i.price),0)/100;
     const discount=Number(raw.discount||0);
     const total=Number.isFinite(Number(raw.total))?Number(raw.total):Math.max(0,subtotal-discount);
-    return {id:String(raw.id),reference:String(raw.reference),customerId:String(raw.customerId||''),customer:String(raw.customer||''),phone:String(raw.phone||''),orderDate:String(raw.orderDate||String(raw.createdAt||'').slice(0,10)||localDate()),pickupDate:String(raw.pickupDate||raw.date||''),date:String(raw.pickupDate||raw.date||''),createdAt:String(raw.createdAt||now()),updatedAt:String(raw.updatedAt||raw.createdAt||now()),items,subtotal,discount:Number.isFinite(discount)?discount:0,total,payments,refunds,status:statuses.includes(raw.status)?raw.status:'Pending',history:Array.isArray(raw.history)?raw.history.map(h=>({status:String(h.status||''),at:String(h.at||''),actor:String(h.actor||'Owner · local browser')})):[],instructions:String(raw.instructions||''),notes:String(raw.notes||''),notification:raw.notification&&typeof raw.notification==='object'?raw.notification:{},messages:raw.messages&&typeof raw.messages==='object'?raw.messages:{}};
+    return {id:String(raw.id),reference:String(raw.reference),customerId:String(raw.customerId||''),customer:String(raw.customer||''),phone:String(raw.phone||''),orderDate:String(raw.orderDate||String(raw.createdAt||'').slice(0,10)||localDate()),pickupDate:String(raw.pickupDate||raw.date||''),date:String(raw.pickupDate||raw.date||''),createdAt:String(raw.createdAt||now()),updatedAt:String(raw.updatedAt||raw.createdAt||now()),items,subtotal,discount:Number.isFinite(discount)?discount:0,total,payments,refunds,cancellation:raw.cancellation&&typeof raw.cancellation==='object'?{by:String(raw.cancellation.by||''),reason:String(raw.cancellation.reason||''),notes:String(raw.cancellation.notes||''),at:String(raw.cancellation.at||''),refundChoice:String(raw.cancellation.refundChoice||'No')}:null,status:statuses.includes(raw.status)?raw.status:'Pending',history:Array.isArray(raw.history)?raw.history.map(h=>({status:String(h.status||''),at:String(h.at||''),actor:String(h.actor||'Owner · local browser')})):[],instructions:String(raw.instructions||''),notes:String(raw.notes||''),notification:raw.notification&&typeof raw.notification==='object'?raw.notification:{},messages:raw.messages&&typeof raw.messages==='object'?raw.messages:{}};
   }
   function validateRepo(parsed){
     if(!parsed||typeof parsed!=='object'||parsed.version!==3||!Array.isArray(parsed.orders)||!Array.isArray(parsed.customers)||!parsed.counters||typeof parsed.counters!=='object')throw Error('The browser repository has an unsupported or malformed format.');
@@ -1165,12 +1164,12 @@
     $('detail-status').value=d.status;$('detail-status').disabled=d.status==='Cancelled';$('add-payment').disabled=d.status==='Cancelled'||balance(d)<=0;
     $('payment-history').innerHTML=d.payments.length?'<strong>Payment history</strong><br>'+d.payments.map(p=>`${esc(timeText(p.at))} · ${esc(p.method)} · ${esc(money(p.amount))}`).join('<br>'):'No payments recorded.';
     $('refund-history').innerHTML=d.refunds?.length?'<strong>Refund history</strong><br>'+d.refunds.map(r=>`${esc(timeText(r.at))} · ${esc(r.method)} · ${esc(money(r.amount))}${r.reason?' · '+esc(r.reason):''}`).join('<br>'):'No refunds recorded.';
-    $('show-refund-form').disabled=refundableBalance(d)<=0;$('refund-form').hidden=true;$('refund-amount').value='';$('refund-reason').value='';
+    $('cancel-order').disabled=d.status==='Cancelled';$('delete-order').disabled=false;
     $('detail-instructions').textContent=d.instructions?`Order instructions: ${d.instructions}`:'';
-    $('detail-notes').textContent=d.notes?`Internal notes: ${d.notes}`:'';
-    $('detail-timeline').innerHTML=milestones.map(([status,label])=>{const matches=d.history.filter(h=>h.status===status);return `<li><strong>${esc(label)}</strong><span class="block muted">${matches.length?matches.map(h=>esc(timeText(h.at))).join(' · '):'Not reached'}</span></li>`}).join('')+(d.history.some(h=>h.status==='Cancelled')?`<li class="error"><strong>Cancelled</strong><span class="block">${esc(timeText(d.history.findLast(h=>h.status==='Cancelled').at))}</span></li>`:'');
+    $('detail-notes').textContent=(d.notes?`Internal notes: ${d.notes}`:'')+(d.cancellation?`\nCancellation: ${d.cancellation.by} initiated it · ${d.cancellation.reason} · ${timeText(d.cancellation.at)}${d.cancellation.refundChoice==='Yes'?' · Refund recorded':''}`:'');
+    $('detail-timeline').innerHTML=milestones.map(([status,label])=>{const matches=d.history.filter(h=>h.status===status);return `<li><strong>${esc(label)}</strong><span class="block muted">${matches.length?matches.map(h=>esc(timeText(h.at))).join(' · '):'Not reached'}</span></li>`}).join('')+(d.history.some(h=>h.status==='Cancelled')?`<li class="error"><strong>Cancelled</strong><span class="block">${esc(timeText(d.history.findLast(h=>h.status==='Cancelled').at))}</span>${d.cancellation?`<span class="block">Initiated by: ${esc(d.cancellation.by)} · ${esc(d.cancellation.reason)}</span>`:''}</li>`:'');
     $('generate-notification').disabled=d.status!=='Ready for Pickup';
-    $('delete-confirmation').hidden=true;showError('detail-error','')
+    $('delete-confirmation').hidden=true;$('cancellation-fields').hidden=true;$('order-action-error').hidden=true;showError('detail-error','')
   }
   function renderCustomers(){
     $('customer-list').innerHTML=repo.customers.length?repo.customers.map(c=>{const orders=repo.orders.filter(d=>d.customerId===c.id),total=orders.reduce((s,d)=>s+(d.status==='Cancelled'?0:cents(d.total)),0)/100,outstanding=orders.reduce((s,d)=>s+(d.status==='Cancelled'?0:cents(balance(d))),0)/100;
@@ -1190,7 +1189,7 @@
       ['metric-cash','metric-expenses'].forEach(id=>$(id).textContent='—');profit.textContent='—';profit.classList.remove('error');
       ['metric-cash-note','metric-expenses-note'].forEach(id=>$(id).textContent='Loading your transactions and expenses…');
     }else{
-      const inMonth=x=>String(x.date).slice(0,7)===month,received=moduleData.transactions.filter(inMonth),spent=moduleData.expenses.filter(inMonth);
+      const activeOrderIds=new Set(active.map(d=>d.id));const inMonth=x=>String(x.date).slice(0,7)===month,received=moduleData.transactions.filter(x=>inMonth(x)&&(!x.orderId||activeOrderIds.has(x.orderId))),spent=moduleData.expenses.filter(inMonth);
       const cash=received.reduce((sum,t)=>sum+cents(transactionNetAmount(t)),0),out=spent.reduce((sum,x)=>sum+cents(x.amount),0);
       $('metric-cash').textContent=money(cash/100);
       const refundCount=received.filter(t=>t.type==='refund').length;
@@ -1205,7 +1204,7 @@
   function renderAllOrders(){renderCustomerSelect();renderQuoteCustomerOptions();renderReferencePreview();renderOrderList();renderDetail();renderCustomers();renderDashboard()}
   $('detail-status').onchange=e=>{
     const d=selected();if(!d)return;const status=e.target.value;if(status===d.status)return;
-    if(status==='Cancelled'){e.target.value=d.status;showError('detail-error','To cancel, select Cancelled again and confirm below.');$('delete-confirmation').hidden=true;openCancellation(d);return}
+    if(status==='Cancelled'){e.target.value=d.status;showError('detail-error','Use the Cancel Order button to record who initiated the cancellation, the required reason, and any refund.');$('delete-confirmation').hidden=true;openCancellation(d);return}
     const next=structuredClone(repo),item=next.orders.find(o=>o.id===d.id),at=now(),firstReady=status==='Ready for Pickup'&&!item.history.some(h=>h.status==='Ready for Pickup');
     item.status=status;item.updatedAt=at;item.history.push({status,at,actor:'Owner · local browser'});
     if(firstReady){const msg=messages(item,'ready');item.notification={...(item.notification||{}),firstReadyAt:at,preparedAt:at,history:[...(item.notification?.history||[]),{at,action:'Prepared',kind:'Ready for Pickup'}],messenger:msg.messenger,sms:msg.sms}}
@@ -1214,31 +1213,18 @@
   };
   function openCancellation(d){
     $('delete-confirmation').hidden=false;
-    $('delete-confirmation').querySelector('p').textContent=`Cancel ${d.reference}? This adds a cancellation event and preserves its history.`;
-    $('confirm-delete').textContent='Confirm cancellation';
-    $('confirm-delete').dataset.action='cancel'
+    $('order-action-prompt').textContent=`Cancel ${d.reference}? The order will remain in Order History, but its linked payment/refund transactions will be removed from active financial totals.`;
+    $('confirm-delete').textContent='Confirm cancellation';$('confirm-delete').dataset.action='cancel';$('confirm-delete').className='primary';
+    $('cancellation-fields').hidden=false;$('cancelled-by').value='';$('cancellation-reason').value='';$('cancellation-other').value='';$('cancellation-other-wrap').hidden=true;$('cancel-refund-choice').value='No';$('cancellation-refund-fields').hidden=true;$('refund-amount').value='';$('refund-reason').value='';$('order-action-error').hidden=true;
   }
+  $('cancellation-reason').onchange=()=>{$('cancellation-other-wrap').hidden=$('cancellation-reason').value!=='Other'};
+  $('cancel-refund-choice').onchange=()=>{$('cancellation-refund-fields').hidden=$('cancel-refund-choice').value!=='Yes'};
   $('add-payment').onclick=e=>{
     const d=selected();if(!d||repoBlocked)return;const input=$('additional-payment'),amount=Number(input.value);
     if(!validAmount(input.value)||amount<=0||cents(amount)>cents(balance(d))){showError('detail-error','Enter a positive payment no greater than the remaining balance.');return}
     const next=structuredClone(repo),item=next.orders.find(o=>o.id===d.id),at=now();item.payments.push({id:uid(),amount,method:$('additional-method').value,at});item.updatedAt=at;
     e.currentTarget.disabled=true;
     try{if(commitRepo(next)){input.value='';notify('Payment saved and added to Transactions.')}else showError('detail-error','Could not save this payment. Amount and method have been preserved.')}finally{e.currentTarget.disabled=false;renderDetail()}
-  };
-  $('show-refund-form').onclick=()=>{$('refund-form').hidden=false;$('refund-amount').focus()};
-  $('cancel-refund').onclick=()=>{$('refund-form').hidden=true;$('refund-amount').value='';$('refund-reason').value=''};
-  $('record-refund').onclick=async e=>{
-    const d=selected();if(!d||repoBlocked)return;
-    const amount=Number($('refund-amount').value),reason=$('refund-reason').value.trim(),method=$('refund-method').value;
-    if(!validAmount($('refund-amount').value)||amount<=0){showError('detail-error','Enter a refund amount greater than zero.');return}
-    if(cents(amount)>cents(refundableBalance(d))){showError('detail-error',`Refund cannot exceed the remaining refundable amount of ${money(refundableBalance(d))}.`);return}
-    if(!reason){showError('detail-error','Enter a reason or note for this refund.');return}
-    if(!confirm(`Record a ${money(amount)} refund for ${d.reference} via ${method}? This will reduce net cash received.`))return;
-    const next=structuredClone(repo),item=next.orders.find(o=>o.id===d.id),at=now();
-    item.refunds=Array.isArray(item.refunds)?item.refunds:[];
-    item.refunds.push({id:uid(),amount,method,at,reason});item.updatedAt=at;
-    e.currentTarget.disabled=true;
-    try{if(commitRepo(next)){$('refund-form').hidden=true;$('refund-amount').value='';$('refund-reason').value='';notify('Refund recorded. Original payments remain in the payment history.')}else showError('detail-error','Refund could not be saved. No refund was recorded.')}finally{e.currentTarget.disabled=false;renderDetail()}
   };
   $('edit-order').onclick=()=>{
     const d=selected();if(!d)return;editingOrderId=d.id;$('order-form-heading').textContent='Edit order';$('save-order').textContent='Save changes';$('cancel-order-edit').hidden=false;
@@ -1247,15 +1233,35 @@
     $('order-date').value=d.orderDate;$('order-pickup').value=d.pickupDate;$('order-discount').value=d.discount;$('order-deposit').value='0';$('order-payment-method').value='Cash';$('order-instructions').value=d.instructions;$('order-notes').value=d.notes;
     orderLines=d.items.map(i=>{const p=products.find(p=>p.name.toLowerCase()===String(i.name||'').trim().toLowerCase());return {...i,category:p?.category||'',productId:p?.id||'__custom__',custom:!p}});renderOrderLines();renderReferencePreview();setView('orders');$('order-form').scrollIntoView({behavior:'smooth',block:'start'})
   };
-  $('delete-order').onclick=()=>{const d=selected();if(!d)return;if((d.payments||[]).length||(d.refunds||[]).length){showError('detail-error','This order has financial history and cannot be permanently deleted. Keep it in the records and use cancellation instead.');return}$('delete-confirmation').hidden=false;$('delete-confirmation').querySelector('p').textContent=`Permanently delete ${d.reference}? It will no longer count toward ${displayName(d)}'s order history or totals. This cannot be undone.`;$('confirm-delete').textContent='Confirm delete';$('confirm-delete').dataset.action='delete'};
-  $('keep-order').onclick=()=>$('delete-confirmation').hidden=true;
+  $('cancel-order').onclick=()=>{const d=selected();if(!d||d.status==='Cancelled')return;openCancellation(d)};
+  $('delete-order').onclick=()=>{const d=selected();if(!d)return;$('delete-confirmation').hidden=false;$('cancellation-fields').hidden=true;$('order-action-prompt').textContent=`Permanently delete ${d.reference}? This removes the order and its linked payment/refund transaction records from the system and cannot be undone.`;$('confirm-delete').textContent='Permanently delete order';$('confirm-delete').dataset.action='delete';$('confirm-delete').className='danger';$('order-action-error').hidden=true};
+  $('keep-order').onclick=()=>{$('delete-confirmation').hidden=true;$('order-action-error').hidden=true};
   $('confirm-delete').onclick=e=>{
-    const d=selected();if(!d)return;const next=structuredClone(repo),action=e.currentTarget.dataset.action;
-    if(action==='cancel'){const item=next.orders.find(o=>o.id===d.id),at=now();item.status='Cancelled';item.updatedAt=at;item.history.push({status:'Cancelled',at,actor:'Owner · local browser'})}
-    else next.orders=next.orders.filter(o=>o.id!==d.id);
+    const d=selected();if(!d)return;const action=e.currentTarget.dataset.action,next=structuredClone(repo),item=next.orders.find(o=>o.id===d.id),at=now();
+    let cancellationRefunded=false;
+    if(action==='cancel'){
+      const by=$('cancelled-by').value,reasonChoice=$('cancellation-reason').value,reason=reasonChoice==='Other'?$('cancellation-other').value.trim():reasonChoice,refundChoice=$('cancel-refund-choice').value;
+      if(!by){$('order-action-error').textContent='Please choose who initiated the cancellation.';$('order-action-error').hidden=false;return}
+      if(!reason){$('order-action-error').textContent='A cancellation reason is required to proceed.';$('order-action-error').hidden=false;return}
+      let refund=null;
+      if(refundChoice==='Yes'){
+        const amount=Number($('refund-amount').value),method=$('refund-method').value;
+        if(!validAmount($('refund-amount').value)||amount<=0){$('order-action-error').textContent='Enter a refund amount greater than zero.';$('order-action-error').hidden=false;return}
+        if(cents(amount)>cents(refundableBalance(d))){$('order-action-error').textContent=`Refund cannot exceed the remaining refundable amount of ${money(refundableBalance(d))}.`;$('order-action-error').hidden=false;return}
+        refund={id:uid(),amount,method,at,reason:$('refund-reason').value.trim()||'Refund issued during order cancellation'};
+      }
+      item.status='Cancelled';item.updatedAt=at;item.cancellation={by,reason,notes:reasonChoice==='Other'?$('cancellation-other').value.trim():'',at,refundChoice};
+      if(refund){item.refunds=Array.isArray(item.refunds)?item.refunds:[];item.refunds.push(refund);cancellationRefunded=true}
+      item.history.push({status:'Cancelled',at,actor:'Owner · local browser',initiatedBy:by,reason});
+    }else next.orders=next.orders.filter(o=>o.id!==d.id);
     e.currentTarget.disabled=true;
-    try{if(commitRepo(next)){if(action==='delete'){removeOrderTransactions(d.id);selectedId=null;if(editingOrderId===d.id)resetOrderForm();renderAllOrders();setView('orders')}notify(action==='cancel'?'Order cancelled.':'Selected order deleted.')}else showError('detail-error','Could not confirm the change. The saved order remains unchanged.')}
-    finally{e.currentTarget.disabled=false}
+    try{
+      if(commitRepo(next)){
+        if(action==='delete'||action==='cancel')removeOrderTransactions(d.id);
+        if(action==='delete'){selectedId=null;if(editingOrderId===d.id)resetOrderForm();renderAllOrders();setView('orders');notify('Order and linked transaction records permanently deleted.')}
+        else{ $('delete-confirmation').hidden=true;renderAllOrders();notify(cancellationRefunded?'Order cancelled. Refund recorded and excluded from active dashboard totals.':'Order cancelled without a refund. It remains in Order History.') }
+      }else showError('detail-error','Could not confirm the change. The saved order remains unchanged.')
+    }finally{e.currentTarget.disabled=false}
   };
   function tokens(d){
     const initial=d.payments?.[0]?.amount||0;
@@ -1800,10 +1806,12 @@
   function syncPaymentTransactions(){
     if(!modulesLoaded||repoBlocked)return txSyncChain;
     txSyncChain=txSyncChain.then(async()=>{
-      const list=moduleData.transactions.map(t=>({...t}));let changed=false;
+      const activeOrderIds=new Set(repo.orders.filter(o=>o.status!=='Cancelled').map(o=>o.id));
+      const list=moduleData.transactions.filter(t=>!t.orderId||activeOrderIds.has(t.orderId)).map(t=>({...t}));let changed=list.length!==moduleData.transactions.length;
       const linked=new Set(list.filter(t=>t.paymentId).map(t=>t.paymentId));
       const linkedRefunds=new Set(list.filter(t=>t.refundId).map(t=>t.refundId));
       for(const o of repo.orders){
+        if(o.status==='Cancelled')continue;
         for(const p of o.payments||[]){
           if(linked.has(p.id))continue;
           // Adopt a matching manually entered payment instead of double counting it.
@@ -1831,7 +1839,7 @@
     if(kept.length===moduleData.transactions.length)return;
     txSyncChain=txSyncChain.then(async()=>{
       try{await moduleRequest('transactions','PUT',kept);moduleData.transactions=kept}
-      catch(e){notify('Order deleted, but its Transactions entries could not sync: '+e.message)}
+      catch(e){notify('The cancelled/deleted order was saved, but its Transactions entries could not sync: '+e.message)}
       renderModules();
     });
   }
