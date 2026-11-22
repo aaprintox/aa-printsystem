@@ -111,52 +111,50 @@
       <header class="mb-7">
        <p class="eyebrow">THE NUMBER CRUNCHER</p>
        <h1 class="page-heading">Pricing calculator</h1>
-       <p class="muted">Enter the costs for the entire job. Your suggested price updates as you type.</p>
+       <p class="muted">Build a price with confidence. Start with the costs you know; add overhead only when you need it.</p>
       </header>
       <div class="grid xl:grid-cols-[1.3fr_.7fr] gap-5 items-start">
        <form id="pricing-form" class="panel p-6">
-        <div class="grid sm:grid-cols-2 gap-4">
-         <div class="sm:col-span-2">
-          <label class="field-label" for="price-name">Product or service name</label><input id="price-name" class="field" required="" maxlength="100" placeholder="e.g. A4 full-color flyers">
-         </div>
-         <div>
-          <label class="field-label" for="price-quantity">Quantity</label><input id="price-quantity" class="field price-input" type="number" min="1" step="1" value="100" required="">
-         </div>
-         <div>
-          <label class="field-label" for="price-margin">Desired profit (%) · markup</label><input id="price-margin" class="field price-input" type="number" min="0" step="0.01" value="30" required="">
-         </div>
-         <div>
-          <label class="field-label" for="cost-material">Material cost</label><input id="cost-material" class="field price-input" type="number" min="0" step="0.01" value="200">
-         </div>
-         <div>
-          <label class="field-label" for="cost-ink">Ink or toner cost</label><input id="cost-ink" class="field price-input" type="number" min="0" step="0.01" value="90">
-         </div>
-         <div>
-          <label class="field-label" for="cost-paper">Paper cost</label><input id="cost-paper" class="field price-input" type="number" min="0" step="0.01" value="120">
-         </div>
-         <div>
-          <label class="field-label" for="cost-labor">Labor cost</label><input id="cost-labor" class="field price-input" type="number" min="0" step="0.01" value="100">
-         </div>
-         <div>
-          <label class="field-label" for="cost-electricity">Electricity cost</label><input id="cost-electricity" class="field price-input" type="number" min="0" step="0.01" value="25">
-         </div>
-         <div>
-          <label class="field-label" for="cost-machine">Machine maintenance / depreciation</label><input id="cost-machine" class="field price-input" type="number" min="0" step="0.01" value="25">
-         </div>
-         <div>
-          <label class="field-label" for="cost-packaging">Packaging cost</label><input id="cost-packaging" class="field price-input" type="number" min="0" step="0.01" value="15">
-         </div>
-         <div>
-          <label class="field-label" for="cost-other">Other expenses</label><input id="cost-other" class="field price-input" type="number" min="0" step="0.01" value="0">
-         </div>
+        <div class="mb-5 rounded-xl p-4" style="background:var(--surface-soft,#f3f5ef);border:1px solid var(--border,#dce4d8)">
+         <label class="field-label" for="pricing-template">Start with an example (optional)</label>
+         <select id="pricing-template" class="field"><option value="">Choose a starter example…</option><option value="flyers">Flyers / Handouts</option><option value="stickers">Die-Cut Stickers</option><option value="photos">Photo Prints</option><option value="craft">Custom Craft / Gift Set</option></select>
+         <p class="text-xs muted mt-2">Examples only—not fixed shop rates. Adjust every amount to match your actual costs.</p>
         </div>
-        <p id="pricing-error" role="alert" class="error text-sm mt-3" hidden=""></p><button type="submit" class="primary mt-6">Save calculation</button>
+        <div class="mb-5 rounded-xl p-4" style="background:var(--surface-soft,#f3f5ef);border:1px solid var(--border,#dce4d8)">
+         <strong class="text-sm">Important: enter batch totals</strong>
+         <p class="text-sm muted mt-1">Enter the total cost for the entire quantity below—not the cost of one piece. The calculator divides the total by the quantity to estimate your per-unit price.</p>
+        </div>
+        <div class="grid sm:grid-cols-2 gap-4">
+         <div class="sm:col-span-2"><label class="field-label" for="price-name">Product or service name</label><input id="price-name" class="field" required="" maxlength="100" placeholder="e.g. A4 full-color flyers"></div>
+         <div><label class="field-label" for="price-quantity">Quantity in this job</label><input id="price-quantity" class="field price-input" type="number" min="1" step="1" value="100" required=""></div>
+         <div>
+          <label class="field-label" for="price-margin">Markup (%)</label><input id="price-margin" class="field price-input" type="number" min="0" max="9999" step="0.01" value="30" required="">
+          <p class="text-xs muted mt-1">Markup is added to your cost. Profit margin is your profit as a share of the selling price.</p>
+          <div class="flex flex-wrap gap-2 mt-2" role="group" aria-label="Suggested markup">
+           <button type="button" class="secondary markup-preset" data-markup="20">20%</button><button type="button" class="secondary markup-preset" data-markup="30">30%</button><button type="button" class="secondary markup-preset" data-markup="50">50%</button><button type="button" class="secondary markup-preset" data-markup="custom">Custom</button>
+          </div>
+         </div>
+         <div><label class="field-label" for="cost-paper">Paper / substrate cost (whole job)</label><input id="cost-paper" class="field price-input" type="number" min="0" step="0.01" value="120"><p class="text-xs muted mt-1">Paper, photo paper, sticker sheet, cardstock, or blank material.</p></div>
+         <div><label class="field-label" for="cost-ink">Ink, toner &amp; materials (whole job)</label><input id="cost-ink" class="field price-input" type="number" min="0" step="0.01" value="90"><p class="text-xs muted mt-1">Estimate the ink/toner and consumables used for this batch.</p></div>
+         <div><label class="field-label" for="cost-material">Other direct materials (whole job)</label><input id="cost-material" class="field price-input" type="number" min="0" step="0.01" value="200"><p class="text-xs muted mt-1">Include blanks, adhesive, laminate, or craft components not listed above.</p></div>
+         <div><label class="field-label" for="cost-labor">Labor cost (whole job)</label><input id="cost-labor" class="field price-input" type="number" min="0" step="0.01" value="100"><p class="text-xs muted mt-1">Estimate: hourly rate × hours spent printing, cutting, packing, and assisting the customer.</p></div>
+         <div class="sm:col-span-2"><label class="field-label" for="cost-packaging">Packaging cost (whole job)</label><input id="cost-packaging" class="field price-input" type="number" min="0" step="0.01" value="15"><p class="text-xs muted mt-1">Envelopes, sleeves, boxes, backing cards, or other packaging for the batch.</p></div>
+        </div>
+        <details class="mt-5 rounded-xl p-4" style="border:1px solid var(--border,#dce4d8)">
+         <summary class="font-semibold cursor-pointer">＋ Add overhead &amp; machine wear (optional)</summary>
+         <p class="text-xs muted mt-2 mb-4">You can leave these at zero if you are not sure yet. Add a reasonable batch estimate when you have one.</p>
+         <div class="grid sm:grid-cols-2 gap-4">
+          <div><label class="field-label" for="cost-electricity">Electricity (whole job)</label><input id="cost-electricity" class="field price-input" type="number" min="0" step="0.01" value="25"><p class="text-xs muted mt-1">A simple estimate is machine power (kW) × hours used × your electricity rate.</p></div>
+          <div><label class="field-label" for="cost-machine">Machine wear &amp; maintenance (whole job)</label><input id="cost-machine" class="field price-input" type="number" min="0" step="0.01" value="25"><p class="text-xs muted mt-1">Use a small per-print or per-sheet allowance, multiplied by the batch quantity.</p></div>
+          <div class="sm:col-span-2"><label class="field-label" for="cost-other">Other overhead (whole job)</label><input id="cost-other" class="field price-input" type="number" min="0" step="0.01" value="0"><p class="text-xs muted mt-1">Any other job-related expense not counted above.</p></div>
+         </div>
+        </details>
+        <p id="pricing-error" role="alert" class="error text-sm mt-3" hidden=""></p><div class="flex flex-wrap gap-2 mt-6"><button type="submit" class="primary">Save calculation</button><button type="button" id="pricing-to-product" class="secondary">Use this price for a product →</button></div><p class="text-xs muted mt-2">After saving it as a product, you can select it in the Quotations tab.</p>
        </form>
        <aside class="panel p-6">
-        <p class="eyebrow mb-2">YOUR PRICE BREAKDOWN</p>
-        <h2 class="section-title mb-3">The big picture</h2>
+        <p class="eyebrow mb-2">YOUR PRICE BREAKDOWN</p><h2 class="section-title mb-3">The big picture</h2>
         <div id="pricing-results"></div>
-        <p class="text-xs muted mt-5">Unit price is rounded up to the nearest cent.</p>
+        <p class="text-xs muted mt-5">Exact unit price is rounded up to the nearest cent. Suggested retail price rounds up to a friendly ₱0.50 step.</p>
        </aside>
       </div>
      </section>
@@ -1063,17 +1061,22 @@
   $('public-form').onsubmit=e=>{e.preventDefault();showError('public-error','Customer tracking is not connected to a live order service. No order was verified.')};
   window.addEventListener('hashchange',()=>{if(window.location.hash==='#track')showPublic()});
 
-  const costs=['cost-material','cost-ink','cost-paper','cost-labor','cost-electricity','cost-machine','cost-packaging','cost-other'];
+  const costs=['cost-paper','cost-ink','cost-material','cost-labor','cost-packaging','cost-electricity','cost-machine','cost-other'];
   function calculatePricing(){
     const qty=Number($('price-quantity').value),markup=Number($('price-margin').value),values=costs.map(id=>Number($(id).value));
-    const valid=Number.isInteger(qty)&&qty>0&&Number.isFinite(markup)&&markup>=0&&costs.every(id=>validAmount($(id).value));
-    const cost=values.reduce((a,b)=>a+b,0),unit=valid?Math.ceil((cost/qty*(1+markup/100)-1e-10)*100)/100:0,total=unit*qty,profit=total-cost;
-    $('pricing-results').innerHTML=[['Total production cost',money(cost)],['Cost per unit',money(cost/qty)],['Selling price / unit',money(unit)],['Total selling price',money(total)],['Estimated profit',money(profit)],['Profit margin',total?(profit/total*100).toFixed(2)+'%':'0.00%']].map(([a,b])=>lineRow(a,valid?b:'—')).join('');
+    const valid=Number.isInteger(qty)&&qty>0&&Number.isFinite(markup)&&markup>=0&&markup<=9999&&costs.every(id=>validAmount($(id).value));
+    const cost=values.reduce((a,b)=>a+b,0),baseUnit=valid?cost/qty:0,unit=valid?Math.ceil((baseUnit*(1+markup/100)-1e-10)*100)/100:0,total=unit*qty,profit=total-cost,margin=total>0?profit/total*100:0;
+    const retail=valid?Math.ceil((baseUnit*(1+markup/100)-1e-10)*2)/2:0,retailTotal=retail*qty,retailProfit=retailTotal-cost;
+    $('pricing-results').innerHTML=[['Break-even price / unit',money(baseUnit)],['Cost per unit',money(baseUnit)],['Selling price / unit (exact)',money(unit)],['Total selling price',money(total)],['Estimated profit',money(profit)],['Markup',valid?markup.toFixed(2)+'%':'—'],['Profit margin',valid?margin.toFixed(2)+'%':'—'],['Suggested retail price / unit',money(retail)],['Profit at suggested retail',money(retailProfit)]].map(([a,b])=>lineRow(a,valid?b:'—')).join('');
     showError('pricing-error',valid?'':'Enter a positive whole-number quantity and non-negative amounts in every cost field.');
-    return {valid,cost,total,profit}
+    return {valid,cost,total,profit,unit,retail,retailTotal,retailProfit,markup,margin,quantity:qty};
   }
   document.querySelectorAll('.price-input').forEach(el=>el.addEventListener('input',calculatePricing));
+  document.querySelectorAll('.markup-preset').forEach(btn=>btn.addEventListener('click',()=>{if(btn.dataset.markup==='custom'){$('price-margin').focus();$('price-margin').select();return}$('price-margin').value=btn.dataset.markup;calculatePricing()}));
+  const pricingExamples={flyers:{name:'Flyers / Handouts',quantity:100,values:{'cost-paper':120,'cost-ink':90,'cost-material':0,'cost-labor':100,'cost-packaging':15,'cost-electricity':20,'cost-machine':15,'cost-other':0}},stickers:{name:'Die-Cut Stickers',quantity:50,values:{'cost-paper':150,'cost-ink':70,'cost-material':35,'cost-labor':120,'cost-packaging':20,'cost-electricity':15,'cost-machine':20,'cost-other':0}},photos:{name:'Photo Prints',quantity:20,values:{'cost-paper':100,'cost-ink':45,'cost-material':0,'cost-labor':35,'cost-packaging':10,'cost-electricity':8,'cost-machine':8,'cost-other':0}},craft:{name:'Custom Craft / Gift Set',quantity:1,values:{'cost-paper':0,'cost-ink':0,'cost-material':250,'cost-labor':150,'cost-packaging':35,'cost-electricity':10,'cost-machine':10,'cost-other':0}}};
+  $('pricing-template').addEventListener('change',()=>{const example=pricingExamples[$('pricing-template').value];if(!example)return;$('price-name').value=example.name;$('price-quantity').value=example.quantity;Object.entries(example.values).forEach(([id,value])=>$(id).value=value);calculatePricing()});
   $('pricing-form').onsubmit=e=>{e.preventDefault();const r=calculatePricing(),name=$('price-name').value.trim();if(!name){showError('pricing-error','Enter a product or service name.');return}if(!r.valid)return;const next=[{id:uid(),name,sales:r.total,expenses:r.cost,profit:r.profit,at:now()},...recent].slice(0,20);if(saveLegacy('recent',next)){recent=next;renderDashboard();notify('Calculation saved.')}};
+  $('pricing-to-product').onclick=()=>{const r=calculatePricing(),name=$('price-name').value.trim();if(!r.valid||!name){showError('pricing-error','Enter a product name and valid costs before continuing.');return}$('product-name').value=name;$('product-cost').value=(r.cost/r.quantity).toFixed(2);$('product-price').value=r.retail.toFixed(2);if(!$('product-category').value&&$('product-category').options.length)$('product-category').selectedIndex=0;setView('products');$('product-name').focus();notify('Price copied to the product form. Choose a category, then save it. You can use it in Quotations afterward.')};
   categories.forEach(c=>$('product-category').add(new Option(c,c)));
   function renderProducts(){
     const query=$('product-search').value.toLowerCase().trim(),shown=products.filter(p=>`${p.name} ${p.category}`.toLowerCase().includes(query));
