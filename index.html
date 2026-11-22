@@ -143,6 +143,54 @@
       .panel,.theme-card,.dialog-box{min-width:0;max-width:100%}
       .table-scroll{max-width:100%;-webkit-overflow-scrolling:touch}
     }
+
+    /* iPhone layout fix: prevent cards, grids, and form controls from forcing a wider page. */
+    *,*::before,*::after{box-sizing:border-box}
+    @media(max-width:650px){
+      html,body,#internal-app,.app-shell,.workspace,.content-width{width:100%;max-width:100%;min-width:0}
+      .workspace{padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right))}
+      .content-width{padding-left:0;padding-right:0}
+      .content-width>*{min-width:0;max-width:100%}
+      .content-width .grid{grid-template-columns:minmax(0,1fr);min-width:0;max-width:100%}
+      .content-width .grid>*{min-width:0;max-width:100%}
+      .panel,.notice,.theme-card,.dialog-box,#order-form{width:100%;min-width:0;max-width:100%}
+      #order-form{padding:18px!important}
+      #order-form .flex{min-width:0;max-width:100%;flex-wrap:wrap}
+      #order-form input,#order-form select,#order-form textarea,#order-form button,
+      .content-width input,.content-width select,.content-width textarea{min-width:0;max-width:100%}
+      .field{width:100%;min-width:0;max-width:100%}
+      .content-width img,.content-width table{max-width:100%}
+    }
+
+    /* Orders tab: iOS Safari/WebKit can preserve intrinsic grid and flex widths. Keep every order section inside the phone viewport. */
+    @media screen and (max-width: 850px){
+      #view-orders{width:100%;min-width:0;max-width:100%;overflow-x:clip}
+      #view-orders>*,#view-orders header,#view-orders .notice,
+      #view-orders>.grid,#view-orders>.grid>* ,
+      #view-orders .space-y-5,#view-orders .panel,
+      #view-orders #order-form,#view-orders #order-form>* ,
+      #view-orders #order-form .grid,#view-orders #order-form .grid>* ,
+      #view-orders #order-lines,#view-orders #order-lines>* ,
+      #view-orders #order-list,#view-orders #order-pagination{box-sizing:border-box;min-width:0;max-width:100%}
+      #view-orders>.grid{display:grid;grid-template-columns:minmax(0,1fr)!important;width:100%}
+      #view-orders #order-form .grid,
+      #view-orders .panel .grid{grid-template-columns:minmax(0,1fr)!important}
+      #view-orders #order-form .sm\:col-span-2,
+      #view-orders #order-form .md\:col-span-2,
+      #view-orders #order-form .xl\:col-span-6{grid-column:1/-1!important}
+      #view-orders .flex{min-width:0;max-width:100%;flex-wrap:wrap}
+      #view-orders input,#view-orders select,#view-orders textarea,
+      #view-orders button{box-sizing:border-box;min-width:0;max-width:100%}
+      #view-orders .field{width:100%}
+      #view-orders #order-lines [data-order-line]{display:grid;grid-template-columns:minmax(0,1fr)!important;width:100%;min-width:0;max-width:100%}
+      #view-orders #order-lines [data-order-line]>*{min-width:0;max-width:100%}
+      #view-orders #order-list{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+      #view-orders .order-table{width:max-content;min-width:760px;max-width:none}
+      #view-orders .panel{padding:18px!important}
+      #view-orders .notice{overflow-wrap:anywhere}
+    }
+    @supports not (overflow:clip){@media screen and (max-width:850px){#view-orders{overflow-x:hidden}}}
+
 </style>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.577.0/dist/umd/lucide.min.js" type="text/javascript"></script>
   <script src="https://cdn.tailwindcss.com/3.4.17" type="text/javascript"></script>
