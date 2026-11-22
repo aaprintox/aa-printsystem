@@ -58,7 +58,56 @@
       .workspace>.site-footer{font-size:11px;padding:10px 8px 4px}
     }
 
-  </style>
+  
+    /* Responsive sidebar: keep navigation tidy at browser zoom and narrow widths. */
+    @media (min-width:851px){
+      .sidebar{width:242px;flex:0 0 242px;min-width:242px;position:sticky;top:0;height:100dvh;max-height:100dvh;overflow:hidden;display:flex;gap:14px;padding:18px 12px}
+      .sidebar>div:first-child{flex:none;min-height:42px}
+      .sidebar-navigation{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;gap:10px;padding:0 2px}
+      .sidebar #logout-button{flex:none;margin-top:auto!important}
+      .sidebar>p{flex:none;margin-top:0!important;padding-bottom:4px}
+      #menu-close{display:none}
+      .workspace{width:auto;flex:1 1 auto;min-width:0;height:auto;min-height:100dvh;overflow:visible}
+      .content-width{height:auto;min-height:0;overflow:visible;flex:1 0 auto}
+    }
+    /* At browser zoom or smaller laptop widths, use a slim icon menu. */
+    @media (min-width:851px) and (max-width:1100px){
+      .sidebar{width:76px;min-width:76px;flex-basis:76px;padding:14px 8px;gap:12px;align-items:stretch}
+      .sidebar>div:first-child{justify-content:center!important;padding:0!important}
+      .sidebar>div:first-child .brand{font-size:0;letter-spacing:0}
+      .sidebar>div:first-child .brand:before{content:'AA';font-size:25px;letter-spacing:-1px}
+      .sidebar>div:first-child .brand-dot{display:none}
+      .sidebar #menu-close{display:none}
+      .sidebar-navigation{gap:9px}
+      .nav-group-label{display:none}
+      .nav-button{width:48px;min-height:44px;height:44px;margin:0 auto;padding:0;justify-content:center;gap:0;font-size:0;border-radius:12px}
+      .nav-button svg{width:20px;height:20px}
+      .nav-button span{display:none}
+      .sidebar #logout-button{width:48px!important;min-height:44px;padding:0!important;justify-content:center!important;font-size:0}
+      .sidebar #logout-button span{display:none}
+      .sidebar>p{display:none}
+    }
+    /* Phones and very narrow windows use a slide-out menu. */
+    @media (max-width:650px){
+      html,body{height:auto;min-height:100%;overflow-x:hidden;overflow-y:auto}
+      .app-shell{display:block;height:auto;min-height:calc(100dvh - 56px);overflow:visible}
+      .mobile-top{position:sticky;top:0;z-index:20}
+      .sidebar{position:fixed;top:0;bottom:0;left:0;width:min(290px,86vw);height:100dvh;max-height:100dvh;overflow:hidden;display:flex;gap:14px;padding:18px 14px;transform:translateX(-105%);z-index:25}
+      .sidebar.open{transform:translateX(0)}
+      .sidebar-navigation{flex:1 1 auto;min-height:0;overflow-y:auto;gap:12px}
+      .sidebar #logout-button{flex:none;margin-top:auto!important}
+      .sidebar>p{flex:none;margin-top:0!important}
+      .workspace{width:100%;height:auto;min-height:calc(100dvh - 56px);overflow:visible;padding:18px 14px 10px}
+      .content-width{height:auto;min-height:0;overflow:visible;padding-bottom:20px}
+    }
+    @media (max-height:620px) and (min-width:651px){
+      .sidebar{padding-top:10px;padding-bottom:10px;gap:7px}
+      .sidebar-navigation{gap:5px}
+      .nav-button{min-height:30px;padding-top:5px;padding-bottom:5px}
+      .nav-group-label{margin-bottom:1px}
+      .sidebar>p{display:none}
+    }
+</style>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.577.0/dist/umd/lucide.min.js" type="text/javascript"></script>
   <script src="https://cdn.tailwindcss.com/3.4.17" type="text/javascript"></script>
  </head>
@@ -2207,6 +2256,8 @@
   };
   $('message-settings-form').onsubmit=e=>{e.preventDefault();const next={confirmMessenger:$('template-confirm-messenger').value,confirmSms:$('template-confirm-sms').value,readyMessenger:$('template-ready-messenger').value,readySms:$('template-ready-sms').value};if(Object.values(next).some(v=>!v.trim())){showError('template-error','All four message templates need text.');return}if(saveLegacy('message-templates',next)){templates=next;showError('template-error','');notify('Message templates saved.')}};
   $('tracking-settings-form').onsubmit=e=>{e.preventDefault();trackingPreview={title:$('tracking-title').value.trim()||'Track your print order',instructions:$('tracking-instructions').value.trim()||'Enter your order reference and registered contact number.',showBalance:$('show-balance').checked,descriptions:$('status-descriptions').value.trim()};notify('Local tracking preview updated. Public tracking is still not connected.')};
+
+  document.querySelectorAll('.sidebar .nav-button[data-view]').forEach(button=>{const label=button.querySelector('span')?.textContent?.trim();if(label){button.title=label;button.setAttribute('aria-label',label)}});
 
   const themes={sage:{name:'Sage & Beige',accent:'#456c5a',page:'#f7f4ed',surface:'#ffffff',sidebar:'#e8eee3',highlight:'#e8eee3'},pink:{name:'Pink & Cream',accent:'#a74264',page:'#fcf5ef',surface:'#ffffff',sidebar:'#f8e7ea',highlight:'#f8e7ea'},blue:{name:'Blue & White',accent:'#28639b',page:'#f3f7fb',surface:'#ffffff',sidebar:'#e5eff9',highlight:'#e5eff9'},lavender:{name:'Lavender & Gray',accent:'#65508d',page:'#f5f4f8',surface:'#ffffff',sidebar:'#eae7f0',highlight:'#eae7f0'},gold:{name:'Black & Gold',accent:'#9c701f',page:'#f5f3ee',surface:'#ffffff',sidebar:'#e7e4dc',highlight:'#f2e9d5'},terracotta:{name:'Terracotta & Cream',accent:'#a44d37',page:'#fbf4eb',surface:'#ffffff',sidebar:'#f4e6dc',highlight:'#f4e6dc'},mint:{name:'Mint & White',accent:'#277866',page:'#f2faf7',surface:'#ffffff',sidebar:'#def2eb',highlight:'#def2eb'}};
   function normalizeAppearance(a){return {theme:themes[a?.theme]?a.theme:'sage',dark:a?.dark===true,accent:typeof a?.accent==='string'&&/^#[0-9a-f]{6}$/i.test(a.accent)?a.accent:null}}
