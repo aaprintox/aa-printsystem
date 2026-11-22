@@ -117,12 +117,12 @@
        <form id="pricing-form" class="panel p-6">
         <div class="mb-5 rounded-xl p-4" style="background:var(--subtle);border:1px solid var(--line)">
          <label class="field-label" for="pricing-template">Start with an example (optional)</label>
-         <select id="pricing-template" class="field"><option value="">Choose a starter example…</option><option value="flyers">Flyers / Handouts</option><option value="stickers">Die-Cut Stickers</option><option value="photos">Photo Prints</option><option value="craft">Custom Craft / Gift Set</option></select>
+         <select id="pricing-template" class="field"><option value="">Choose a starter example…</option><option value="atm">ATM-size Photo Magnet (recipe example)</option><option value="flyers">Flyers / Handouts</option><option value="stickers">Die-Cut Stickers</option><option value="photos">Photo Prints</option><option value="craft">Custom Craft / Gift Set</option></select>
          <p class="text-xs muted mt-2">Examples only—not fixed shop rates. Adjust every amount to match your actual costs.</p>
         </div>
         <div class="mb-5 rounded-xl p-4" style="background:var(--subtle);border:1px solid var(--line)">
-         <strong class="text-sm">Important: enter batch totals &amp; private shop rates</strong>
-         <p class="text-sm muted mt-1">Enter batch totals for materials, consumables, and packaging. Unrounded costs stay accurate internally and round up at the end of the calculation order.</p>
+         <strong class="text-sm">How this works</strong>
+         <p class="text-sm muted mt-1">List each material you buy: the pack price, how many sheets come in a pack, and how many finished pieces one sheet makes. The calculator works out the cost per piece and for the whole job. Unrounded costs stay accurate internally and round up at the end of the calculation order.</p>
         </div>
         <div class="grid sm:grid-cols-2 gap-4">
          <div class="sm:col-span-2"><label class="field-label" for="price-name">Product or service name</label><input id="price-name" class="field" required="" maxlength="100" placeholder="e.g. A4 full-color flyers"></div>
@@ -135,24 +135,57 @@
           </select>
          </div>
          <div>
-          <label class="field-label" for="price-margin">Rate (%)</label><input id="price-margin" class="field price-input" type="number" min="0" max="99.99" step="0.01" value="30" required="">
+          <label class="field-label" for="price-margin" id="price-rate-label">Markup (% on cost)</label><input id="price-margin" class="field price-input" type="number" min="0" max="99.99" step="0.01" value="30" required="">
           <p class="text-xs muted mt-1">Markup adds % above cost; Profit Margin sets profit as a % of selling price.</p>
           <div class="flex flex-wrap gap-2 mt-2" role="group" aria-label="Suggested rate">
            <button type="button" class="secondary markup-preset" data-markup="20">20%</button><button type="button" class="secondary markup-preset" data-markup="30">30%</button><button type="button" class="secondary markup-preset" data-markup="50">50%</button><button type="button" class="secondary markup-preset" data-markup="custom">Custom</button>
           </div>
          </div>
-         <div>
+        </div>
+
+        <section id="recipe-section" class="mt-6" aria-labelledby="recipe-title">
+         <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+          <h2 id="recipe-title" class="section-title" style="font-size:19px">Materials &amp; costs for this job</h2>
+          <span class="pill">Step 1 · Direct costs</span>
+         </div>
+         <p class="text-xs muted mb-3">Add one line per material. Pick a saved price from your library or type it in. Use “direct cost” for flat amounts such as ink or packaging.</p>
+         <div id="recipe-rows"></div>
+         <div class="flex flex-wrap gap-2 mt-3">
+          <button type="button" id="recipe-add-material" class="secondary">+ Add material</button>
+          <button type="button" id="recipe-add-direct" class="secondary">+ Add direct cost</button>
+         </div>
+         <label class="flex items-center gap-2 mt-3 text-sm cursor-pointer" for="recipe-whole-sheets"><input id="recipe-whole-sheets" type="checkbox" class="price-input"><span>Charge whole sheets only (round sheets up, since a partly used sheet is still bought)</span></label>
+         <p id="recipe-total" class="text-sm font-bold mt-3"></p>
+         <input type="hidden" id="cost-paper" value="0"><input type="hidden" id="cost-ink" value="0"><input type="hidden" id="cost-material" value="0"><input type="hidden" id="cost-packaging" value="0">
+
+         <details id="material-library" class="mt-4 rounded-xl p-4" style="border:1px solid var(--line)">
+          <summary class="font-semibold cursor-pointer">Materials library <span id="lib-count" class="muted text-xs ml-2"></span></summary>
+          <p class="text-xs muted mt-2 mb-3">Save each material’s pack price once, then reuse it in any calculation. Change a price here and every linked line updates.</p>
+          <div class="grid sm:grid-cols-2 gap-3">
+           <div class="sm:col-span-2"><label class="field-label" for="lib-name">Material name</label><input id="lib-name" class="field" maxlength="80" placeholder="e.g. A4 magnetic sheet with adhesive"></div>
+           <div><label class="field-label" for="lib-price">Pack price</label><input id="lib-price" class="field" type="number" min="0" step="0.01" placeholder="e.g. 350"></div>
+           <div><label class="field-label" for="lib-qty">Units per pack</label><input id="lib-qty" class="field" type="number" min="1" step="1" placeholder="e.g. 10"></div>
+           <div><label class="field-label" for="lib-unit">Unit</label><select id="lib-unit" class="field"><option value="sheet">sheet</option><option value="pc">pc</option><option value="pack">pack</option><option value="ml">ml</option><option value="meter">meter</option></select></div>
+           <div><label class="field-label" for="lib-supplier">Supplier (optional)</label><input id="lib-supplier" class="field" maxlength="80"></div>
+          </div>
+          <p id="lib-error" role="alert" class="error text-sm mt-2" hidden></p>
+          <div class="flex flex-wrap gap-2 mt-3"><button type="button" id="lib-save" class="primary">Save material</button><button type="button" id="lib-cancel" class="secondary" hidden>Cancel edit</button></div>
+          <div id="lib-list" class="mt-4"></div>
+         </details>
+        </section>
+
+        <details id="pricing-advanced" class="mt-6 rounded-xl p-4" style="border:1px solid var(--line)">
+         <summary class="font-semibold cursor-pointer">Advanced options <span id="advanced-status" class="muted text-xs ml-2"></span></summary>
+         <p class="text-xs muted mt-2 mb-4">Waste, quantity discount, minimum charge, labor, and overhead. Anything you set here is included in the price, even while this section is closed.</p>
+         <div class="grid sm:grid-cols-2 gap-4">
+                  <div>
           <label class="field-label" for="price-tier-discount">Quantity tier discount (%)</label>
           <input id="price-tier-discount" class="field price-input" type="number" min="0" max="90" step="0.01" value="0">
           <p class="text-xs muted mt-1">Applied after markup/margin, protected by a minimum 5% margin floor.</p>
          </div>
-         <div><label class="field-label" for="cost-paper">Paper / substrate cost</label><input id="cost-paper" class="field price-input" type="number" min="0" step="0.0001" value="120"><p class="text-xs muted mt-1">Paper, photo paper, sticker sheet, cardstock, or blank material.</p></div>
-         <div><label class="field-label" for="cost-ink">Ink, toner &amp; materials</label><input id="cost-ink" class="field price-input" type="number" min="0" step="0.0001" value="90"><p class="text-xs muted mt-1">Ink/toner and consumables used for this batch.</p></div>
-         <div><label class="field-label" for="cost-material">Other direct materials &amp; equipment wear</label><input id="cost-material" class="field price-input" type="number" min="0" step="0.0001" value="200"><p class="text-xs muted mt-1">Blanks, adhesive, laminate, craft parts, or equipment wear allowance.</p></div>
-         <div><label class="field-label" for="cost-packaging">Packaging cost</label><input id="cost-packaging" class="field price-input" type="number" min="0" step="0.0001" value="15"><p class="text-xs muted mt-1">Sleeves, boxes, envelopes, or backing cards for the batch.</p></div>
          <div><label class="field-label" for="cost-waste">Waste allowance (%)</label><input id="cost-waste" class="field price-input" type="number" min="0" max="99" step="0.01" value="0"><p class="text-xs muted mt-1">Step 2: Spoilage/trim allowance on direct materials &amp; packaging.</p></div>
          <div><label class="field-label" for="price-min-override">Minimum charge override (optional)</label><input id="price-min-override" class="field price-input" type="number" min="0" step="0.01" placeholder="Use shop default"><p class="text-xs muted mt-1">Leave blank to use Business Settings minimum charge; enter 0 to waive.</p></div>
-        </div>
+         </div>
 
         <div class="mt-5 rounded-xl p-4" style="background:var(--subtle);border:1px solid var(--line)">
          <div class="flex flex-wrap items-center justify-between gap-2">
@@ -187,9 +220,10 @@
          <p class="text-xs muted mt-2 mb-4">Applied after labor in the calculation order. Leave at zero if not needed for this job.</p>
          <div class="grid sm:grid-cols-3 gap-4">
           <div><label class="field-label" for="cost-electricity">Electricity</label><input id="cost-electricity" class="field price-input" type="number" min="0" step="0.01" value="25"></div>
-          <div><label class="field-label" for="cost-machine">Machine &amp; fees</label><input id="cost-machine" class="field price-input" type="number" min="0" step="0.01" value="25"></div>
+          <div><label class="field-label" for="cost-machine">Machine wear &amp; platform fees</label><input id="cost-machine" class="field price-input" type="number" min="0" step="0.01" value="25"></div>
           <div><label class="field-label" for="cost-other">Other overhead</label><input id="cost-other" class="field price-input" type="number" min="0" step="0.01" value="0"></div>
          </div>
+        </details>
         </details>
         <p id="pricing-error" role="alert" class="error text-sm mt-3" hidden=""></p><div class="flex flex-wrap gap-2 mt-6"><button type="submit" class="primary">Save calculation</button><button type="button" id="pricing-to-product" class="secondary">Use this price for a product →</button></div><p class="text-xs muted mt-2">After saving it as a product, you can select it in the Quotations tab.</p>
        </form>
@@ -198,6 +232,14 @@
         <div id="pricing-results"></div>
         <p class="text-xs muted mt-5">Unrounded costs are kept internally; batch totals round up to your configured increment (default ₱1) before applying any minimum charge.</p>
        </aside>
+      </div>
+      <div class="panel p-6 mt-5" id="saved-calcs-panel">
+       <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+        <div><p class="eyebrow mb-1">YOUR PRICE BOOK</p><h2 class="section-title">Saved calculations</h2></div>
+        <span id="saved-count" class="pill">0 saved</span>
+       </div>
+       <input id="saved-search" class="field mb-3" type="search" placeholder="Search saved calculations" aria-label="Search saved calculations" hidden>
+       <div id="saved-list"></div>
       </div>
      </section>
      <section id="view-products" class="view" hidden="">
@@ -1165,11 +1207,184 @@
     calculatePricing();
   });
 
+
+  /* ===== Recipe builder, materials library, saved calculations ===== */
+  const LOW_MARGIN_PCT = 20;
+  const CAT_FIELD = {paper:'cost-paper', ink:'cost-ink', material:'cost-material', packaging:'cost-packaging'};
+  const CAT_LABEL = {paper:'Paper / substrate', ink:'Ink, toner & consumables', material:'Other materials & wear', packaging:'Packaging'};
+  let materials = readLegacy('materials', []);
+  if(!Array.isArray(materials)) materials = [];
+  let recipeRows = [], editingMaterialId = null;
+  const makeMaterialRow = extra => ({id:uid(), type:'material', libId:'', name:'', category:'paper', packPrice:'', packQty:'', yield:'1', ...extra});
+  const makeDirectRow = extra => ({id:uid(), type:'direct', name:'', category:'material', amount:'', basis:'batch', ...extra});
+  const catOptions = sel => Object.entries(CAT_LABEL).map(([k,v])=>`<option value="${k}"${k===sel?' selected':''}>${esc(v)}</option>`).join('');
+  const trimNum = n => String(Number((Number(n)||0).toFixed(2)));
+
+  function rowCost(row, qty, whole){
+    if(row.type==='direct'){
+      const amt = Number(row.amount);
+      if(row.amount===''||!Number.isFinite(amt)||amt<0) return {valid:false, cost:0};
+      return {valid:true, cost: row.basis==='piece' ? amt*qty : amt};
+    }
+    const lib = row.libId ? materials.find(m=>m.id===row.libId) : null;
+    const price = lib ? lib.packPrice : Number(row.packPrice);
+    const packQty = lib ? lib.packQty : Number(row.packQty);
+    const yld = Number(row.yield);
+    if((!lib && (row.packPrice===''||row.packQty===''))||!Number.isFinite(price)||price<0||!Number.isFinite(packQty)||packQty<=0||!Number.isFinite(yld)||yld<=0) return {valid:false, cost:0};
+    const perUnit = price/packQty, perPiece = perUnit/yld;
+    const units = qty/yld, charged = whole ? Math.ceil(units-1e-9) : units;
+    return {valid:true, cost: charged*perUnit, perUnit, perPiece, units: charged, unit: lib ? lib.unit : 'sheet'};
+  }
+
+  function syncRecipeTotals(){
+    const qtyRaw = Number($('price-quantity').value);
+    const qty = Number.isFinite(qtyRaw) && qtyRaw > 0 ? qtyRaw : 0;
+    const whole = $('recipe-whole-sheets').checked;
+    const sums = {paper:0, ink:0, material:0, packaging:0};
+    recipeRows.forEach(row=>{
+      const c = rowCost(row, qty, whole);
+      sums[row.category] = (sums[row.category]||0) + c.cost;
+      const out = document.querySelector(`[data-row-id="${row.id}"] [data-out]`);
+      if(!out) return;
+      if(!c.valid){ out.textContent = row.type==='direct' ? 'Enter an amount to include this cost.' : 'Fill in the pack price, units per pack, and pieces per sheet.'; out.classList.add('error'); return }
+      out.classList.remove('error');
+      out.textContent = row.type==='direct'
+        ? `${money(c.cost)} for this job (${money(qty>0?c.cost/qty:0)} per piece)`
+        : `${money(c.perUnit)} per ${c.unit} · ${money(c.perPiece)} per piece · ${trimNum(c.units)} ${c.unit}(s) to use · ${money(c.cost)} for this job`;
+    });
+    Object.entries(CAT_FIELD).forEach(([cat,id])=>{$(id).value = String(sums[cat])});
+    const total = Object.values(sums).reduce((a,b)=>a+b,0);
+    $('recipe-total').textContent = recipeRows.length
+      ? `Direct costs: ${money(total)} for ${qty||0} pc(s) · ${money(qty>0?total/qty:0)} per piece (before waste)`
+      : '';
+  }
+
+  function renderRecipe(){
+    const holder = $('recipe-rows');
+    if(!recipeRows.length){ holder.innerHTML = '<p class="text-sm muted">No materials yet. Add a material, or pick a starter example at the top.</p>'; syncRecipeTotals(); return }
+    holder.innerHTML = recipeRows.map(row=>{
+      const head = `<div class="flex flex-wrap items-center justify-between gap-2 mb-3"><span class="pill">${row.type==='material'?'Material':'Direct cost'}</span><button type="button" class="danger" data-row-remove aria-label="Remove this line">Remove</button></div>`;
+      if(row.type==='direct'){
+        return `<div class="item-row mb-2" data-row-id="${esc(row.id)}">${head}<div class="grid sm:grid-cols-2 gap-3">
+          <div><label class="field-label">Name</label><input class="field" data-f="name" maxlength="80" value="${esc(row.name)}" placeholder="e.g. Ink, electricity, backing card"></div>
+          <div><label class="field-label">Cost type</label><select class="field" data-f="category">${catOptions(row.category)}</select></div>
+          <div><label class="field-label">Amount</label><input class="field" data-f="amount" type="number" min="0" step="0.01" value="${esc(row.amount)}"></div>
+          <div><label class="field-label">Applies</label><select class="field" data-f="basis"><option value="batch"${row.basis==='batch'?' selected':''}>Once per job (batch total)</option><option value="piece"${row.basis==='piece'?' selected':''}>Per piece</option></select></div>
+        </div><p class="text-xs muted mt-2" data-out></p></div>`;
+      }
+      const lib = row.libId ? materials.find(m=>m.id===row.libId) : null;
+      const linked = Boolean(lib);
+      const dis = linked ? ' disabled' : '';
+      const libOpts = '<option value="">Custom (type it in below)</option>' + materials.map(m=>`<option value="${esc(m.id)}"${m.id===row.libId?' selected':''}>${esc(m.name)}</option>`).join('');
+      return `<div class="item-row mb-2" data-row-id="${esc(row.id)}">${head}<div class="grid sm:grid-cols-3 gap-3">
+        <div class="sm:col-span-3"><label class="field-label">From materials library</label><select class="field" data-f="libId">${libOpts}</select></div>
+        <div class="sm:col-span-2"><label class="field-label">Material name</label><input class="field" data-f="name" maxlength="80" value="${esc(linked?lib.name:row.name)}" placeholder="e.g. A4 magnetic sheet"${dis}></div>
+        <div><label class="field-label">Cost type</label><select class="field" data-f="category">${catOptions(row.category)}</select></div>
+        <div><label class="field-label">Pack price</label><input class="field" data-f="packPrice" type="number" min="0" step="0.01" value="${esc(linked?lib.packPrice:row.packPrice)}"${dis}></div>
+        <div><label class="field-label">Sheets / units per pack</label><input class="field" data-f="packQty" type="number" min="1" step="1" value="${esc(linked?lib.packQty:row.packQty)}"${dis}></div>
+        <div><label class="field-label">Pieces per sheet (yield)</label><input class="field" data-f="yield" type="number" min="0.01" step="0.01" value="${esc(row.yield)}"></div>
+      </div><p class="text-xs muted mt-2" data-out></p></div>`;
+    }).join('');
+    syncRecipeTotals();
+  }
+
+  $('recipe-rows').addEventListener('input', e=>{
+    const el = e.target.closest('[data-f]'); if(!el||el.dataset.f==='libId') return;
+    const holder = el.closest('[data-row-id]'); const row = recipeRows.find(r=>r.id===holder.dataset.rowId); if(!row) return;
+    row[el.dataset.f] = el.value; calculatePricing();
+  });
+  $('recipe-rows').addEventListener('change', e=>{
+    const el = e.target.closest('[data-f="libId"]'); if(!el) return;
+    const row = recipeRows.find(r=>r.id===el.closest('[data-row-id]').dataset.rowId); if(!row) return;
+    const lib = materials.find(m=>m.id===el.value);
+    if(lib){ row.libId = lib.id; row.name = lib.name }
+    else { const old = row.libId ? materials.find(m=>m.id===row.libId) : null; if(old){ row.packPrice = String(old.packPrice); row.packQty = String(old.packQty) } row.libId = '' }
+    renderRecipe(); calculatePricing();
+  });
+  $('recipe-rows').addEventListener('click', e=>{
+    const b = e.target.closest('[data-row-remove]'); if(!b) return;
+    const id = b.closest('[data-row-id]').dataset.rowId;
+    recipeRows = recipeRows.filter(r=>r.id!==id); renderRecipe(); calculatePricing();
+  });
+  $('recipe-add-material').onclick = ()=>{ recipeRows.push(makeMaterialRow()); renderRecipe(); calculatePricing() };
+  $('recipe-add-direct').onclick = ()=>{ recipeRows.push(makeDirectRow()); renderRecipe(); calculatePricing() };
+
+  /* --- Materials library --- */
+  function renderLibrary(){
+    $('lib-count').textContent = materials.length ? `(${materials.length} saved)` : '';
+    $('lib-list').innerHTML = materials.length ? materials.map(m=>`<div class="item-row mb-2" data-material-id="${esc(m.id)}"><strong>${esc(m.name)}</strong><p class="text-xs muted my-2">${esc(money(m.packPrice))} per pack of ${esc(m.packQty)} ${esc(m.unit)}(s) → ${esc(money(m.packPrice/m.packQty))} per ${esc(m.unit)}${m.supplier?' · '+esc(m.supplier):''} · updated ${esc(timeText(m.updatedAt))}</p><div class="flex flex-wrap gap-2" data-material-actions><button type="button" class="secondary" data-material-action="use">Add to recipe</button><button type="button" class="secondary" data-material-action="edit">Edit</button><button type="button" class="danger" data-material-action="delete">Delete</button></div></div>`).join('') : '<p class="text-sm muted">No saved materials yet.</p>';
+  }
+  function resetLibraryForm(){ editingMaterialId=null; ['lib-name','lib-price','lib-qty','lib-supplier'].forEach(id=>$(id).value=''); $('lib-unit').value='sheet'; $('lib-save').textContent='Save material'; $('lib-cancel').hidden=true; showError('lib-error','') }
+  $('lib-cancel').onclick = resetLibraryForm;
+  $('lib-save').onclick = ()=>{
+    const name=$('lib-name').value.trim(), price=Number($('lib-price').value), qty=Number($('lib-qty').value);
+    if(!name){showError('lib-error','Enter a material name.');return}
+    if(!validAmount($('lib-price').value)){showError('lib-error','Enter the pack price (0 or more).');return}
+    if(!Number.isFinite(qty)||qty<=0){showError('lib-error','Enter how many units come in one pack.');return}
+    const next = structuredClone(materials), existing = next.find(m=>m.id===editingMaterialId);
+    const data = {name, packPrice:price, packQty:qty, unit:$('lib-unit').value, supplier:$('lib-supplier').value.trim(), updatedAt:now()};
+    if(existing) Object.assign(existing, data); else next.unshift({id:uid(), ...data});
+    if(saveLegacy('materials', next)){ materials=next; const wasEdit=Boolean(existing); resetLibraryForm(); renderLibrary(); renderRecipe(); calculatePricing(); notify(wasEdit?'Material updated. Linked lines now use the new price.':'Material saved to your library.') }
+  };
+  $('lib-list').addEventListener('click', e=>{
+    const b = e.target.closest('[data-material-action]'); if(!b) return;
+    const m = materials.find(x=>x.id===b.closest('[data-material-id]').dataset.materialId); if(!m) return;
+    const act = b.dataset.materialAction;
+    if(act==='use'){ recipeRows.push(makeMaterialRow({libId:m.id, name:m.name})); renderRecipe(); calculatePricing(); notify(`“${m.name}” added to this recipe.`) }
+    if(act==='edit'){ editingMaterialId=m.id; $('lib-name').value=m.name; $('lib-price').value=m.packPrice; $('lib-qty').value=m.packQty; $('lib-unit').value=m.unit; $('lib-supplier').value=m.supplier||''; $('lib-save').textContent='Update material'; $('lib-cancel').hidden=false; $('lib-name').focus() }
+    if(act==='delete') b.parentElement.innerHTML='<span class="text-sm">Delete this material?</span><button type="button" data-material-action="confirm" class="danger">Confirm delete</button><button type="button" data-material-action="cancel" class="secondary">Cancel</button>';
+    if(act==='cancel') renderLibrary();
+    if(act==='confirm'){
+      recipeRows.forEach(r=>{ if(r.libId===m.id){ r.packPrice=String(m.packPrice); r.packQty=String(m.packQty); r.name=r.name||m.name; r.libId='' } });
+      const next = materials.filter(x=>x.id!==m.id);
+      if(saveLegacy('materials', next)){ materials=next; if(editingMaterialId===m.id) resetLibraryForm(); renderLibrary(); renderRecipe(); calculatePricing(); notify('Material deleted. Lines that used it kept their last price.') }
+    }
+  });
+
+  /* --- Saved calculations (stored in the existing "recent" list) --- */
+  const SNAP_IDS = ['price-name','price-quantity','price-rate-mode','price-margin','price-tier-discount','cost-waste','price-min-override','owner-hourly-rate','owner-labor-hours','staff-labor-cost','cost-electricity','cost-machine','cost-other'];
+  function snapshotForm(){
+    const v = {}; SNAP_IDS.forEach(id=>v[id]=$(id).value);
+    v.laborOn = $('include-owner-labor').checked; v.wholeSheets = $('recipe-whole-sheets').checked;
+    v.rows = recipeRows.map(r=>{ const c={...r}; if(c.type==='material'&&c.libId){ const m=materials.find(x=>x.id===c.libId); if(m){ c.name=m.name; c.packPrice=String(m.packPrice); c.packQty=String(m.packQty) } } return c });
+    return v;
+  }
+  function applySnapshot(v){
+    SNAP_IDS.forEach(id=>{ if(v[id]!==undefined) $(id).value=v[id] });
+    $('include-owner-labor').checked = Boolean(v.laborOn); $('recipe-whole-sheets').checked = Boolean(v.wholeSheets);
+    recipeRows = (Array.isArray(v.rows)?v.rows:[]).map(r=>({...r, id:uid()}));
+    renderRecipe(); calculatePricing();
+  }
+  function renderSaved(){
+    const list = recent, q = $('saved-search').value.toLowerCase().trim();
+    $('saved-search').hidden = list.length <= 10;
+    const shown = list.filter(r=>String(r.name||'').toLowerCase().includes(q));
+    $('saved-count').textContent = `${list.length} saved`;
+    $('saved-list').innerHTML = shown.length ? shown.map(r=>{
+      const price = r.unit!==undefined ? `${money(r.unit)} per unit · ${esc(r.quantity||'')} pc(s) · total ${money(r.sales)}` : `Total ${money(r.sales)}`;
+      return `<article class="item-row mb-2" data-saved-id="${esc(r.id)}"><strong>${esc(r.name)}</strong><p class="text-xs muted my-2">${price} · est. profit ${money(r.profit)} · saved ${esc(timeText(r.at))}${r.snap?'':' · saved before recipes, so it cannot be reopened'}</p><div class="flex flex-wrap gap-2" data-saved-actions>${r.snap?'<button type="button" class="secondary" data-saved-action="load">Load</button>':''}<button type="button" class="secondary" data-saved-action="duplicate">Duplicate</button><button type="button" class="danger" data-saved-action="delete">Delete</button></div></article>`;
+    }).join('') : `<p class="text-sm muted py-3">${list.length?'No saved calculation matches your search.':'Nothing saved yet. Fill in a calculation and press “Save calculation”.'}</p>`;
+  }
+  $('saved-search').oninput = renderSaved;
+  $('saved-list').addEventListener('click', e=>{
+    const b = e.target.closest('[data-saved-action]'); if(!b) return;
+    const rec = recent.find(x=>x.id===b.closest('[data-saved-id]').dataset.savedId); if(!rec) return;
+    const act = b.dataset.savedAction;
+    if(act==='load'){ applySnapshot(rec.snap); window.scrollTo({top:0,behavior:'smooth'}); notify(`Loaded “${rec.name}”. Edit it and save again if you like.`) }
+    if(act==='duplicate'){ const copy = {...structuredClone(rec), id:uid(), name:`${rec.name} (copy)`, at:now()}; const next=[copy,...recent].slice(0,20); if(saveLegacy('recent',next)){ recent=next; renderSaved(); renderDashboard(); notify('Duplicated. Load the copy to edit it.') } }
+    if(act==='delete') b.parentElement.innerHTML='<span class="text-sm">Delete this saved calculation?</span><button type="button" data-saved-action="confirm" class="danger">Confirm delete</button><button type="button" data-saved-action="cancel" class="secondary">Cancel</button>';
+    if(act==='cancel') renderSaved();
+    if(act==='confirm'){ const next=recent.filter(x=>x.id!==rec.id); if(saveLegacy('recent',next)){ recent=next; renderSaved(); renderDashboard(); notify('Saved calculation deleted.') } }
+  });
+  document.querySelectorAll('[data-view="pricing"]').forEach(btn=>btn.addEventListener('click', renderSaved));
+
   function calculatePricing(){
     syncLaborFields();
+    syncRecipeTotals();
     const qty = Number($('price-quantity').value);
     const rateVal = Number($('price-margin').value);
     const mode = $('price-rate-mode').value || 'markup';
+    $('price-rate-label').textContent = mode==='margin' ? 'Profit margin (% of price)' : 'Markup (% on cost)';
     const tierDiscountPct = Number($('price-tier-discount').value || 0);
     const laborOn = $('include-owner-labor').checked;
     const ownerRateRaw = $('owner-hourly-rate').value;
@@ -1249,20 +1464,35 @@
       ? `Applied (${money(finalBatchTotal)})`
       : (effectiveMinCharge > 0 ? `Not needed (${money(roundedBatchTotal)} ≥ ${money(effectiveMinCharge)})` : 'Off');
 
+    const breakEvenBatch = roundUpStep(totalCostExact, 0.01), breakEvenUnit = roundUpStep(unitCostExact, 0.01);
+    const warnings = [];
+    if(valid){
+      if(profitExact < 0) warnings.push('Loss: the final price is below your total cost.');
+      else if(actualMarginPct < LOW_MARGIN_PCT) warnings.push(`Low margin: ${actualMarginPct.toFixed(2)}% is under the ${LOW_MARGIN_PCT}% guideline. Check your rate or tier discount.`);
+    }
+    const advParts = [];
+    if(wastePct>0) advParts.push(`waste ${wastePct}%`);
+    if(tierDiscountPct>0) advParts.push(`tier discount ${tierDiscountPct}%`);
+    if(laborOn) advParts.push('labor on');
+    if(step4Overhead>0) advParts.push(`overhead ${money(step4Overhead)}`);
+    if(hasOverride) advParts.push('minimum charge override');
+    $('advanced-status').textContent = advParts.length ? '· Active: ' + advParts.join(', ') : '· none applied';
+
     $('pricing-results').innerHTML = [
-      ['1. Direct materials & wear (exact)', exactMoney(step1Direct)],
-      ['2. Waste allowance (' + wastePct + '%)', exactMoney(step2Waste)],
+      ['1. Direct materials, ink & packaging', money(step1Direct)],
+      ['2. Waste allowance (' + wastePct + '%)', money(step2Waste)],
       ['3. Labor' + (laborOn ? '' : ' (off)'), laborOn ? money(step3Labor) : 'Off (skipped)'],
       ['4. Overhead & fees', money(step4Overhead)],
-      ['Total cost (exact / per unit)', `${exactMoney(totalCostExact)} (${exactMoney(unitCostExact)}/ea)`],
-      ['5–6. After ' + (mode === 'margin' ? 'margin' : 'markup') + ' & tier discount', `${exactMoney(afterTierExact)}${tierFloorApplied ? ' · 5% floor' : ''}`],
+      ['Total cost (batch / per unit)', `${money(totalCostExact)} (${money(unitCostExact)}/ea)`],
+      ['Break-even price (no profit)', `${money(breakEvenBatch)} (${money(breakEvenUnit)}/ea)`],
+      ['5–6. After ' + (mode === 'margin' ? 'margin' : 'markup') + ' & tier discount', `${money(afterTierExact)}${tierFloorApplied ? ' · 5% floor' : ''}`],
       ['7. Rounded up (step ₱' + increment + ')', money(roundedBatchTotal)],
       ['8. ' + minChargeRowLabel, minChargeRowValue],
       ['Final batch / order total', money(finalBatchTotal)],
       ['Final per-unit price', money(finalUnitPrice)],
       ['Estimated profit', money(profitExact)],
       ['Actual margin / markup', `${actualMarginPct.toFixed(2)}% / ${actualMarkupPct.toFixed(2)}%`]
-    ].map(([a,b]) => lineRow(a, valid ? b : '—')).join('');
+    ].map(([a,b]) => lineRow(a, valid ? b : '—')).join('') + warnings.map(w=>`<div class="notice mt-4 text-sm" role="status"><strong>${esc(w)}</strong></div>`).join('');
 
     return {
       valid,
@@ -1285,14 +1515,32 @@
     photos:{name:'Photo Prints',quantity:20,values:{'cost-paper':100,'cost-ink':45,'cost-material':0,'cost-packaging':10,'cost-waste':2,'cost-electricity':8,'cost-machine':8,'cost-other':0}},
     craft:{name:'Custom Craft / Gift Set',quantity:1,values:{'cost-paper':0,'cost-ink':0,'cost-material':250,'cost-packaging':35,'cost-waste':0,'cost-electricity':10,'cost-machine':10,'cost-other':0}}
   };
-  $('pricing-template').addEventListener('change',()=>{const example=pricingExamples[$('pricing-template').value];if(!example)return;$('price-name').value=example.name;$('price-quantity').value=example.quantity;Object.entries(example.values).forEach(([id,value])=>$(id).value=value);calculatePricing()});
+  pricingExamples.atm={name:'ATM-size Photo Magnet',quantity:50,values:{'cost-waste':5,'cost-electricity':15,'cost-machine':15,'cost-other':0},rows:[
+    makeMaterialRow({name:'A4 magnetic sheet with adhesive',category:'material',packPrice:'350',packQty:'10',yield:'10'}),
+    makeMaterialRow({name:'A4 glossy photo paper',category:'paper',packPrice:'60',packQty:'20',yield:'10'}),
+    makeMaterialRow({name:'A4 cold laminating film',category:'material',packPrice:'120',packQty:'20',yield:'10'}),
+    makeDirectRow({name:'Ink (estimate)',category:'ink',amount:'40',basis:'batch'}),
+    makeDirectRow({name:'Packaging (bag + backing card)',category:'packaging',amount:'2',basis:'piece'})
+  ]};
+  const EXAMPLE_ROW_NAMES={'cost-paper':'Paper / substrate','cost-ink':'Ink & toner','cost-material':'Other materials','cost-packaging':'Packaging'};
+  $('pricing-template').addEventListener('change',()=>{
+    const example=pricingExamples[$('pricing-template').value];if(!example)return;
+    $('price-name').value=example.name;$('price-quantity').value=example.quantity;
+    const rows=example.rows?example.rows.map(r=>({...r,id:uid()})):[];
+    Object.entries(example.values).forEach(([id,value])=>{
+      const cat=Object.keys(CAT_FIELD).find(k=>CAT_FIELD[k]===id);
+      if(cat){ if(Number(value)>0) rows.push(makeDirectRow({name:EXAMPLE_ROW_NAMES[id],category:cat,amount:String(value),basis:'batch'})) }
+      else $(id).value=value;
+    });
+    recipeRows=rows;renderRecipe();calculatePricing();
+  });
   $('pricing-form').onsubmit=e=>{
     e.preventDefault();
     const r=calculatePricing(),name=$('price-name').value.trim();
     if(!name){showError('pricing-error','Enter a product or service name.');return}
     if(!r.valid)return;
-    const next=[{id:uid(),name,sales:r.total,expenses:r.cost,profit:r.profit,at:now()},...recent].slice(0,20);
-    if(saveLegacy('recent',next)){recent=next;renderDashboard();notify('Calculation saved.')}
+    const next=[{id:uid(),name,sales:r.total,expenses:r.cost,profit:r.profit,at:now(),unit:r.unit,quantity:r.quantity,snap:snapshotForm()},...recent].slice(0,20);
+    if(saveLegacy('recent',next)){recent=next;renderDashboard();renderSaved();notify('Calculation saved.')}
   };
   $('pricing-to-product').onclick=()=>{
     const r=calculatePricing(),name=$('price-name').value.trim();
@@ -1479,7 +1727,7 @@
   }
   $('staff-labor-cost').value=settings.labor;
   $('cost-other').value=settings.overhead;
-  calculatePricing();calculateProfit();quoteLines.push({id:uid(),productId:'',quantity:1});renderQuote();
+  renderLibrary();renderRecipe();renderSaved();calculatePricing();calculateProfit();quoteLines.push({id:uid(),productId:'',quantity:1});renderQuote();
   (async()=>{await initializeCloudRepository();for(const key of ['products','recent','settings','message_templates','appearance']){try{const value=await readCloudSetting(key);const localKey=key==='message_templates'?'message-templates':key;const fallback=key==='products'?products:key==='recent'?recent:key==='settings'?settings:key==='message_templates'?templates:savedAppearance;if(value!==null){localStorage.setItem(PREFIX+localKey,JSON.stringify(value));if(key==='products'&&Array.isArray(value))products=value;if(key==='recent'&&Array.isArray(value))recent=value;if(key==='settings'&&value&&typeof value==='object')settings={...defaults,...value};if(key==='message_templates'&&value)templates={...defaultTemplates,...value};if(key==='appearance'&&value)savedAppearance=value;}else{await cloudSetting(key,fallback);}}catch(e){/* Preserve local copy if a cloud setting is not available. */}}fillSettings();applyAppearance(savedAppearance);renderProducts();renderDashboard();renderAllOrders();$('include-owner-labor').checked=Boolean(settings.includeOwnerLabor);if(settings.ownerHourlyRate!=null&&settings.ownerHourlyRate>0){$('owner-hourly-rate').value=String(settings.ownerHourlyRate)}$('staff-labor-cost').value=settings.labor;$('cost-other').value=settings.overhead;calculatePricing();})();
   if(window.lucide)lucide.createIcons();
   if(window.location.hash==='#track')showPublic();
