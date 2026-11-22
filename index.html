@@ -1331,7 +1331,7 @@
     let name=creatingCustomer?$('order-customer').value.trim():customer?.name||'';
     let phone=creatingCustomer?$('order-phone').value.trim():customer?.phone||'';
     if(!name||!/^[+()\d\s-]{7,25}$/.test(phone)){showError('order-error','Select a customer or enter a name and valid contact number.');return}
-    if(creatingCustomer){const match=repo.customers.find(c=>phoneKey(c.phone)===phoneKey(phone));if(match){customer=match;name=match.name;phone=match.phone}}
+    // A contact number may be shared by multiple customers. Keep new inline customers as separate records.
     const orderDate=$('order-date').value,pickupDate=$('order-pickup').value,math=orderMath();
     if(!isDate(orderDate)||!isDate(pickupDate)||pickupDate<orderDate){showError('order-error','Enter valid order and pickup dates; pickup cannot precede the order date.');return}
     if(!orderLines.length||orderLines.some(l=>!l.name.trim()||!Number.isInteger(l.quantity)||l.quantity<1||!validAmount(String(l.price)))||!validAmount($('order-discount').value)||!validAmount($('order-deposit').value)||math.discount>math.subtotal||math.deposit>math.total){
@@ -1399,7 +1399,7 @@
   $('customer-cancel').addEventListener('click',resetCustomerForm);
   $('customer-search').addEventListener('input',renderCustomers);
   $('customer-list').addEventListener('click',e=>{const b=e.target.closest('[data-customer-edit]');if(!b)return;const c=repo.customers.find(x=>x.id===b.dataset.customerEdit);if(c)openCustomerForm(c)});
-  $('customer-form').addEventListener('submit',e=>{e.preventDefault();const name=$('customer-name').value.trim(),phone=$('customer-phone').value.trim();if(!name){showError('customer-form-error','Please enter the customer name.');return}const duplicate=repo.customers.find(c=>c.id!==editingCustomerId&&phoneKey(c.phone)&&phoneKey(c.phone)===phoneKey(phone));if(duplicate){showError('customer-form-error',`This contact number is already saved under ${duplicate.name}. Please check the existing record.`);return}const at=now(),customers=repo.customers.slice(),wasEditing=!!editingCustomerId;if(editingCustomerId){const index=customers.findIndex(c=>c.id===editingCustomerId);if(index<0){showError('customer-form-error','This customer record could not be found. Refresh and try again.');return}customers[index]={...customers[index],name,phone}}else customers.push({id:uid(),name,phone,createdAt:at});if(commitRepo({...repo,customers})){resetCustomerForm();notify(wasEditing?'Customer details updated.':'Customer added successfully.')}});
+  $('customer-form').addEventListener('submit',e=>{e.preventDefault();const name=$('customer-name').value.trim(),phone=$('customer-phone').value.trim();if(!name){showError('customer-form-error','Please enter the customer name.');return}// Contact numbers are not unique; family members or other customers may share one.const at=now(),customers=repo.customers.slice(),wasEditing=!!editingCustomerId;if(editingCustomerId){const index=customers.findIndex(c=>c.id===editingCustomerId);if(index<0){showError('customer-form-error','This customer record could not be found. Refresh and try again.');return}customers[index]={...customers[index],name,phone}}else customers.push({id:uid(),name,phone,createdAt:at});if(commitRepo({...repo,customers})){resetCustomerForm();notify(wasEditing?'Customer details updated.':'Customer added successfully.')}});
   function signedMoney(n){return n<0?'−'+money(Math.abs(n)):money(n)}
   function renderDashboard(){
     $('metric-products').textContent=products.length;
