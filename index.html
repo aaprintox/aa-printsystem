@@ -678,7 +678,7 @@
   const showError = (id,text) => {$(id).textContent=text;$(id).hidden=!text};
   function notify(text){$('toast').textContent=text;$('toast').hidden=false;clearTimeout(notify.timer);notify.timer=setTimeout(()=>$('toast').hidden=true,4500)}
   function readLegacy(name,fallback){try{const raw=localStorage.getItem(PREFIX+name);return raw===null?fallback:JSON.parse(raw)}catch{return fallback}}
-  function saveLegacy(name,value){try{localStorage.setItem(PREFIX+name,JSON.stringify(value));return true}catch{notify('Could not save in this browser. Check available storage.');return false}}
+  function saveLegacy(name,value){try{localStorage.setItem(PREFIX+name,JSON.stringify(value));if(cloudReady&&['products','settings','message-templates','appearance','recent'].includes(name))cloudSetting(name.replaceAll('-','_'),value).catch(e=>notify('Saved on this device; cloud sync failed: '+e.message));return true}catch{notify('Could not save in this browser. Check available storage.');return false}}
   let products=readLegacy('products',sampleProducts);
   if(!Array.isArray(products))products=sampleProducts;
   let recent=readLegacy('recent',[]);
@@ -734,10 +734,36 @@
       repo=migrated;
     }catch(e){repoBlocked=`Saved orders could not be loaded safely: ${e.message||'browser storage unavailable'}. Orders are locked; existing storage has not been cleared.`;showError('repository-warning',repoBlocked)}
   }
+  let cloudReady=false, cloudSyncChain=Promise.resolve();
+  async function cloudRecords(collection,method='GET',records){
+    const response=await fetch('/api/shop/records/'+collection,{method,credentials:'same-origin',headers:method==='PUT'?{'Content-Type':'application/json'}:undefined,body:method==='PUT'?JSON.stringify({records}):undefined});
+    let data={};try{data=await response.json()}catch{}if(!response.ok||data.success===false)throw Error(data.message||'Cloud sync failed for '+collection+'.');return data;
+  }
+  function queueRepoCloudSync(safe){
+    if(!cloudReady)return;
+    cloudSyncChain=cloudSyncChain.then(async()=>{
+      await cloudRecords('orders','PUT',safe.orders);
+      await cloudRecords('customers','PUT',safe.customers);
+    }).catch(e=>notify('Saved locally; cloud sync needs attention: '+e.message));
+  }
   function commitRepo(next){
     if(repoBlocked){notify(repoBlocked);return false}
-    try{const safe=validateRepo(next);localStorage.setItem(STORE,JSON.stringify(safe));repo=safe;renderAllOrders();return true}
+    try{const safe=validateRepo(next);localStorage.setItem(STORE,JSON.stringify(safe));repo=safe;renderAllOrders();queueRepoCloudSync(safe);return true}
     catch(e){showError('repository-warning',`Could not save orders: ${e.message||'browser storage unavailable'}. Existing saved records remain unchanged.`);return false}
+  }
+  async function initializeCloudRepository(){
+    try{
+      const [cloudOrders,cloudCustomers]=await Promise.all([cloudRecords('orders'),cloudRecords('customers')]);
+      const local=validateRepo(repo);
+      const byOrder=new Map((cloudOrders.records||[]).map(x=>[String(x.id),x]));
+      for(const x of local.orders)if(!byOrder.has(String(x.id)))byOrder.set(String(x.id),x);
+      const byCustomer=new Map((cloudCustomers.records||[]).map(x=>[String(x.id),x]));
+      for(const x of local.customers)if(!byCustomer.has(String(x.id)))byCustomer.set(String(x.id),x);
+      const merged=validateRepo({version:3,orders:[...byOrder.values()],customers:[...byCustomer.values()],counters:local.counters});
+      repo=merged;localStorage.setItem(STORE,JSON.stringify(merged));cloudReady=true;
+      await Promise.all([cloudRecords('orders','PUT',merged.orders),cloudRecords('customers','PUT',merged.customers)]);
+      renderAllOrders();
+    }catch(e){notify('Cloud data could not be loaded. Your existing browser data was kept: '+e.message)}
   }
   function nextReference(date){
     const day=date.replaceAll('-',''), prefix=`PB-${day}-`;
@@ -1060,6 +1086,8 @@
 
 
   // Additional shop modules. Records are stored in the authenticated shop cloud API.
+  async function cloudSetting(key,value){const response=await fetch('/api/shop/settings/'+key,{method:'PUT',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({setting:value})});let data={};try{data=await response.json()}catch{}if(!response.ok||data.success===false)throw Error(data.message||'Could not save '+key+' to cloud.');return data}
+  async function readCloudSetting(key){const response=await fetch('/api/shop/settings/'+key,{credentials:'same-origin'});let data={};try{data=await response.json()}catch{}if(!response.ok||data.success===false)throw Error(data.message||'Could not load '+key+' from cloud.');return data.setting}
   const moduleData={transactions:[],expenses:[],inventory:[],quotations:[]};
   async function moduleRequest(collection,method='GET',records){const response=await fetch('/api/shop/records/'+collection,{method,credentials:'same-origin',headers:method==='PUT'?{'Content-Type':'application/json'}:undefined,body:method==='PUT'?JSON.stringify({records}):undefined});let data={};try{data=await response.json()}catch{}if(!response.ok||data.success===false)throw Error(data.message||'Could not sync '+collection+'. Please sign in again.');return data}
   async function loadModuleData(){for(const c of Object.keys(moduleData)){try{const result=await moduleRequest(c);moduleData[c]=Array.isArray(result.records)?result.records:[]}catch(e){notify(e.message);break}}renderModules()}
@@ -1121,6 +1149,7 @@
     }
   };
   loadRepo();loadModuleData();fillSettings();applyAppearance(savedAppearance);renderAppearance();resetOrderForm();renderAllOrders();renderProducts();calculatePricing();calculateProfit();quoteLines.push({id:uid(),productId:'',quantity:1});renderQuote();
+  (async()=>{await initializeCloudRepository();for(const key of ['products','recent','settings','message_templates','appearance']){try{const value=await readCloudSetting(key);const localKey=key==='message_templates'?'message-templates':key;const fallback=key==='products'?products:key==='recent'?recent:key==='settings'?settings:key==='message_templates'?templates:savedAppearance;if(value!==null){localStorage.setItem(PREFIX+localKey,JSON.stringify(value));if(key==='products'&&Array.isArray(value))products=value;if(key==='recent'&&Array.isArray(value))recent=value;if(key==='settings'&&value&&typeof value==='object')settings={...defaults,...value};if(key==='message_templates'&&value)templates={...defaultTemplates,...value};if(key==='appearance'&&value)savedAppearance=value;}else{await cloudSetting(key,fallback);}}catch(e){/* Preserve local copy if a cloud setting is not available. */}}fillSettings();applyAppearance(savedAppearance);renderProducts();renderDashboard();renderAllOrders();})();
   $('price-margin').value=settings.margin;$('cost-labor').value=settings.labor;$('cost-other').value=settings.overhead;calculatePricing();
   if(window.lucide)lucide.createIcons();
   if(window.location.hash==='#track')showPublic();
