@@ -31,6 +31,33 @@
     #order-list{max-height:min(64vh,760px);overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable}
     #product-list:empty,#saved-list:empty{max-height:none}
     @media(max-width:850px){#product-list{max-height:55vh}#saved-list{max-height:52vh}#order-list{max-height:58vh}}
+  
+    /* Simplified page layout: one main vertical scrollbar, no nested list scrollbars. */
+    @media (min-width:851px){
+      html,body{min-height:100%;height:auto;overflow-x:hidden;overflow-y:auto}
+      .app-shell{height:auto;min-height:100vh;min-height:100dvh;overflow:visible;align-items:stretch}
+      .sidebar{position:sticky;top:0;height:100vh;height:100dvh;max-height:100vh;max-height:100dvh;overflow:hidden;padding:18px 12px;gap:13px}
+      .sidebar-navigation{gap:9px;overflow:visible}
+      .nav-group{gap:1px}
+      .nav-group-label{font-size:9px;margin:0 0 3px;padding:0 10px}
+      .nav-button{min-height:34px;padding:7px 10px;font-size:13px;gap:9px}
+      .nav-button svg{width:17px;height:17px}
+      .sidebar #logout-button{min-height:34px;padding:7px 10px}
+      .workspace{height:auto;min-height:100vh;min-height:100dvh;overflow:visible;padding:26px clamp(18px,3vw,48px) 14px}
+      .content-width{flex:1 0 auto;min-height:0;overflow:visible;overscroll-behavior:auto;padding:0 2px 24px;scrollbar-gutter:auto}
+      .workspace>.site-footer{margin-top:8px}
+    }
+    /* Long records flow with the page instead of creating extra vertical scrollbars. */
+    #product-list,#saved-list,#order-list{max-height:none!important;height:auto!important;overflow:visible!important;overscroll-behavior:auto!important;padding-right:0!important;scrollbar-gutter:auto!important}
+    @media(max-width:850px){
+      html,body{height:auto;min-height:100%;overflow-x:hidden;overflow-y:auto}
+      .app-shell{display:block;height:auto;min-height:calc(100vh - 56px);min-height:calc(100dvh - 56px);overflow:visible}
+      .sidebar{height:100dvh;max-height:100dvh;overflow-y:auto}
+      .workspace{width:100%;height:auto;min-height:calc(100vh - 56px);min-height:calc(100dvh - 56px);overflow:visible;padding:18px 14px 10px}
+      .content-width{height:auto;min-height:0;overflow:visible;padding-bottom:20px}
+      .workspace>.site-footer{font-size:11px;padding:10px 8px 4px}
+    }
+
   </style>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.577.0/dist/umd/lucide.min.js" type="text/javascript"></script>
   <script src="https://cdn.tailwindcss.com/3.4.17" type="text/javascript"></script>
