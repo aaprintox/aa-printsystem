@@ -548,6 +548,12 @@
        <h1 class="page-heading">Quotations</h1>
        <p class="muted">Build an itemized quote, save it, track its status, and turn an accepted quote into an order.</p>
       </header>
+      <div class="grid grid-cols-2 xl:grid-cols-4 gap-3 mb-5" id="quote-overview">
+       <div class="panel p-4"><p class="text-xs muted">Total quotations</p><strong class="text-xl" id="quote-metric-total">0</strong></div>
+       <div class="panel p-4"><p class="text-xs muted">Awaiting response</p><strong class="text-xl" id="quote-metric-pending">0</strong></div>
+       <div class="panel p-4"><p class="text-xs muted">Accepted</p><strong class="text-xl" id="quote-metric-accepted">0</strong></div>
+       <div class="panel p-4"><p class="text-xs muted">Total quoted value</p><strong class="text-xl" id="quote-metric-value">—</strong></div>
+      </div>
       <div class="grid xl:grid-cols-[1.2fr_.8fr] gap-5 items-start">
        <section class="panel p-6">
         <div class="flex justify-between items-start gap-3 mb-5">
@@ -564,7 +570,7 @@
           <label class="field-label" for="quote-valid-until">Valid until</label><input id="quote-valid-until" class="field" type="date">
          </div>
          <div>
-          <label class="field-label" for="quote-status">Status</label><select id="quote-status" class="field"><option>Draft</option><option>Sent</option><option>Accepted</option><option>Expired</option></select>
+          <label class="field-label" for="quote-status">Status</label><select id="quote-status" class="field"><option>Draft</option><option>Sent</option><option>Accepted</option><option>Rejected</option><option>Expired</option></select>
          </div>
         </div>
         <div class="flex justify-between items-center gap-3 mt-7 mb-4">
@@ -599,8 +605,11 @@
          <label class="field-label" for="quote-search">Search quotations</label><input id="quote-search" class="field" type="search" placeholder="Reference or customer">
         </div>
         <div>
-         <label class="field-label" for="quote-status-filter">Status</label><select id="quote-status-filter" class="field"><option value="">All statuses</option><option>Draft</option><option>Sent</option><option>Accepted</option><option>Expired</option></select>
+         <label class="field-label" for="quote-status-filter">Status</label><select id="quote-status-filter" class="field"><option value="">All statuses</option><option>Draft</option><option>Sent</option><option>Accepted</option><option>Rejected</option><option>Expired</option></select>
         </div>
+        <div><label class="field-label" for="quote-from">Created from</label><input class="field" id="quote-from" type="date"></div>
+        <div><label class="field-label" for="quote-to">Created to</label><input class="field" id="quote-to" type="date"></div>
+        <div><label class="field-label" for="quote-sort">Sort by</label><select class="field" id="quote-sort"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="total-high">Highest total</option><option value="total-low">Lowest total</option><option value="customer">Customer name</option></select></div>
        </div>
        <div id="quote-list"></div>
       </section>
@@ -2224,7 +2233,7 @@
   }
 
   /* ===== Quotations: saved list, statuses and Convert to order ===== */
-  const QUOTE_STATUSES=['Draft','Sent','Accepted','Expired'];
+  const QUOTE_STATUSES=['Draft','Sent','Accepted','Rejected','Expired'];
   let editingQuoteId=null, confirmQuoteDeleteId=null;
   const blankQuoteLine=()=>({id:uid(),productId:'',name:'',quantity:1,price:0});
   const addDays=(iso,n)=>{const d=new Date(iso+'T12:00:00');d.setDate(d.getDate()+n);return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)};
@@ -2346,12 +2355,35 @@
     const c=repo.customers.find(x=>x.name.toLowerCase()===$('quote-customer').value.trim().toLowerCase());
     if(c&&!$('quote-contact').value.trim())$('quote-contact').value=c.phone;
   });
+  function renderQuoteOverview(){
+    const all=moduleData.quotations||[];
+    const pending=all.filter(q=>['Draft','Sent'].includes(quoteStatus(q))).length;
+    const accepted=all.filter(q=>quoteStatus(q)==='Accepted').length;
+    const total=all.reduce((sum,q)=>sum+(Number.isFinite(Number(q.total))?cents(Number(q.total)):0),0)/100;
+    $('quote-metric-total').textContent=String(all.length);
+    $('quote-metric-pending').textContent=String(pending);
+    $('quote-metric-accepted').textContent=String(accepted);
+    $('quote-metric-value').textContent=money(total);
+  }
   function renderQuoteList(){
     const holder=$('quote-list');
     const term=$('quote-search').value.toLowerCase().trim(),filter=$('quote-status-filter').value;
-    const all=moduleData.quotations;
+    const from=$('quote-from').value,to=$('quote-to').value,sort=$('quote-sort').value;
+    const all=moduleData.quotations||[];
     $('quote-count').textContent=`${all.length} saved`;
-    const rows=all.slice().sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||''))).filter(q=>(!filter||quoteStatus(q)===filter)&&`${q.reference} ${q.customer} ${q.contact||''}`.toLowerCase().includes(term));
+    renderQuoteOverview();
+    if(from&&to&&to<from){holder.innerHTML='<p class="text-sm muted py-4">Please choose an end date that is on or after the start date.</p>';return}
+    let rows=all.filter(q=>{
+      const created=String(q.createdAt||'').slice(0,10);
+      return (!filter||quoteStatus(q)===filter)&&(!from||created>=from)&&(!to||created<=to)&&`${q.reference} ${q.customer} ${q.contact||''}`.toLowerCase().includes(term);
+    });
+    rows.sort((a,b)=>{
+      if(sort==='oldest')return String(a.createdAt||'').localeCompare(String(b.createdAt||''));
+      if(sort==='total-high')return Number(b.total||0)-Number(a.total||0);
+      if(sort==='total-low')return Number(a.total||0)-Number(b.total||0);
+      if(sort==='customer')return String(a.customer||'').localeCompare(String(b.customer||''));
+      return String(b.createdAt||'').localeCompare(String(a.createdAt||''));
+    });
     if(!rows.length){holder.innerHTML=`<p class="text-sm muted py-4">${all.length?'No quotation matches your search or filter.':'No saved quotations yet. Fill in the form above and press “Save quotation”.'}</p>`;return}
     holder.innerHTML=rows.map(q=>{
       const status=quoteStatus(q),order=q.orderId?repo.orders.find(o=>o.id===q.orderId):null;
@@ -2359,15 +2391,25 @@
       const options=QUOTE_STATUSES.map(s=>`<option${s===status?' selected':''}>${s}</option>`).join('');
       const actions=confirmQuoteDeleteId===q.id
         ?`<span class="text-sm">Delete ${esc(q.reference)}?</span><button type="button" class="danger" data-quote-action="confirm">Confirm delete</button><button type="button" class="secondary" data-quote-action="cancel">Cancel</button>`
-        :`<button type="button" class="secondary" data-quote-action="edit">Open / edit</button><button type="button" class="secondary" data-quote-action="print">Print</button>${order?`<button type="button" class="primary" data-quote-action="order">Open order ${esc(order.reference)}</button>`:`<button type="button" class="primary" data-quote-action="convert">Convert to order</button>`}<button type="button" class="danger" data-quote-action="delete">Delete</button>`;
-      return `<article class="item-row mb-3" data-quote-id="${esc(q.id)}"><div class="flex flex-wrap items-start justify-between gap-3"><div><strong>${esc(q.reference)}</strong><span class="pill ml-2"${status==='Expired'?' style="color:var(--danger)"':''}>${esc(status)}</span><p class="text-sm mt-1">${esc(q.customer)}${q.contact?' · '+esc(q.contact):''}</p><p class="text-xs muted mt-1">${esc(meta)}</p>${q.orderId?`<p class="text-xs mt-1">${order?`Converted to order ${esc(order.reference)}.`:`Converted to order ${esc(q.orderRef||'')}, which no longer exists.`}</p>`:''}</div><div><label class="field-label" for="qs-${esc(q.id)}">Status</label><select id="qs-${esc(q.id)}" class="field" style="width:auto;min-height:38px" data-quote-status>${options}</select></div></div><div class="flex flex-wrap items-center gap-2 mt-3">${actions}</div></article>`;
+        :`<button type="button" class="secondary" data-quote-action="edit">Open / edit</button><button type="button" class="secondary" data-quote-action="duplicate">Duplicate</button><button type="button" class="secondary" data-quote-action="print">Print</button>${order?`<button type="button" class="primary" data-quote-action="order">Open order ${esc(order.reference)}</button>`:`<button type="button" class="primary" data-quote-action="convert">Convert to order</button>`}<button type="button" class="danger" data-quote-action="delete">Delete</button>`;
+      return `<article class="item-row mb-3" data-quote-id="${esc(q.id)}"><div class="flex flex-wrap items-start justify-between gap-3"><div><strong>${esc(q.reference)}</strong><span class="pill ml-2"${status==='Expired'||status==='Rejected'?' style="color:var(--danger)"':''}>${esc(status)}</span><p class="text-sm mt-1">${esc(q.customer)}${q.contact?' · '+esc(q.contact):''}</p><p class="text-xs muted mt-1">${esc(meta)}</p>${q.orderId?`<p class="text-xs mt-1">${order?`Converted to order ${esc(order.reference)}.`:`Converted to order ${esc(q.orderRef||'')}, which no longer exists.`}</p>`:''}</div><div><label class="field-label" for="qs-${esc(q.id)}">Status</label><select id="qs-${esc(q.id)}" class="field" style="width:auto;min-height:38px" data-quote-status>${options}</select></div></div><div class="flex flex-wrap items-center gap-2 mt-3">${actions}</div></article>`;
     }).join('');
+  }
+  async function duplicateQuote(id){
+    if(!modulesLoaded){notify('Your shop data has not finished loading. Try again in a moment.');return}
+    const source=moduleData.quotations.find(x=>x.id===id);if(!source)return;
+    const copy={...source,id:moduleId(),reference:nextQuoteRef(),status:'Draft',validUntil:addDays(localDate(),14),createdAt:now(),updatedAt:now()};
+    delete copy.orderId;delete copy.orderRef;
+    copy.items=(source.items||[]).map(item=>({...item}));
+    const next=[copy,...moduleData.quotations];
+    if(await saveModuleData('quotations',next)){renderQuoteList();notify(`${copy.reference} created as a draft copy. You can edit it before sending.`)}
   }
   $('quote-list').addEventListener('click',async e=>{
     const b=e.target.closest('[data-quote-action]');if(!b)return;
     const id=b.closest('[data-quote-id]').dataset.quoteId,q=moduleData.quotations.find(x=>x.id===id);if(!q)return;
     const a=b.dataset.quoteAction;
     if(a==='edit')loadQuote(id);
+    if(a==='duplicate')duplicateQuote(id);
     if(a==='print')printQuote(q);
     if(a==='convert')convertQuote(id);
     if(a==='order'){selectedId=q.orderId;renderDetail();setView('order-detail')}
@@ -2384,9 +2426,10 @@
     const q=moduleData.quotations.find(x=>x.id===sel.closest('[data-quote-id]').dataset.quoteId);if(!q)return;
     if(!modulesLoaded){notify('Your shop data has not finished loading. Try again in a moment.');renderQuoteList();return}
     const updated={...q,status:sel.value,updatedAt:now()};
-    if(await saveModuleData('quotations',moduleData.quotations.map(x=>x.id===q.id?updated:x))){if(editingQuoteId===q.id)$('quote-status').value=updated.status;if((updated.status==='Draft'||updated.status==='Sent')&&updated.validUntil&&updated.validUntil<localDate())notify('Saved, but its “valid until” date has passed, so it still shows as Expired. Open the quote to extend the date.')}
+    if(await saveModuleData('quotations',moduleData.quotations.map(x=>x.id===q.id?updated:x))){if(editingQuoteId===q.id)$('quote-status').value=updated.status;renderQuoteList();if((updated.status==='Draft'||updated.status==='Sent')&&updated.validUntil&&updated.validUntil<localDate())notify('Saved, but its “valid until” date has passed, so it still shows as Expired. Open the quote to extend the date.')}
   });
   $('quote-search').oninput=renderQuoteList;$('quote-status-filter').onchange=renderQuoteList;
+  ['quote-from','quote-to','quote-sort'].forEach(id=>$(id).addEventListener('change',renderQuoteList));
   $('add-quote-line').onclick=()=>{quoteLines.push(blankQuoteLine());renderQuote()};
   $('quote-lines').addEventListener('change',e=>{
     const el=e.target.closest('[data-quote-line]');if(!el||!e.target.classList.contains('quote-select'))return;
