@@ -222,7 +222,7 @@
         <div class="grid sm:grid-cols-2 gap-4">
          <div class="sm:col-span-2"><label class="field-label" for="price-name">Product or service name</label><input id="price-name" class="field" required="" maxlength="100" placeholder="e.g. A4 full-color flyers"></div>
          <div><label class="field-label" for="price-sku">Item code / SKU (optional)</label><input id="price-sku" class="field" maxlength="40" placeholder="e.g. STK-A4-001"></div>
-         <div><label class="field-label" for="price-unit">Product unit</label><input id="price-unit" class="field" maxlength="30" value="piece" placeholder="piece, set, pack, page"></div>
+         <div><label class="field-label" for="price-unit">Product unit</label><select id="price-unit" class="field"><option value="piece">Piece</option><option value="sheet">Sheet</option><option value="set">Set</option><option value="pack">Pack</option><option value="copy">Copy</option><option value="page">Page</option><option value="pair">Pair</option><option value="roll">Roll</option><option value="meter">Meter</option><option value="bundle">Bundle</option><option value="box">Box</option><option value="lot">Lot / Bulk order</option><option value="service">Service</option><option value="other">Other</option></select><input id="price-unit-custom" class="field mt-2" maxlength="30" placeholder="Enter your own unit" hidden></div>
          <div class="sm:col-span-2"><label class="field-label" for="price-remarks">Remarks / pricing notes (optional)</label><textarea id="price-remarks" class="field" rows="2" maxlength="500" placeholder="Special instructions, pricing assumptions, or notes"></textarea></div>
          <div><label class="field-label" for="price-quantity">Quantity in this job</label><input id="price-quantity" class="field price-input" type="number" min="1" step="1" value="100" required=""></div>
          <div>
@@ -1605,7 +1605,9 @@
   });
 
   /* --- Saved calculations (stored in the existing "recent" list) --- */
-  const SNAP_IDS = ['price-name','price-sku','price-unit','price-remarks','price-manual-unit-price','labor-calculation-mode','labor-print-rate','labor-print-minutes','labor-cut-rate','labor-cut-minutes','labor-pack-rate','labor-pack-minutes','labor-layout-rate','labor-layout-minutes','price-quantity','price-rate-mode','price-margin','price-tier-discount','cost-waste','price-min-override','owner-hourly-rate','owner-labor-hours','staff-labor-cost','cost-electricity','cost-machine','cost-other'];
+  const SNAP_IDS = ['price-name','price-sku','price-unit','price-unit-custom','price-remarks','price-manual-unit-price','labor-calculation-mode','labor-print-rate','labor-print-minutes','labor-cut-rate','labor-cut-minutes','labor-pack-rate','labor-pack-minutes','labor-layout-rate','labor-layout-minutes','price-quantity','price-rate-mode','price-margin','price-tier-discount','cost-waste','price-min-override','owner-hourly-rate','owner-labor-hours','staff-labor-cost','cost-electricity','cost-machine','cost-other'];
+  function getPriceUnit(){ return $('price-unit').value==='other' ? ($('price-unit-custom').value.trim()||'other') : $('price-unit').value; }
+  $('price-unit').addEventListener('change',()=>{ $('price-unit-custom').hidden=$('price-unit').value!=='other'; if($('price-unit').value==='other') $('price-unit-custom').focus(); });
   function snapshotForm(){
     const v = {}; SNAP_IDS.forEach(id=>v[id]=$(id).value);
     v.laborOn = $('include-owner-labor').checked; v.wholeSheets = $('recipe-whole-sheets').checked;
@@ -1614,6 +1616,8 @@
   }
   function applySnapshot(v){
     SNAP_IDS.forEach(id=>{ if(v[id]!==undefined) $(id).value=v[id] });
+    if(v['price-unit'] && !Array.from($('price-unit').options).some(o=>o.value===v['price-unit'])){ $('price-unit').value='other'; $('price-unit-custom').value=v['price-unit']; }
+    $('price-unit-custom').hidden=$('price-unit').value!=='other';
     $('include-owner-labor').checked = Boolean(v.laborOn); $('recipe-whole-sheets').checked = Boolean(v.wholeSheets); $('task-labor-fields').hidden=$('labor-calculation-mode').value!=='tasks'; $('owner-hourly-rate').closest('div').hidden=$('labor-calculation-mode').value==='tasks'; $('owner-labor-hours').closest('div').hidden=$('labor-calculation-mode').value==='tasks';
     recipeRows = (Array.isArray(v.rows)?v.rows:[]).map(r=>({...r, id:uid()}));
     renderRecipe(); calculatePricing();
@@ -1818,14 +1822,14 @@
     const r=calculatePricing(),name=$('price-name').value.trim();
     if(!name){showError('pricing-error','Enter a product or service name.');return}
     if(!r.valid)return;
-    const next=[{id:uid(),name,sku:$('price-sku').value.trim(),unitLabel:$('price-unit').value.trim()||'piece',remarks:$('price-remarks').value.trim(),sales:r.total,expenses:r.cost,profit:r.profit,at:now(),unit:r.unit,quantity:r.quantity,snap:snapshotForm()},...recent].slice(0,20);
+    const next=[{id:uid(),name,sku:$('price-sku').value.trim(),unitLabel:getPriceUnit()||'piece',remarks:$('price-remarks').value.trim(),sales:r.total,expenses:r.cost,profit:r.profit,at:now(),unit:r.unit,quantity:r.quantity,snap:snapshotForm()},...recent].slice(0,20);
     if(saveLegacy('recent',next)){recent=next;renderDashboard();renderSaved();notify('Calculation saved.')}
   };
   $('pricing-to-product').onclick=()=>{
     const r=calculatePricing(),name=$('price-name').value.trim();
     if(!r.valid||!name){showError('pricing-error',r.valid?'Enter a product name before continuing.':$('pricing-error').textContent||'Enter valid costs before continuing.');return}
     $('product-name').value=name;
-    $('product-sku').value=$('price-sku').value.trim();$('product-unit').value=$('price-unit').value.trim()||'piece';
+    $('product-sku').value=$('price-sku').value.trim();$('product-unit').value=getPriceUnit()||'piece';
     $('product-cost').value=(r.cost/r.quantity).toFixed(4);
     $('product-price').value=r.unit.toFixed(2);
     if(!$('product-category').value&&$('product-category').options.length)$('product-category').selectedIndex=0;
