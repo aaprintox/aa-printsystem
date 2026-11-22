@@ -79,18 +79,31 @@
        <h1 data-template-id="dash-title" class="canva-text page-heading" style="color: rgb(36, 53, 46); font-weight: 700; font-style: normal; font-size: 30px;">Make every print count.</h1>
        <p class="muted">Simple numbers, smarter prices, healthier profits.</p>
       </header>
-      <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+      <p id="dash-period" class="eyebrow mb-3"></p>
+      <div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
        <article class="panel p-5">
-        <p class="muted mb-3">Products &amp; services</p><strong id="metric-products" class="metric">0</strong>
+        <p class="muted mb-2">Revenue (orders placed)</p><strong id="metric-sales" class="metric">—</strong>
+        <p id="metric-sales-note" class="text-xs muted mt-2"></p>
        </article>
        <article class="panel p-5">
-        <p class="muted mb-3">Saved order revenue</p><strong id="metric-sales" class="metric">—</strong>
+        <p class="muted mb-2">Cash collected</p><strong id="metric-cash" class="metric">—</strong>
+        <p id="metric-cash-note" class="text-xs muted mt-2"></p>
        </article>
        <article class="panel p-5">
-        <p class="muted mb-3">Outstanding balances</p><strong id="metric-outstanding" class="metric">—</strong>
+        <p class="muted mb-2">Expenses</p><strong id="metric-expenses" class="metric">—</strong>
+        <p id="metric-expenses-note" class="text-xs muted mt-2"></p>
        </article>
        <article class="panel highlight-panel p-5">
-        <p class="mb-3">Estimated pricing profit</p><strong id="metric-profit" class="metric">—</strong>
+        <p class="mb-2">Net cash (collected − expenses)</p><strong id="metric-profit" class="metric">—</strong>
+        <p class="text-xs muted mt-2">Real money in minus real money out this month.</p>
+       </article>
+       <article class="panel p-5">
+        <p class="muted mb-2">Outstanding balances</p><strong id="metric-outstanding" class="metric">—</strong>
+        <p class="text-xs muted mt-2">Still owed on all open orders, any month.</p>
+       </article>
+       <article class="panel p-5">
+        <p class="muted mb-2">Products &amp; services</p><strong id="metric-products" class="metric">0</strong>
+        <p class="text-xs muted mt-2">In your catalogue.</p>
        </article>
       </div>
       <div class="grid lg:grid-cols-2 gap-5">
@@ -105,7 +118,7 @@
         <div id="recent-list"></div>
        </article>
       </div>
-      <p class="text-xs muted mt-5">Order revenue uses one saved order ID per job. Pricing calculations are estimates, not additional sales.</p>
+      <p class="text-xs muted mt-5">Revenue is the value of orders placed this month. Cash collected is money actually received, taken from Transactions. Saved pricing calculations are estimates and are never counted here.</p>
      </section>
      <section id="view-pricing" class="view" hidden="">
       <header class="mb-7">
@@ -262,7 +275,7 @@
           <label class="field-label" for="product-cost">Default material cost per unit</label><input id="product-cost" class="field" type="number" min="0" step="0.0001" required="">
          </div>
          <div>
-          <label class="field-label" for="product-price">Default selling price per unit</label><input id="product-price" class="field" type="number" min="0" step="0.01" required="">
+          <label class="field-label" for="product-price">Default selling price per unit</label><input id="product-price" class="field" type="number" min="0" step="0.01" required=""><p id="product-margin-preview" class="text-xs muted mt-2" aria-live="polite"></p>
          </div>
         </div>
         <p id="product-error" class="error text-sm mt-3" role="alert" hidden=""></p>
@@ -282,42 +295,76 @@
       <header class="mb-7">
        <p class="eyebrow">KNOW YOUR NUMBERS</p>
        <h1 class="page-heading">Profit &amp; markup</h1>
-       <p class="muted">Compare your price with your cost and explore a target margin.</p>
+       <p class="muted">See which products earn their keep and which need a higher price.</p>
       </header>
-      <div class="grid lg:grid-cols-2 gap-5">
-       <div class="panel p-6 space-y-4">
+      <section class="panel p-5 mb-5" aria-labelledby="quick-calc-title">
+       <h2 id="quick-calc-title" class="font-bold mb-3">Quick calculator</h2>
+       <div class="grid lg:grid-cols-[1.25fr_1fr] gap-6 items-start">
         <div>
-         <label class="field-label" for="profit-cost">Total cost</label><input id="profit-cost" class="field profit-input" type="number" min="0" step="0.01" value="500">
+         <div class="grid sm:grid-cols-3 gap-3">
+          <div>
+           <label class="field-label" for="profit-cost">Total cost</label><input id="profit-cost" class="field profit-input" type="number" min="0" step="0.01" value="500">
+          </div>
+          <div>
+           <label class="field-label" for="profit-price">Selling price</label><input id="profit-price" class="field profit-input" type="number" min="0" step="0.01" value="750">
+          </div>
+          <div>
+           <label class="field-label" for="profit-target">Target margin (%)</label><input id="profit-target" class="field profit-input" type="number" min="0" max="99.99" step="0.01" value="30">
+          </div>
+         </div>
+         <p id="profit-error" class="error text-sm mt-2" role="alert" hidden=""></p>
+         <p class="text-xs muted mt-2">Margin is profit ÷ selling price. Markup is profit ÷ cost. The target starts from your Business Settings.</p>
         </div>
-        <div>
-         <label class="field-label" for="profit-price">Desired selling price</label><input id="profit-price" class="field profit-input" type="number" min="0" step="0.01" value="750">
-        </div>
-        <div>
-         <label class="field-label" for="profit-target">Desired profit margin (%)</label><input id="profit-target" class="field profit-input" type="number" min="0" max="99.99" step="0.01" value="30">
-        </div>
-        <p id="profit-error" class="error text-sm" role="alert" hidden=""></p>
-        <p class="text-xs muted">Margin is profit ÷ selling price. Markup is profit ÷ cost.</p>
-       </div>
-       <div class="panel p-6">
-        <h2 class="section-title mb-4">Your results</h2>
         <div id="profit-results"></div>
        </div>
-      </div>
+      </section>
+      <section class="panel p-6" aria-labelledby="health-title">
+       <div class="flex flex-wrap justify-between items-start gap-3 mb-4">
+        <div>
+         <h2 id="health-title" class="section-title">Catalogue health</h2>
+         <p id="health-summary" class="text-sm muted mt-1"></p>
+        </div><span id="health-target" class="pill"></span>
+       </div>
+       <div class="grid sm:grid-cols-[1fr_auto] gap-3 items-end mb-4">
+        <div>
+         <label class="field-label" for="health-search">Search products or categories</label><input id="health-search" class="field" type="search">
+        </div>
+        <label class="flex items-center gap-2 font-bold cursor-pointer pb-3" for="health-low-only"><input id="health-low-only" type="checkbox"><span>Below target only</span></label>
+       </div>
+       <div class="table-scroll">
+        <table class="order-table" style="min-width:860px">
+         <thead>
+          <tr><th>Product</th><th>Cost</th><th>Price</th><th>Margin</th><th>Markup</th><th>Status</th><th>Suggested price</th><th></th></tr>
+         </thead>
+         <tbody id="health-list"></tbody>
+        </table>
+       </div>
+       <p class="text-xs muted mt-4">Cost is the cost saved on each product. The suggested price is the lowest price that reaches your target margin, rounded up with your price rounding setting.</p>
+      </section>
      </section>
      <section id="view-quotes" class="view" hidden="">
       <header class="mb-7">
        <p class="eyebrow">MAKE IT OFFICIAL</p>
-       <h1 class="page-heading">Quotation generator</h1>
-       <p class="muted">Build an itemized quote, then print it or choose Save as PDF in your browser.</p>
+       <h1 class="page-heading">Quotations</h1>
+       <p class="muted">Build an itemized quote, save it, track its status, and turn an accepted quote into an order.</p>
       </header>
       <div class="grid xl:grid-cols-[1.2fr_.8fr] gap-5 items-start">
        <section class="panel p-6">
+        <div class="flex justify-between items-start gap-3 mb-5">
+         <h2 id="quote-form-title" class="section-title">New quotation</h2><span id="quote-ref-preview" class="pill"></span>
+        </div>
         <div class="grid sm:grid-cols-2 gap-4">
          <div>
-          <label class="field-label" for="quote-customer">Customer name</label><input id="quote-customer" class="field" maxlength="100">
+          <label class="field-label" for="quote-customer">Customer name</label><input id="quote-customer" class="field" maxlength="100" list="quote-customer-options" autocomplete="off"><datalist id="quote-customer-options"></datalist>
          </div>
          <div>
           <label class="field-label" for="quote-contact">Customer contact details</label><input id="quote-contact" class="field" maxlength="120">
+         </div>
+         <div>
+          <label class="field-label" for="quote-valid-until">Valid until</label><input id="quote-valid-until" class="field" type="date">
+         </div>
+         <div>
+          <label class="field-label" for="quote-status">Status</label><select id="quote-status" class="field"><option>Draft</option><option>Sent</option><option>Accepted</option><option>Expired</option></select>
          </div>
         </div>
         <div class="flex justify-between items-center gap-3 mt-7 mb-4">
@@ -337,13 +384,30 @@
        <aside class="panel p-6">
         <p class="eyebrow mb-2">READY TO SEND</p>
         <h2 class="section-title mb-4">Quote summary</h2>
-        <div id="quote-results"></div><button id="print-quote" type="button" class="primary w-full mt-5">Print / Save as PDF</button>
+        <div id="quote-results"></div>
+        <button id="save-quote" type="button" class="primary w-full mt-5">Save quotation</button>
+        <button id="print-quote" type="button" class="secondary w-full mt-2">Save &amp; print / Save as PDF</button>
+        <button id="new-quote" type="button" class="secondary w-full mt-2">Start a new quotation</button>
        </aside>
       </div>
+      <section class="panel p-6 mt-5" aria-labelledby="saved-quotes-title">
+       <div class="flex justify-between items-start gap-3 mb-4">
+        <h2 id="saved-quotes-title" class="section-title">Saved quotations</h2><span id="quote-count" class="pill"></span>
+       </div>
+       <div class="grid sm:grid-cols-2 gap-3 mb-4">
+        <div>
+         <label class="field-label" for="quote-search">Search quotations</label><input id="quote-search" class="field" type="search" placeholder="Reference or customer">
+        </div>
+        <div>
+         <label class="field-label" for="quote-status-filter">Status</label><select id="quote-status-filter" class="field"><option value="">All statuses</option><option>Draft</option><option>Sent</option><option>Accepted</option><option>Expired</option></select>
+        </div>
+       </div>
+       <div id="quote-list"></div>
+      </section>
      </section>
 
      <section id="view-transactions" class="view" hidden>
-      <header class="mb-7"><p class="eyebrow">PAYMENTS & CASH FLOW</p><h1 class="page-heading">Transactions</h1><p class="muted">Record customer payments, deposits, and other money received.</p></header>
+      <header class="mb-7"><p class="eyebrow">PAYMENTS & CASH FLOW</p><h1 class="page-heading">Transactions</h1><p class="muted">Every payment recorded on an order appears here automatically. Add other money received below.</p></header>
       <div class="panel p-6 mb-5"><h2 class="section-title mb-4">Add transaction</h2><form id="transaction-form" class="grid md:grid-cols-3 gap-4"><div><label class="field-label">Date</label><input class="field" id="tx-date" type="date" required></div><div><label class="field-label">Customer / payer</label><input class="field" id="tx-customer" maxlength="100" required></div><div><label class="field-label">Order reference (optional)</label><input class="field" id="tx-order" maxlength="100"></div><div><label class="field-label">Amount</label><input id="tx-amount" class="field" type="number" min="0.01" step="0.01" required></div><div><label class="field-label">Payment method</label><select class="field" id="tx-method"><option>Cash</option><option>GCash</option><option>Bank transfer</option><option>Other</option></select></div><div><label class="field-label">Reference / notes</label><input class="field" id="tx-notes" maxlength="250"></div><div class="md:col-span-3"><button class="primary" type="submit">Save transaction</button></div></form></div>
       <div class="panel p-6"><div class="flex justify-between flex-wrap gap-3 mb-4"><h2 class="section-title">Transaction history</h2><strong id="tx-total"></strong></div><div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr><th class="text-left p-2">Date</th><th class="text-left p-2">Payer</th><th class="text-left p-2">Order</th><th class="text-left p-2">Method</th><th class="text-right p-2">Amount</th><th></th></tr></thead><tbody id="tx-list"></tbody></table></div></div>
      </section>
@@ -364,8 +428,9 @@
        <p data-template-id="orders-intro" class="canva-text muted" style="color: rgb(88, 107, 99); font-weight: 400; font-style: normal; font-size: 15px;">Create, update, and review printing orders in your shop workspace.</p>
       </header>
       <div class="notice mb-6" role="status">
-       <strong data-template-id="storage-heading" class="canva-text block" style="color: rgb(36, 53, 46); font-weight: 700; font-style: normal; font-size: 15px;">Same-browser storage · not a shared order service</strong>
-       <p data-template-id="storage-detail" class="canva-text text-sm mt-1" style="color: rgb(88, 107, 99); font-weight: 400; font-style: normal; font-size: 15px;">Orders saved here remain in this browser. Cross-device sync and customer tracking require a connected, authenticated backend. Messages are prepared for manual sending only.</p>
+       <strong data-template-id="storage-heading" class="canva-text block" style="color: rgb(36, 53, 46); font-weight: 700; font-style: normal; font-size: 15px;">Saved on this device and backed up to your shop account</strong>
+       <p data-template-id="storage-detail" class="canva-text text-sm mt-1" style="color: rgb(88, 107, 99); font-weight: 400; font-style: normal; font-size: 15px;">Every order you save is kept in this browser and synced to your shop account, so it is not lost if the browser is cleared. Messages are prepared for you to send yourself; nothing is sent automatically.</p>
+       <p id="cloud-status" class="text-sm muted mt-2" role="status">Connecting to your shop account…</p>
        <p id="repository-warning" class="error text-sm mt-2" hidden=""></p>
       </div>
       <div class="grid xl:grid-cols-[1.15fr_.85fr] gap-5 items-start">
@@ -551,7 +616,11 @@
          <label class="field-label" for="business-date-format">Date format</label><select id="business-date-format" class="field"><option value="short">Day / month / year</option><option value="long">Long date</option><option value="iso">YYYY-MM-DD</option></select>
         </div>
         <div>
-         <label class="field-label" for="default-margin">Default profit markup (%)</label><input id="default-margin" class="field" type="number" min="0" step="0.01" required="">
+         <label class="field-label" for="default-margin">Default profit markup (%)</label><input id="default-margin" class="field" type="number" min="0" step="0.01" required=""><p class="text-xs muted mt-1">Starting markup in the Pricing Calculator.</p>
+        </div>
+        <div>
+         <label class="field-label" for="target-margin">Target profit margin (%)</label><input id="target-margin" class="field" type="number" min="0.01" max="99.99" step="0.01" required="">
+         <p class="text-xs muted mt-1">Profit as a % of selling price. Products below this are flagged in Products &amp; Services and Profit &amp; Markup.</p>
         </div>
         <div>
          <label class="field-label" for="default-labor">Default hired labor cost per job</label><input id="default-labor" class="field" type="number" min="0" step="0.01" required="">
@@ -611,7 +680,8 @@
        </div>
        <p id="template-error" class="error text-sm mt-3" role="alert" hidden=""></p><button type="submit" class="primary mt-5">Save message templates</button>
       </form>
-      <section class="panel p-6 sm:p-8 max-w-3xl mt-5">
+      <!-- Hidden until a secure public tracking backend exists. Re-enable by removing the hidden attribute. -->
+      <section class="panel p-6 sm:p-8 max-w-3xl mt-5" hidden id="tracking-setup-section">
        <h2 class="section-title">Customer tracking setup</h2>
        <p class="notice text-sm mt-4">Local setup preview only. These settings do not enable public tracking or sync. Connect a secure order service and deploy a public tracking route first.</p>
        <form id="tracking-settings-form" class="grid gap-4 mt-5">
@@ -819,7 +889,8 @@
     ownerHourlyRate:null,
     roundingIncrement:1,
     minChargeEnabled:false,
-    minChargeAmount:50
+    minChargeAmount:50,
+    targetMargin:30
   };
   const defaultTemplates = {
     confirmMessenger:'Hello, [Customer Name]! 😊\n\nThank you for placing your order with [Shop Name]!\n\nHere are your order details:\n\nOrder Reference: [Order Reference Number]\nServices: [Services Ordered]\nTotal Amount: [Total Amount]\nDown Payment: [Down Payment]\nRemaining Balance: [Remaining Balance]\nExpected Pickup: [Expected Pickup Date]\n\nPlease keep your reference number so you can easily inquire about your order.\n\nThank you for choosing [Shop Name]! 💚',
@@ -856,6 +927,7 @@
   const balance=d=>Math.max(0,Math.round((cents(d.total)-cents(paid(d)))/1))/100;
   const paymentStatus=d=>paid(d)<=0?'Unpaid':balance(d)<=0?'Fully Paid':'Partially Paid';
   const selected=()=>repo.orders.find(d=>d.id===selectedId);
+  let convertingQuoteId=null;
   const lineRow=(label,value)=>`<div class="result-row"><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`;
 
   function normalizeOrder(raw){
@@ -901,16 +973,22 @@
     const response=await fetch('/api/shop/records/'+collection,{method,credentials:'same-origin',headers:method==='PUT'?{'Content-Type':'application/json'}:undefined,body:method==='PUT'?JSON.stringify({records}):undefined});
     let data={};try{data=await response.json()}catch{}if(!response.ok||data.success===false)throw Error(data.message||'Cloud sync failed for '+collection+'.');return data;
   }
+  function setCloudStatus(state){
+    const el=$('cloud-status');if(!el)return;
+    const text={connecting:'Connecting to your shop account…',on:'✓ Cloud backup is on. Orders and customers sync to your shop account automatically.',off:'Cloud backup is not connected right now. Your orders are saved on this device. Reload the page to retry the connection.',attention:'The last cloud sync did not go through. Your orders are saved on this device, and the next save will try again.'};
+    el.textContent=text[state]||'';el.classList.toggle('error',state==='off'||state==='attention');el.classList.toggle('muted',state==='on'||state==='connecting');
+  }
   function queueRepoCloudSync(safe){
     if(!cloudReady)return;
     cloudSyncChain=cloudSyncChain.then(async()=>{
       await cloudRecords('orders','PUT',safe.orders);
       await cloudRecords('customers','PUT',safe.customers);
-    }).catch(e=>notify('Saved locally; cloud sync needs attention: '+e.message));
+      setCloudStatus('on');
+    }).catch(e=>{setCloudStatus('attention');notify('Saved on this device; cloud backup needs attention: '+e.message)});
   }
   function commitRepo(next){
     if(repoBlocked){notify(repoBlocked);return false}
-    try{const safe=validateRepo(next);localStorage.setItem(STORE,JSON.stringify(safe));repo=safe;renderAllOrders();queueRepoCloudSync(safe);return true}
+    try{const safe=validateRepo(next);localStorage.setItem(STORE,JSON.stringify(safe));repo=safe;renderAllOrders();queueRepoCloudSync(safe);syncPaymentTransactions();return true}
     catch(e){showError('repository-warning',`Could not save orders: ${e.message||'browser storage unavailable'}. Existing saved records remain unchanged.`);return false}
   }
   async function initializeCloudRepository(){
@@ -924,8 +1002,8 @@
       const merged=validateRepo({version:3,orders:[...byOrder.values()],customers:[...byCustomer.values()],counters:local.counters});
       repo=merged;localStorage.setItem(STORE,JSON.stringify(merged));cloudReady=true;
       await Promise.all([cloudRecords('orders','PUT',merged.orders),cloudRecords('customers','PUT',merged.customers)]);
-      renderAllOrders();
-    }catch(e){notify('Cloud data could not be loaded. Your existing browser data was kept: '+e.message)}
+      renderAllOrders();setCloudStatus('on');syncPaymentTransactions();
+    }catch(e){setCloudStatus('off');notify('Cloud data could not be loaded. Your existing browser data was kept: '+e.message)}
   }
   function nextReference(date){
     const day=date.replaceAll('-',''), prefix=`PB-${day}-`;
@@ -1009,7 +1087,7 @@
   document.querySelectorAll('.order-math').forEach(el=>el.addEventListener('input',orderMath));
   $('order-date').addEventListener('change',renderReferencePreview);
   function resetOrderForm(){
-    editingOrderId=null;$('order-form').reset();$('order-date').value=localDate();$('order-pickup').value=localDate();$('order-discount').value='0';$('order-deposit').value='0';$('order-form-heading').textContent='Create an order';$('save-order').textContent='Save order';$('cancel-order-edit').hidden=true;showNewCustomer(false);$('order-customer-search').value='';$('order-customer-select').value='';orderLines=[{id:uid(),name:'',category:'',productId:'',custom:false,quantity:1,price:0}];renderOrderLines();renderReferencePreview();showError('order-error','')
+    editingOrderId=null;convertingQuoteId=null;$('cancel-order-edit').textContent='Cancel editing';$('order-form').reset();$('order-date').value=localDate();$('order-pickup').value=localDate();$('order-discount').value='0';$('order-deposit').value='0';$('order-form-heading').textContent='Create an order';$('save-order').textContent='Save order';$('cancel-order-edit').hidden=true;showNewCustomer(false);$('order-customer-search').value='';$('order-customer-select').value='';orderLines=[{id:uid(),name:'',category:'',productId:'',custom:false,quantity:1,price:0}];renderOrderLines();renderReferencePreview();showError('order-error','')
   }
   $('cancel-order-edit').onclick=resetOrderForm;
   function saveOrder(e){
@@ -1040,9 +1118,12 @@
       next.orders.unshift(d);
     }
     if(!commitRepo(next)){showError('order-error','Could not confirm this save. Your entered form data is still here; check browser storage before retrying.');return}
-    selectedId=d.id;renderAllOrders();resetOrderForm();
-    if(existing)notify('Order updated in this browser.');
-    else{notify('Order saved in this browser.');openMessageModal(d,'confirm')}
+    selectedId=d.id;renderAllOrders();
+    const fromQuote=!existing&&convertingQuoteId?convertingQuoteId:null;
+    if(fromQuote)linkQuoteToOrder(fromQuote,d);
+    resetOrderForm();
+    if(existing)notify('Order updated.');
+    else{notify(fromQuote?'Order saved and the quotation is marked Accepted.':'Order saved.');openMessageModal(d,'confirm')}
   }
   $('order-form').addEventListener('submit',saveOrder);
   function renderOrderList(){
@@ -1071,16 +1152,32 @@
     $('customer-list').innerHTML=repo.customers.length?repo.customers.map(c=>{const orders=repo.orders.filter(d=>d.customerId===c.id),total=orders.reduce((s,d)=>s+(d.status==='Cancelled'?0:cents(d.total)),0)/100,outstanding=orders.reduce((s,d)=>s+(d.status==='Cancelled'?0:cents(balance(d))),0)/100;
       return `<article class="item-row mb-3"><strong>${esc(c.name)}</strong><p class="text-sm muted">${esc(c.phone)}</p><p class="text-sm mt-2">${orders.length} order${orders.length===1?'':'s'} · ${esc(money(total))} purchases · ${esc(money(outstanding))} outstanding</p><p class="text-xs muted mt-2">${orders.length?orders.map(d=>`${esc(d.reference)} (${esc(d.status)})`).join(' · '):'No orders yet.'}</p></article>`}).join(''):'<p class="text-sm muted">Customers added through orders will appear here.</p>'
   }
+  function signedMoney(n){return n<0?'−'+money(Math.abs(n)):money(n)}
   function renderDashboard(){
     $('metric-products').textContent=products.length;
-    const active=repo.orders.filter(d=>d.status!=='Cancelled');
-    $('metric-sales').textContent=money(active.reduce((sum,d)=>sum+cents(d.total),0)/100);
+    const month=localDate().slice(0,7);
+    $('dash-period').textContent=new Date().toLocaleDateString('en-PH',{month:'long',year:'numeric'})+' · real figures';
+    const active=repo.orders.filter(d=>d.status!=='Cancelled'),monthOrders=active.filter(d=>String(d.orderDate).slice(0,7)===month);
+    $('metric-sales').textContent=money(monthOrders.reduce((sum,d)=>sum+cents(d.total),0)/100);
+    $('metric-sales-note').textContent=`${monthOrders.length} order${monthOrders.length===1?'':'s'} placed this month, paid or not. Cancelled orders are left out.`;
     $('metric-outstanding').textContent=money(active.reduce((sum,d)=>sum+cents(balance(d)),0)/100);
-    $('metric-profit').textContent=money(recent.reduce((sum,r)=>sum+Number(r.profit||0),0));
-    $('profit-overview').textContent=recent.length?`${recent.length} saved pricing calculation${recent.length===1?'':'s'}; these estimates are separate from order revenue.`:'Save a pricing calculation to see an estimated profit here.';
+    const profit=$('metric-profit');
+    if(!modulesLoaded){
+      ['metric-cash','metric-expenses'].forEach(id=>$(id).textContent='—');profit.textContent='—';profit.classList.remove('error');
+      ['metric-cash-note','metric-expenses-note'].forEach(id=>$(id).textContent='Loading your transactions and expenses…');
+    }else{
+      const inMonth=x=>String(x.date).slice(0,7)===month,received=moduleData.transactions.filter(inMonth),spent=moduleData.expenses.filter(inMonth);
+      const cash=received.reduce((sum,t)=>sum+cents(t.amount),0),out=spent.reduce((sum,x)=>sum+cents(x.amount),0);
+      $('metric-cash').textContent=money(cash/100);
+      $('metric-cash-note').textContent=`${received.length} payment${received.length===1?'':'s'} actually received this month.`;
+      $('metric-expenses').textContent=money(out/100);
+      $('metric-expenses-note').textContent=`${spent.length} expense${spent.length===1?'':'s'} recorded this month.`;
+      profit.textContent=signedMoney((cash-out)/100);profit.classList.toggle('error',cash-out<0);
+    }
+    $('profit-overview').textContent=recent.length?`${recent.length} saved pricing calculation${recent.length===1?'':'s'}. These are estimates and are not counted in the figures above.`:'Save a pricing calculation to keep a copy of its recipe and price.';
     $('recent-list').innerHTML=recent.length?recent.slice(0,4).map(r=>`<div class="item-row mb-2"><strong>${esc(r.name)}</strong><p class="text-xs muted">${esc(timeText(r.at))} · ${esc(money(r.profit))} estimated profit</p></div>`).join(''):'<p class="text-sm muted">No calculations saved yet.</p>'
   }
-  function renderAllOrders(){renderCustomerSelect();renderReferencePreview();renderOrderList();renderDetail();renderCustomers();renderDashboard()}
+  function renderAllOrders(){renderCustomerSelect();renderQuoteCustomerOptions();renderReferencePreview();renderOrderList();renderDetail();renderCustomers();renderDashboard()}
   $('detail-status').onchange=e=>{
     const d=selected();if(!d)return;const status=e.target.value;if(status===d.status)return;
     if(status==='Cancelled'){e.target.value=d.status;showError('detail-error','To cancel, select Cancelled again and confirm below.');$('delete-confirmation').hidden=true;openCancellation(d);return}
@@ -1088,7 +1185,7 @@
     item.status=status;item.updatedAt=at;item.history.push({status,at,actor:'Owner · local browser'});
     if(firstReady){const msg=messages(item,'ready');item.notification={...(item.notification||{}),firstReadyAt:at,preparedAt:at,history:[...(item.notification?.history||[]),{at,action:'Prepared',kind:'Ready for Pickup'}],messenger:msg.messenger,sms:msg.sms}}
     if(!commitRepo(next)){e.target.value=d.status;showError('detail-error','Could not save the status. Your previous status remains unchanged.');return}
-    notify('Order status saved in this browser.');if(firstReady)openMessageModal(item,'ready')
+    notify('Order status saved.');if(firstReady)openMessageModal(item,'ready')
   };
   function openCancellation(d){
     $('delete-confirmation').hidden=false;
@@ -1101,7 +1198,7 @@
     if(!validAmount(input.value)||amount<=0||cents(amount)>cents(balance(d))){showError('detail-error','Enter a positive payment no greater than the remaining balance.');return}
     const next=structuredClone(repo),item=next.orders.find(o=>o.id===d.id),at=now();item.payments.push({id:uid(),amount,method:$('additional-method').value,at});item.updatedAt=at;
     e.currentTarget.disabled=true;
-    try{if(commitRepo(next)){input.value='';notify('Payment saved in this browser.')}else showError('detail-error','Could not save this payment. Amount and method have been preserved.')}finally{e.currentTarget.disabled=false;renderDetail()}
+    try{if(commitRepo(next)){input.value='';notify('Payment saved and added to Transactions.')}else showError('detail-error','Could not save this payment. Amount and method have been preserved.')}finally{e.currentTarget.disabled=false;renderDetail()}
   };
   $('edit-order').onclick=()=>{
     const d=selected();if(!d)return;editingOrderId=d.id;$('order-form-heading').textContent='Edit order';$('save-order').textContent='Save changes';$('cancel-order-edit').hidden=false;
@@ -1110,14 +1207,14 @@
     $('order-date').value=d.orderDate;$('order-pickup').value=d.pickupDate;$('order-discount').value=d.discount;$('order-deposit').value='0';$('order-payment-method').value='Cash';$('order-instructions').value=d.instructions;$('order-notes').value=d.notes;
     orderLines=d.items.map(i=>{const p=products.find(p=>p.name.toLowerCase()===String(i.name||'').trim().toLowerCase());return {...i,category:p?.category||'',productId:p?.id||'__custom__',custom:!p}});renderOrderLines();renderReferencePreview();setView('orders');$('order-form').scrollIntoView({behavior:'smooth',block:'start'})
   };
-  $('delete-order').onclick=()=>{const d=selected();if(!d)return;$('delete-confirmation').hidden=false;$('delete-confirmation').querySelector('p').textContent=`Permanently delete ${d.reference}? This cannot be undone.`;$('confirm-delete').textContent='Confirm delete';$('confirm-delete').dataset.action='delete'};
+  $('delete-order').onclick=()=>{const d=selected();if(!d)return;$('delete-confirmation').hidden=false;$('delete-confirmation').querySelector('p').textContent=`Permanently delete ${d.reference}? ${(d.payments||[]).length?`Its ${(d.payments||[]).length} recorded payment${(d.payments||[]).length===1?'':'s'} will also be removed from Transactions. `:''}It will no longer count toward ${displayName(d)}'s order history or totals. This cannot be undone.`;$('confirm-delete').textContent='Confirm delete';$('confirm-delete').dataset.action='delete'};
   $('keep-order').onclick=()=>$('delete-confirmation').hidden=true;
   $('confirm-delete').onclick=e=>{
     const d=selected();if(!d)return;const next=structuredClone(repo),action=e.currentTarget.dataset.action;
     if(action==='cancel'){const item=next.orders.find(o=>o.id===d.id),at=now();item.status='Cancelled';item.updatedAt=at;item.history.push({status:'Cancelled',at,actor:'Owner · local browser'})}
     else next.orders=next.orders.filter(o=>o.id!==d.id);
     e.currentTarget.disabled=true;
-    try{if(commitRepo(next)){if(action==='delete'){selectedId=null;if(editingOrderId===d.id)resetOrderForm();renderAllOrders();setView('orders')}notify(action==='cancel'?'Order cancelled in this browser.':'Selected order deleted.')}else showError('detail-error','Could not confirm the change. The saved order remains unchanged.')}
+    try{if(commitRepo(next)){if(action==='delete'){removeOrderTransactions(d.id);selectedId=null;if(editingOrderId===d.id)resetOrderForm();renderAllOrders();setView('orders')}notify(action==='cancel'?'Order cancelled.':'Selected order deleted.')}else showError('detail-error','Could not confirm the change. The saved order remains unchanged.')}
     finally{e.currentTarget.disabled=false}
   };
   function tokens(d){
@@ -1181,7 +1278,7 @@
     $('public-page').hidden=true;$('internal-app').hidden=false;document.querySelector('.mobile-top').hidden=false;
     document.querySelectorAll('.view').forEach(el=>el.hidden=el.id!=='view-'+view);
     document.querySelectorAll('.nav-button').forEach(el=>el.classList.toggle('active',el.dataset.view===(view==='order-detail'?'orders':view)));
-    closeMenu();if(view==='orders')renderAllOrders();if(view==='order-detail')renderDetail();if(view==='dashboard')renderDashboard();if(view==='products')renderProducts();if(view==='quotes')renderQuote();if(['transactions','expenses','inventory'].includes(view))renderModules();window.scrollTo(0,0)
+    closeMenu();if(view==='orders')renderAllOrders();if(view==='order-detail')renderDetail();if(view==='dashboard')renderDashboard();if(view==='products')renderProducts();if(view==='quotes'){renderQuote();renderQuoteList()}if(view==='profit')renderCatalogueHealth();if(['transactions','expenses','inventory'].includes(view))renderModules();window.scrollTo(0,0)
   }
   function showPublic(){closeMenu();$('internal-app').hidden=true;document.querySelector('.mobile-top').hidden=true;$('public-page').hidden=false;$('public-title').textContent=trackingPreview.title;$('public-instructions').textContent=trackingPreview.instructions;showError('public-error','');window.scrollTo(0,0)}
   document.querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>setView(button.dataset.view)));
@@ -1549,16 +1646,64 @@
     $('product-cost').value=(r.cost/r.quantity).toFixed(4);
     $('product-price').value=r.unit.toFixed(2);
     if(!$('product-category').value&&$('product-category').options.length)$('product-category').selectedIndex=0;
-    setView('products');$('product-name').focus();
+    setView('products');$('product-name').focus();updateProductMarginPreview();
     notify('Price copied to the product form. Choose a category, then save it. You can use it in Quotations afterward.')
   };
   categories.forEach(c=>$('product-category').add(new Option(c,c)));
+  const targetMargin=()=>{const t=Number(settings.targetMargin);return Number.isFinite(t)&&t>0&&t<100?t:30};
+  const pctText=n=>n===null||!Number.isFinite(n)?'—':n.toFixed(1)+'%';
+  function marginBadge(p){
+    const cost=Number(p.cost)||0,price=Number(p.price)||0;
+    if(price<=0)return '<span class="muted">Margin —</span>';
+    if(cost<=0)return '<span class="muted">No cost saved</span>';
+    const m=(price-cost)/price*100;
+    return m<targetMargin()?`<span class="error font-bold">Margin ${pctText(m)} · below ${targetMargin()}% target</span>`:`<span class="font-bold">Margin ${pctText(m)}</span>`;
+  }
   function renderProducts(){
     const query=$('product-search').value.toLowerCase().trim(),shown=products.filter(p=>`${p.name} ${p.category}`.toLowerCase().includes(query));
     $('catalogue-count').textContent=`${shown.length} item${shown.length===1?'':'s'}`;
-    $('product-list').innerHTML=shown.length?shown.map(p=>`<article class="item-row mb-2" data-product-id="${esc(p.id)}"><strong>${esc(p.name)}</strong><span class="pill ml-2">${esc(p.category)}</span><p class="text-xs muted my-2">Material ${esc(exactMoney(p.cost))} · Selling ${esc(money(p.price))} / unit</p><div class="flex flex-wrap gap-2"><button type="button" data-product-action="edit" class="secondary">Edit</button><button type="button" data-product-action="delete" class="danger">Delete</button></div></article>`).join(''):'<p class="text-sm muted py-5">No matching products. Add one using the form.</p>'
+    $('product-list').innerHTML=shown.length?shown.map(p=>`<article class="item-row mb-2" data-product-id="${esc(p.id)}"><strong>${esc(p.name)}</strong><span class="pill ml-2">${esc(p.category)}</span><p class="text-xs muted my-2">Material ${esc(exactMoney(p.cost))} · Selling ${esc(money(p.price))} / unit · ${marginBadge(p)}</p><div class="flex flex-wrap gap-2"><button type="button" data-product-action="edit" class="secondary">Edit</button><button type="button" data-product-action="delete" class="danger">Delete</button></div></article>`).join(''):'<p class="text-sm muted py-5">No matching products. Add one using the form.</p>';
+    renderCatalogueHealth();
   }
-  function resetProduct(){editingProductId=null;$('product-form').reset();$('product-form-title').textContent='Add a product';$('product-submit').textContent='Save product';$('product-cancel').hidden=true;showError('product-error','')}
+  function updateProductMarginPreview(){
+    const el=$('product-margin-preview'),cost=Number($('product-cost').value),price=Number($('product-price').value);
+    if(!validAmount($('product-cost').value)||!validAmount($('product-price').value)||!(price>0)){el.textContent='';el.classList.remove('error');return}
+    const m=(price-cost)/price*100,t=targetMargin(),low=cost>0&&m<t;
+    el.textContent=`Margin ${m.toFixed(1)}%`+(cost>0?` · markup ${((price-cost)/cost*100).toFixed(1)}%`:'')+(low?` · below your ${t}% target`:'');
+    el.classList.toggle('error',low);
+  }
+  $('product-cost').addEventListener('input',updateProductMarginPreview);
+  $('product-price').addEventListener('input',updateProductMarginPreview);
+  function startEditProduct(p){
+    editingProductId=p.id;$('product-name').value=p.name;$('product-category').value=p.category;$('product-cost').value=p.cost;$('product-price').value=p.price;
+    $('product-form-title').textContent='Edit product';$('product-submit').textContent='Update product';$('product-cancel').hidden=false;$('product-name').focus();updateProductMarginPreview();
+  }
+  function renderCatalogueHealth(){
+    const holder=$('health-list');if(!holder)return;
+    const t=targetMargin(),step=settings.roundingIncrement||1,term=$('health-search').value.toLowerCase().trim(),onlyLow=$('health-low-only').checked;
+    const all=products.map(p=>{
+      const cost=Number(p.cost)||0,price=Number(p.price)||0,noCost=cost<=0,noPrice=price<=0;
+      const m=noPrice?null:(price-cost)/price*100,mk=noCost?null:(price-cost)/cost*100;
+      return {p,cost,price,m,mk,noCost,noPrice,low:!noCost&&!noPrice&&m<t,suggested:noCost?null:roundUpStep(cost/(1-t/100),step)};
+    });
+    const lowCount=all.filter(r=>r.low).length,measured=all.filter(r=>!r.noCost&&!r.noPrice),avg=measured.length?measured.reduce((s,r)=>s+r.m,0)/measured.length:null;
+    $('health-target').textContent=`Target margin ${t}%`;
+    $('health-summary').textContent=all.length?`${lowCount} of ${all.length} product${all.length===1?'':'s'} below target${avg===null?'':` · average margin ${avg.toFixed(1)}%`}`:'No products in your catalogue yet.';
+    const shown=all.filter(r=>(!onlyLow||r.low)&&`${r.p.name} ${r.p.category}`.toLowerCase().includes(term)).sort((a,b)=>(a.m===null)-(b.m===null)||(a.m||0)-(b.m||0));
+    holder.innerHTML=shown.length?shown.map(r=>{
+      const status=r.noPrice?'<span class="muted">No price set</span>':r.noCost?'<span class="muted">No cost saved</span>':r.low?'<span class="error font-bold">Below target</span>':'<span class="pill">On target</span>';
+      const suggested=r.suggested===null?'<span class="muted">—</span>':r.low?`<strong>${esc(money(r.suggested))}</strong><br><span class="text-xs muted">+${esc(money(r.suggested-r.price))} from now</span>`:`<span class="muted">${esc(money(r.suggested))}</span>`;
+      return `<tr data-health-id="${esc(r.p.id)}"><td><strong>${esc(r.p.name)}</strong><br><span class="text-xs muted">${esc(r.p.category)}</span></td><td>${esc(exactMoney(r.cost))}</td><td>${esc(money(r.price))}</td><td${r.low?' class="error font-bold"':''}>${esc(pctText(r.m))}</td><td>${esc(pctText(r.mk))}</td><td>${status}</td><td>${suggested}</td><td><button type="button" class="secondary" data-health-edit>Edit</button></td></tr>`;
+    }).join(''):`<tr><td colspan="8" class="muted">${all.length?'No products match your search or filter.':'Add products in Products &amp; Services to see their health here.'}</td></tr>`;
+  }
+  $('health-search').addEventListener('input',renderCatalogueHealth);
+  $('health-low-only').addEventListener('change',renderCatalogueHealth);
+  $('health-list').addEventListener('click',e=>{
+    const b=e.target.closest('[data-health-edit]');if(!b)return;
+    const p=products.find(x=>x.id===b.closest('[data-health-id]').dataset.healthId);if(!p)return;
+    setView('products');startEditProduct(p);
+  });
+  function resetProduct(){editingProductId=null;$('product-form').reset();$('product-form-title').textContent='Add a product';$('product-submit').textContent='Save product';$('product-cancel').hidden=true;showError('product-error','');updateProductMarginPreview()}
   $('product-cancel').onclick=resetProduct;
   $('product-form').onsubmit=e=>{
     e.preventDefault();const name=$('product-name').value.trim(),category=$('product-category').value,cost=Number($('product-cost').value),price=Number($('product-price').value);
@@ -1571,7 +1716,7 @@
   $('product-search').oninput=renderProducts;
   $('product-list').onclick=e=>{
     const b=e.target.closest('[data-product-action]');if(!b)return;const p=products.find(p=>p.id===b.closest('[data-product-id]').dataset.productId);if(!p)return;
-    if(b.dataset.productAction==='edit'){editingProductId=p.id;$('product-name').value=p.name;$('product-category').value=p.category;$('product-cost').value=p.cost;$('product-price').value=p.price;$('product-form-title').textContent='Edit product';$('product-submit').textContent='Update product';$('product-cancel').hidden=false;$('product-name').focus()}
+    if(b.dataset.productAction==='edit')startEditProduct(p);
     if(b.dataset.productAction==='delete')b.parentElement.innerHTML='<span>Delete this product?</span><button type="button" data-product-action="confirm" class="danger">Confirm delete</button><button type="button" data-product-action="cancel" class="secondary">Cancel</button>';
     if(b.dataset.productAction==='cancel')renderProducts();
     if(b.dataset.productAction==='confirm'){const next=products.filter(x=>x.id!==p.id);if(saveLegacy('products',next)){products=next;if(editingProductId===p.id)resetProduct();renderProducts();renderDashboard();renderQuote();renderOrderLines();notify('Product deleted.')}}
@@ -1582,34 +1727,21 @@
     $('profit-results').innerHTML=[['Gross profit',money(price-cost)],['Markup percentage',cost?((price-cost)/cost*100).toFixed(2)+'%':'Not defined'],['Profit margin',price?((price-cost)/price*100).toFixed(2)+'%':'Not defined'],['Recommended selling price',money(Math.ceil((cost/(1-target/100)-1e-10)*100)/100)]].map(([a,b])=>lineRow(a,valid?b:'—')).join('')
   }
   document.querySelectorAll('.profit-input').forEach(el=>el.addEventListener('input',calculateProfit));
-  function quoteOptions(id){return '<option value="">Choose a product</option>'+products.map(p=>`<option value="${esc(p.id)}" ${id===p.id?'selected':''}>${esc(p.name)} — ${esc(money(p.price))}</option>`).join('')}
-  function renderQuote(){
-    const holder=$('quote-lines'),ids=new Set(quoteLines.map(l=>l.id));holder.querySelectorAll('[data-quote-line]').forEach(el=>{if(!ids.has(el.dataset.quoteLine))el.remove()});
-    for(const line of quoteLines){let el=Array.from(holder.children).find(x=>x.dataset.quoteLine===line.id);if(!el){el=document.createElement('div');el.className='draft-line grid sm:grid-cols-[1fr_90px_100px_auto] gap-3 items-end';el.dataset.quoteLine=line.id;el.innerHTML=`<div><label class="field-label" for="q-select-${line.id}">Product or service</label><select class="field quote-select" id="q-select-${line.id}"></select></div><div><label class="field-label" for="q-qty-${line.id}">Quantity</label><input class="field quote-qty" id="q-qty-${line.id}" type="number" min="1" step="1"></div><strong class="quote-line-total pb-3"></strong><button type="button" class="danger quote-remove">Remove</button>`;holder.appendChild(el)}
-      const select=el.querySelector('select'),html=quoteOptions(line.productId);if(select.innerHTML!==html)select.innerHTML=html;const input=el.querySelector('.quote-qty');if(document.activeElement!==input)input.value=line.quantity;const p=products.find(p=>p.id===line.productId);el.querySelector('.quote-line-total').textContent=money(p?p.price*line.quantity:0)}
-    if(!quoteLines.length)holder.innerHTML='<p class="text-sm muted">No line items yet. Add an item to begin.</p>';updateQuote()
-  }
-  function updateQuote(){const subtotal=quoteLines.reduce((sum,l)=>{const p=products.find(p=>p.id===l.productId);return sum+(p&&Number.isInteger(l.quantity)&&l.quantity>0?cents(p.price*l.quantity):0)},0)/100,discount=Number($('quote-discount').value),valid=validAmount($('quote-discount').value)&&discount<=100;showError('quote-error',valid?'':'Discount must be between 0% and 100%.');$('quote-results').innerHTML=lineRow('Subtotal',money(subtotal))+lineRow('Discount',valid?'-'+money(subtotal*discount/100):'—')+lineRow('Grand total',valid?money(Math.round(cents(subtotal)*(1-discount/100))/100):'—')}
-  $('add-quote-line').onclick=()=>{quoteLines.push({id:uid(),productId:'',quantity:1});renderQuote()};
-  $('quote-lines').addEventListener('change',e=>{const el=e.target.closest('[data-quote-line]');if(!el)return;const l=quoteLines.find(x=>x.id===el.dataset.quoteLine);if(e.target.classList.contains('quote-select'))l.productId=e.target.value;if(e.target.classList.contains('quote-qty'))l.quantity=Number(e.target.value);renderQuote()});
-  $('quote-lines').addEventListener('input',e=>{if(!e.target.classList.contains('quote-qty'))return;const l=quoteLines.find(x=>x.id===e.target.closest('[data-quote-line]').dataset.quoteLine);l.quantity=Number(e.target.value);renderQuote()});
-  $('quote-lines').addEventListener('click',e=>{if(!e.target.classList.contains('quote-remove'))return;quoteLines=quoteLines.filter(l=>l.id!==e.target.closest('[data-quote-line]').dataset.quoteLine);renderQuote()});
-  $('quote-discount').oninput=updateQuote;
-  $('print-quote').onclick=()=>{const discount=Number($('quote-discount').value),customer=$('quote-customer').value.trim();if(!validAmount($('quote-discount').value)||discount>100||!customer||!quoteLines.length||quoteLines.some(l=>!products.some(p=>p.id===l.productId)||!Number.isInteger(l.quantity)||l.quantity<1)){showError('quote-error','Enter a customer, valid products and quantities, and a discount between 0% and 100%.');return}showError('quote-error','');const items=quoteLines.map(l=>{const p=products.find(p=>p.id===l.productId);return {name:p.name,quantity:l.quantity,price:p.price}}),subtotal=items.reduce((sum,i)=>sum+cents(i.quantity*i.price),0)/100,off=Math.round(cents(subtotal)*discount/100)/100;const quotation={id:moduleId(),reference:'QT-'+new Date().toISOString().replace(/[-:T.Z]/g,'').slice(0,14),customer,contact:$('quote-contact').value.trim(),items,subtotal,discount:off,total:subtotal-off,notes:$('quote-notes').value.trim(),status:'Draft',createdAt:now()};moduleData.quotations.unshift(quotation);saveModuleData('quotations');fillPrint('QUOTATION',customer,$('quote-contact').value.trim(),items,subtotal,off,subtotal-off,$('quote-notes').value.trim())};
 
 
   // Additional shop modules. Records are stored in the authenticated shop cloud API.
   async function cloudSetting(key,value){const response=await fetch('/api/shop/settings/'+key,{method:'PUT',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({setting:value})});let data={};try{data=await response.json()}catch{}if(!response.ok||data.success===false)throw Error(data.message||'Could not save '+key+' to cloud.');return data}
   async function readCloudSetting(key){const response=await fetch('/api/shop/settings/'+key,{credentials:'same-origin'});let data={};try{data=await response.json()}catch{}if(!response.ok||data.success===false)throw Error(data.message||'Could not load '+key+' from cloud.');return data.setting}
   const moduleData={transactions:[],expenses:[],inventory:[],quotations:[]};
+  let modulesLoaded=false;
   async function moduleRequest(collection,method='GET',records){const response=await fetch('/api/shop/records/'+collection,{method,credentials:'same-origin',headers:method==='PUT'?{'Content-Type':'application/json'}:undefined,body:method==='PUT'?JSON.stringify({records}):undefined});let data={};try{data=await response.json()}catch{}if(!response.ok||data.success===false)throw Error(data.message||'Could not sync '+collection+'. Please sign in again.');return data}
-  async function loadModuleData(){for(const c of Object.keys(moduleData)){try{const result=await moduleRequest(c);moduleData[c]=Array.isArray(result.records)?result.records:[]}catch(e){notify(e.message);break}}renderModules()}
+  async function loadModuleData(){let ok=true;for(const c of Object.keys(moduleData)){try{const result=await moduleRequest(c);moduleData[c]=Array.isArray(result.records)?result.records:[]}catch(e){ok=false;notify(e.message);break}}modulesLoaded=ok;renderModules();if(ok)syncPaymentTransactions()}
   async function saveModuleData(collection){try{await moduleRequest(collection,'PUT',moduleData[collection]);notify('Saved and synced to your shop account.');renderModules();return true}catch(e){notify(e.message);return false}}
   const moduleId=()=>crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random().toString(16).slice(2);
-  function renderTransactions(){const rows=moduleData.transactions.slice().sort((a,b)=>b.date.localeCompare(a.date));$('tx-total').textContent='Total received: '+money(rows.reduce((s,x)=>s+Number(x.amount||0),0));$('tx-list').innerHTML=rows.map(x=>`<tr class="border-t"><td class="p-2">${esc(dateText(x.date))}</td><td class="p-2">${esc(x.customer)}</td><td class="p-2">${esc(x.order||'—')}</td><td class="p-2">${esc(x.method)}</td><td class="p-2 text-right">${money(x.amount)}</td><td class="p-2 text-right"><button class="danger" data-delete-tx="${esc(x.id)}">Delete</button></td></tr>`).join('')||'<tr><td colspan="6" class="p-4 muted">No transactions recorded yet.</td></tr>'}
+  function renderTransactions(){const rows=moduleData.transactions.slice().sort((a,b)=>b.date.localeCompare(a.date));$('tx-total').textContent='Total received: '+money(rows.reduce((s,x)=>s+Number(x.amount||0),0));$('tx-list').innerHTML=rows.map(x=>`<tr class="border-t"><td class="p-2">${esc(dateText(x.date))}</td><td class="p-2">${esc(x.customer)}</td><td class="p-2">${esc(x.order||'—')}</td><td class="p-2">${esc(x.method)}</td><td class="p-2 text-right">${money(x.amount)}</td><td class="p-2 text-right">${x.paymentId?'<span class="pill" title="This entry mirrors a payment on the order. Delete the order to remove it.">Order payment</span>':`<button class="danger" data-delete-tx="${esc(x.id)}">Delete</button>`}</td></tr>`).join('')||'<tr><td colspan="6" class="p-4 muted">No transactions recorded yet.</td></tr>'}
   function renderExpenses(){const rows=moduleData.expenses.slice().sort((a,b)=>b.date.localeCompare(a.date));$('ex-total').textContent='Total expenses: '+money(rows.reduce((s,x)=>s+Number(x.amount||0),0));$('ex-list').innerHTML=rows.map(x=>`<tr class="border-t"><td class="p-2">${esc(dateText(x.date))}</td><td class="p-2">${esc(x.category)}</td><td class="p-2">${esc(x.description)}</td><td class="p-2">${esc(x.method)}</td><td class="p-2 text-right">${money(x.amount)}</td><td class="p-2 text-right"><button class="danger" data-delete-ex="${esc(x.id)}">Delete</button></td></tr>`).join('')||'<tr><td colspan="6" class="p-4 muted">No expenses recorded yet.</td></tr>'}
   function renderInventory(){ $('iv-list').innerHTML=moduleData.inventory.map(x=>`<tr class="border-t"><td class="p-2 font-semibold">${esc(x.name)}</td><td class="p-2">${esc(x.category||'—')}</td><td class="p-2 text-right">${Number(x.quantity)} ${esc(x.unit)}</td><td class="p-2 text-right">${Number(x.reorder)}</td><td class="p-2 text-right">${money(x.cost)}</td><td class="p-2"><div class="flex gap-1"><input aria-label="Quantity adjustment" class="field" style="width:75px" type="number" step="0.01" min="0.01" data-adjust-value="${esc(x.id)}"><button class="secondary" data-stock-in="${esc(x.id)}">+ In</button><button class="secondary" data-stock-out="${esc(x.id)}">− Out</button></div></td><td class="p-2"><button class="danger" data-delete-iv="${esc(x.id)}">Delete</button>${Number(x.quantity)<=Number(x.reorder)?'<div class="text-xs" style="color:var(--danger)">Low stock</div>':''}</td></tr>`).join('')||'<tr><td colspan="7" class="p-4 muted">No inventory items yet.</td></tr>' }
-  function renderModules(){renderTransactions();renderExpenses();renderInventory()}
+  function renderModules(){renderTransactions();renderExpenses();renderInventory();renderDashboard();renderQuoteList();updateQuoteHeading()}
   $('tx-date').value=localDate();$('ex-date').value=localDate();
   $('transaction-form').onsubmit=async e=>{e.preventDefault();const amount=Number($('tx-amount').value);if(!Number.isFinite(amount)||amount<=0)return notify('Enter a valid transaction amount.');moduleData.transactions.unshift({id:moduleId(),date:$('tx-date').value,customer:$('tx-customer').value.trim(),order:$('tx-order').value.trim(),amount,method:$('tx-method').value,notes:$('tx-notes').value.trim(),createdAt:now()});if(await saveModuleData('transactions'))e.target.reset();$('tx-date').value=localDate()};
   $('expense-form').onsubmit=async e=>{e.preventDefault();const amount=Number($('ex-amount').value);if(!Number.isFinite(amount)||amount<=0)return notify('Enter a valid expense amount.');moduleData.expenses.unshift({id:moduleId(),date:$('ex-date').value,category:$('ex-category').value,description:$('ex-description').value.trim(),amount,method:$('ex-method').value,notes:$('ex-notes').value.trim(),createdAt:now()});if(await saveModuleData('expenses'))e.target.reset();$('ex-date').value=localDate()};
@@ -1617,6 +1749,241 @@
   $('tx-list').onclick=async e=>{const b=e.target.closest('[data-delete-tx]');if(!b||!confirm('Delete this transaction?'))return;moduleData.transactions=moduleData.transactions.filter(x=>x.id!==b.dataset.deleteTx);await saveModuleData('transactions')};
   $('ex-list').onclick=async e=>{const b=e.target.closest('[data-delete-ex]');if(!b||!confirm('Delete this expense?'))return;moduleData.expenses=moduleData.expenses.filter(x=>x.id!==b.dataset.deleteEx);await saveModuleData('expenses')};
   $('iv-list').onclick=async e=>{const del=e.target.closest('[data-delete-iv]');if(del){if(!confirm('Delete this inventory item?'))return;moduleData.inventory=moduleData.inventory.filter(x=>x.id!==del.dataset.deleteIv);await saveModuleData('inventory');return}const b=e.target.closest('[data-stock-in],[data-stock-out]');if(!b)return;const item=moduleData.inventory.find(x=>x.id===(b.dataset.stockIn||b.dataset.stockOut));const input=$('iv-list').querySelector(`[data-adjust-value="${CSS.escape(item.id)}"]`),qty=Number(input.value);if(!Number.isFinite(qty)||qty<=0)return notify('Enter an adjustment quantity greater than zero.');const next=Number(item.quantity)+(b.hasAttribute('data-stock-in')?qty:-qty);if(next<0)return notify('Not enough stock for this adjustment.');item.quantity=next;item.updatedAt=now();await saveModuleData('inventory')};
+
+  /* ===== Order payments -> Transactions (one source of truth for cash flow) ===== */
+  let txSyncChain=Promise.resolve();
+  const paymentDate=p=>{const d=new Date(p.at);return Number.isNaN(d.getTime())?localDate():new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)};
+  const txMethod=m=>m==='Bank Transfer'?'Bank transfer':m;
+  // Creates a transaction for every order payment that does not have one yet.
+  // Safe to call repeatedly: payments already linked by paymentId are skipped.
+  function syncPaymentTransactions(){
+    if(!modulesLoaded||repoBlocked)return txSyncChain;
+    txSyncChain=txSyncChain.then(async()=>{
+      const list=moduleData.transactions;let changed=false;
+      const linked=new Set(list.filter(t=>t.paymentId).map(t=>t.paymentId));
+      for(const o of repo.orders)for(const p of o.payments||[]){
+        if(linked.has(p.id))continue;
+        // A shop owner who already typed this payment by hand: adopt it instead of double counting.
+        const manual=list.find(t=>!t.paymentId&&String(t.order||'').trim().toLowerCase()===o.reference.toLowerCase()&&cents(t.amount)===cents(p.amount));
+        if(manual){manual.paymentId=p.id;manual.orderId=o.id}
+        else list.unshift({id:moduleId(),date:paymentDate(p),customer:displayName(o),order:o.reference,orderId:o.id,paymentId:p.id,amount:p.amount,method:txMethod(p.method),notes:'Order payment (recorded automatically)',createdAt:p.at});
+        linked.add(p.id);changed=true;
+      }
+      if(!changed)return;
+      try{await moduleRequest('transactions','PUT',list)}
+      catch(e){notify('The payment is saved on the order, but the Transactions list could not sync: '+e.message)}
+      renderModules();
+    }).catch(e=>console.warn('Payment sync failed',e));
+    return txSyncChain;
+  }
+  function removeOrderTransactions(orderId){
+    if(!modulesLoaded)return;
+    const kept=moduleData.transactions.filter(t=>t.orderId!==orderId);
+    if(kept.length===moduleData.transactions.length)return;
+    moduleData.transactions=kept;
+    txSyncChain=txSyncChain.then(async()=>{
+      try{await moduleRequest('transactions','PUT',moduleData.transactions)}
+      catch(e){notify('Order deleted, but its Transactions entries could not sync: '+e.message)}
+      renderModules();
+    });
+  }
+
+  /* ===== Quotations: saved list, statuses and Convert to order ===== */
+  const QUOTE_STATUSES=['Draft','Sent','Accepted','Expired'];
+  let editingQuoteId=null, confirmQuoteDeleteId=null;
+  const blankQuoteLine=()=>({id:uid(),productId:'',name:'',quantity:1,price:0});
+  const addDays=(iso,n)=>{const d=new Date(iso+'T12:00:00');d.setDate(d.getDate()+n);return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)};
+  const quoteLineOk=l=>Boolean(l.productId)&&Boolean(String(l.name||'').trim())&&Number.isInteger(l.quantity)&&l.quantity>0&&Number.isFinite(l.price)&&l.price>=0;
+  function nextQuoteRef(){
+    const used=moduleData.quotations.map(q=>{const m=/^QT-(\d{1,6})$/.exec(String(q.reference||''));return m?Number(m[1]):0});
+    return 'QT-'+String(Math.max(0,...used)+1).padStart(4,'0');
+  }
+  function quoteStatus(q){
+    const stored=QUOTE_STATUSES.includes(q.status)?q.status:'Draft';
+    return (stored==='Draft'||stored==='Sent')&&q.validUntil&&q.validUntil<localDate()?'Expired':stored;
+  }
+  function quoteProductOptions(id){
+    return '<option value="">Choose a product or service</option>'+products.map(p=>`<option value="${esc(p.id)}" ${id===p.id?'selected':''}>${esc(p.name)} — ${esc(money(p.price))}</option>`).join('')+`<option value="__custom__" ${id==='__custom__'?'selected':''}>＋ Custom item (e.g. design fee)</option>`;
+  }
+  function quoteLineHtml(l){
+    const custom=l.productId==='__custom__';
+    return `<div class="draft-line grid sm:grid-cols-2 xl:grid-cols-[1.5fr_80px_110px_110px_auto] gap-3 items-end" data-quote-line="${esc(l.id)}">
+      <div><label class="field-label" for="q-select-${esc(l.id)}">Product or service</label><select class="field quote-select" id="q-select-${esc(l.id)}">${quoteProductOptions(l.productId)}</select>${custom?`<input class="field quote-name mt-2" aria-label="Custom item description" maxlength="120" placeholder="Item description" value="${esc(l.name)}">`:''}</div>
+      <div><label class="field-label" for="q-qty-${esc(l.id)}">Quantity</label><input class="field quote-qty" id="q-qty-${esc(l.id)}" type="number" min="1" step="1" value="${esc(l.quantity)}"></div>
+      <div><label class="field-label" for="q-price-${esc(l.id)}">Unit price</label><input class="field quote-price" id="q-price-${esc(l.id)}" type="number" min="0" step="0.01" value="${esc(l.price)}"></div>
+      <strong class="quote-line-total pb-3">${esc(money(l.quantity*l.price||0))}</strong>
+      <button type="button" class="danger quote-remove">Remove</button></div>`;
+  }
+  function renderQuote(){
+    $('quote-lines').innerHTML=quoteLines.length?quoteLines.map(quoteLineHtml).join(''):'<p class="text-sm muted">No line items yet. Add an item to begin.</p>';
+    updateQuote();
+  }
+  function quoteTotals(){
+    const subtotal=quoteLines.reduce((sum,l)=>sum+(quoteLineOk(l)?cents(l.quantity*l.price):0),0)/100,discount=Number($('quote-discount').value);
+    return {subtotal,discount,valid:validAmount($('quote-discount').value)&&discount<=100};
+  }
+  function updateQuote(){
+    const {subtotal,discount,valid}=quoteTotals();
+    showError('quote-error',valid?'':'Discount must be between 0% and 100%.');
+    $('quote-results').innerHTML=lineRow('Subtotal',money(subtotal))+lineRow('Discount',valid?'-'+money(subtotal*discount/100):'—')+lineRow('Grand total',valid?money(Math.round(cents(subtotal)*(1-discount/100))/100):'—');
+  }
+  function updateQuoteHeading(){
+    const q=editingQuoteId?moduleData.quotations.find(x=>x.id===editingQuoteId):null;
+    $('quote-form-title').textContent=q?`Editing ${q.reference}`:'New quotation';
+    $('quote-ref-preview').textContent=q?q.reference:(modulesLoaded?nextQuoteRef()+' · assigned on save':'');
+  }
+  function resetQuoteForm(){
+    editingQuoteId=null;
+    ['quote-customer','quote-contact','quote-notes'].forEach(id=>$(id).value='');
+    $('quote-discount').value='0';$('quote-valid-until').value=addDays(localDate(),14);$('quote-status').value='Draft';
+    quoteLines=[blankQuoteLine()];showError('quote-error','');updateQuoteHeading();renderQuote();
+  }
+  function loadQuote(id){
+    const q=moduleData.quotations.find(x=>x.id===id);if(!q)return;
+    editingQuoteId=q.id;
+    $('quote-customer').value=q.customer||'';$('quote-contact').value=q.contact||'';$('quote-notes').value=q.notes||'';
+    $('quote-discount').value=q.discountPct!==undefined?q.discountPct:(q.subtotal?Math.round(q.discount/q.subtotal*10000)/100:0);
+    $('quote-valid-until').value=q.validUntil||'';$('quote-status').value=QUOTE_STATUSES.includes(q.status)?q.status:'Draft';
+    quoteLines=(q.items||[]).map(i=>{
+      const p=products.find(x=>x.id===i.productId)||products.find(x=>x.name.toLowerCase()===String(i.name||'').trim().toLowerCase());
+      return {id:uid(),productId:p?p.id:'__custom__',name:String(i.name||''),quantity:Number(i.quantity),price:Number(i.price)};
+    });
+    if(!quoteLines.length)quoteLines=[blankQuoteLine()];
+    showError('quote-error','');updateQuoteHeading();setView('quotes');renderQuote();
+  }
+  function collectQuote(){
+    const discount=Number($('quote-discount').value),customer=$('quote-customer').value.trim(),validUntil=$('quote-valid-until').value;
+    if(!validAmount($('quote-discount').value)||discount>100||!customer||!quoteLines.length||!quoteLines.every(quoteLineOk)){
+      showError('quote-error','Enter a customer, then a product (or custom item name), quantity and price on every line, with a discount between 0% and 100%.');return null;
+    }
+    if(validUntil&&!isDate(validUntil)){showError('quote-error','Enter a valid “valid until” date or leave it blank.');return null}
+    showError('quote-error','');
+    const items=quoteLines.map(l=>({name:l.name.trim(),quantity:l.quantity,price:l.price,productId:l.productId==='__custom__'?'':l.productId}));
+    const subtotal=items.reduce((sum,i)=>sum+cents(i.quantity*i.price),0)/100,off=Math.round(cents(subtotal)*discount/100)/100;
+    const existing=editingQuoteId?moduleData.quotations.find(q=>q.id===editingQuoteId):null;
+    return {...(existing||{}),id:existing?existing.id:moduleId(),reference:existing?existing.reference:nextQuoteRef(),customer,contact:$('quote-contact').value.trim(),items,subtotal,discountPct:discount,discount:off,total:(cents(subtotal)-cents(off))/100,notes:$('quote-notes').value.trim(),validUntil,status:$('quote-status').value,createdAt:existing?existing.createdAt:now(),updatedAt:now()};
+  }
+  function printQuote(q){
+    const notes=(q.validUntil?`Valid until: ${dateText(q.validUntil)}\n`:'')+(q.notes||'');
+    fillPrint('QUOTATION · '+q.reference,q.customer,q.contact||'',q.items,q.subtotal,q.discount,q.total,notes.trim());
+  }
+  async function saveQuote(printAfter){
+    if(!modulesLoaded){
+      if(printAfter){const draft=collectQuote();if(draft){printQuote(draft);notify('Printed, but not saved: your shop data has not finished loading.')}}
+      else notify('Your shop data has not finished loading. Try again in a moment.');
+      return;
+    }
+    const q=collectQuote();if(!q)return;
+    const i=moduleData.quotations.findIndex(x=>x.id===q.id);
+    if(i>=0)moduleData.quotations[i]=q;else moduleData.quotations.unshift(q);
+    editingQuoteId=q.id;
+    await saveModuleData('quotations');
+    updateQuoteHeading();
+    if(printAfter)printQuote(q);
+  }
+  function linkQuoteToOrder(quoteId,order){
+    const q=moduleData.quotations.find(x=>x.id===quoteId);if(!q||!modulesLoaded)return;
+    q.status='Accepted';q.orderId=order.id;q.orderRef=order.reference;q.updatedAt=now();
+    renderModules();
+    moduleRequest('quotations','PUT',moduleData.quotations).catch(e=>notify('Order saved, but the quotation status could not sync: '+e.message));
+  }
+  function convertQuote(id){
+    const q=moduleData.quotations.find(x=>x.id===id);if(!q)return;
+    resetOrderForm();convertingQuoteId=id;
+    const key=phoneKey(q.contact),name=String(q.customer||'').trim().toLowerCase();
+    const match=repo.customers.find(c=>key&&phoneKey(c.phone)===key)||repo.customers.find(c=>c.name.trim().toLowerCase()===name);
+    if(match){$('order-customer-select').value=match.id;$('order-customer-search').value=`${match.name} · ${match.phone}`}
+    else{showNewCustomer(true);$('order-customer').value=q.customer||'';$('order-phone').value=/^[+()\d\s-]{7,25}$/.test(String(q.contact||'').trim())?String(q.contact).trim():''}
+    orderLines=(q.items||[]).map(i=>{
+      const p=products.find(x=>x.id===i.productId)||products.find(x=>x.name.toLowerCase()===String(i.name||'').trim().toLowerCase());
+      return {id:uid(),name:String(i.name||''),category:p?p.category:'',productId:p?p.id:'__custom__',custom:!p,quantity:Number(i.quantity),price:Number(i.price)};
+    });
+    if(!orderLines.length)orderLines=[{id:uid(),name:'',category:'',productId:'',custom:false,quantity:1,price:0}];
+    $('order-discount').value=q.discount||0;$('order-instructions').value=q.notes||'';$('order-notes').value=`Converted from quotation ${q.reference}.`;
+    $('order-form-heading').textContent=`Create an order from ${q.reference}`;
+    $('cancel-order-edit').hidden=false;$('cancel-order-edit').textContent='Cancel conversion';
+    renderOrderLines();renderReferencePreview();setView('orders');
+    $('order-form').scrollIntoView({behavior:'smooth',block:'start'});
+    notify(`${q.reference} loaded into a new order. ${match||/^[+()\d\s-]{7,25}$/.test(String(q.contact||'').trim())?'Set the pickup date and save.':'Add a contact number, set the pickup date, and save.'}`);
+  }
+  function renderQuoteCustomerOptions(){
+    const list=$('quote-customer-options');list.replaceChildren();
+    repo.customers.slice().sort((a,b)=>a.name.localeCompare(b.name,undefined,{sensitivity:'base'})).forEach(c=>list.appendChild(new Option(c.phone,c.name)));
+  }
+  $('quote-customer').addEventListener('input',()=>{
+    const c=repo.customers.find(x=>x.name.toLowerCase()===$('quote-customer').value.trim().toLowerCase());
+    if(c&&!$('quote-contact').value.trim())$('quote-contact').value=c.phone;
+  });
+  function renderQuoteList(){
+    const holder=$('quote-list');
+    const term=$('quote-search').value.toLowerCase().trim(),filter=$('quote-status-filter').value;
+    const all=moduleData.quotations;
+    $('quote-count').textContent=`${all.length} saved`;
+    const rows=all.slice().sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||''))).filter(q=>(!filter||quoteStatus(q)===filter)&&`${q.reference} ${q.customer} ${q.contact||''}`.toLowerCase().includes(term));
+    if(!rows.length){holder.innerHTML=`<p class="text-sm muted py-4">${all.length?'No quotation matches your search or filter.':'No saved quotations yet. Fill in the form above and press “Save quotation”.'}</p>`;return}
+    holder.innerHTML=rows.map(q=>{
+      const status=quoteStatus(q),order=q.orderId?repo.orders.find(o=>o.id===q.orderId):null;
+      const meta=[`${(q.items||[]).length} item${(q.items||[]).length===1?'':'s'}`,`Total ${money(q.total)}`,q.validUntil?`Valid until ${dateText(q.validUntil)}`:'No expiry date',`Created ${dateText(String(q.createdAt||'').slice(0,10))}`].join(' · ');
+      const options=QUOTE_STATUSES.map(s=>`<option${s===status?' selected':''}>${s}</option>`).join('');
+      const actions=confirmQuoteDeleteId===q.id
+        ?`<span class="text-sm">Delete ${esc(q.reference)}?</span><button type="button" class="danger" data-quote-action="confirm">Confirm delete</button><button type="button" class="secondary" data-quote-action="cancel">Cancel</button>`
+        :`<button type="button" class="secondary" data-quote-action="edit">Open / edit</button><button type="button" class="secondary" data-quote-action="print">Print</button>${order?`<button type="button" class="primary" data-quote-action="order">Open order ${esc(order.reference)}</button>`:`<button type="button" class="primary" data-quote-action="convert">Convert to order</button>`}<button type="button" class="danger" data-quote-action="delete">Delete</button>`;
+      return `<article class="item-row mb-3" data-quote-id="${esc(q.id)}"><div class="flex flex-wrap items-start justify-between gap-3"><div><strong>${esc(q.reference)}</strong><span class="pill ml-2"${status==='Expired'?' style="color:var(--danger)"':''}>${esc(status)}</span><p class="text-sm mt-1">${esc(q.customer)}${q.contact?' · '+esc(q.contact):''}</p><p class="text-xs muted mt-1">${esc(meta)}</p>${q.orderId?`<p class="text-xs mt-1">${order?`Converted to order ${esc(order.reference)}.`:`Converted to order ${esc(q.orderRef||'')}, which no longer exists.`}</p>`:''}</div><div><label class="field-label" for="qs-${esc(q.id)}">Status</label><select id="qs-${esc(q.id)}" class="field" style="width:auto;min-height:38px" data-quote-status>${options}</select></div></div><div class="flex flex-wrap items-center gap-2 mt-3">${actions}</div></article>`;
+    }).join('');
+  }
+  $('quote-list').addEventListener('click',async e=>{
+    const b=e.target.closest('[data-quote-action]');if(!b)return;
+    const id=b.closest('[data-quote-id]').dataset.quoteId,q=moduleData.quotations.find(x=>x.id===id);if(!q)return;
+    const a=b.dataset.quoteAction;
+    if(a==='edit')loadQuote(id);
+    if(a==='print')printQuote(q);
+    if(a==='convert')convertQuote(id);
+    if(a==='order'){selectedId=q.orderId;renderDetail();setView('order-detail')}
+    if(a==='delete'){confirmQuoteDeleteId=id;renderQuoteList()}
+    if(a==='cancel'){confirmQuoteDeleteId=null;renderQuoteList()}
+    if(a==='confirm'){
+      if(!modulesLoaded){notify('Your shop data has not finished loading. Try again in a moment.');return}
+      moduleData.quotations=moduleData.quotations.filter(x=>x.id!==id);confirmQuoteDeleteId=null;
+      if(editingQuoteId===id)resetQuoteForm();
+      await saveModuleData('quotations');
+    }
+  });
+  $('quote-list').addEventListener('change',async e=>{
+    const sel=e.target.closest('[data-quote-status]');if(!sel)return;
+    const q=moduleData.quotations.find(x=>x.id===sel.closest('[data-quote-id]').dataset.quoteId);if(!q)return;
+    if(!modulesLoaded){notify('Your shop data has not finished loading. Try again in a moment.');renderQuoteList();return}
+    q.status=sel.value;q.updatedAt=now();
+    if(editingQuoteId===q.id)$('quote-status').value=q.status;
+    await saveModuleData('quotations');
+    if((q.status==='Draft'||q.status==='Sent')&&q.validUntil&&q.validUntil<localDate())notify('Saved, but its “valid until” date has passed, so it still shows as Expired. Open the quote to extend the date.');
+  });
+  $('quote-search').oninput=renderQuoteList;$('quote-status-filter').onchange=renderQuoteList;
+  $('add-quote-line').onclick=()=>{quoteLines.push(blankQuoteLine());renderQuote()};
+  $('quote-lines').addEventListener('change',e=>{
+    const el=e.target.closest('[data-quote-line]');if(!el||!e.target.classList.contains('quote-select'))return;
+    const l=quoteLines.find(x=>x.id===el.dataset.quoteLine);if(!l)return;
+    const v=e.target.value;l.productId=v;
+    if(v==='__custom__'){l.name='';l.price=0}
+    else{const p=products.find(x=>x.id===v);l.name=p?p.name:'';l.price=p?p.price:0}
+    renderQuote();
+    if(v==='__custom__'){const input=$('quote-lines').querySelector(`[data-quote-line="${CSS.escape(l.id)}"] .quote-name`);if(input)input.focus()}
+  });
+  $('quote-lines').addEventListener('input',e=>{
+    const el=e.target.closest('[data-quote-line]');if(!el)return;
+    const l=quoteLines.find(x=>x.id===el.dataset.quoteLine);if(!l)return;
+    if(e.target.classList.contains('quote-name'))l.name=e.target.value;
+    if(e.target.classList.contains('quote-qty'))l.quantity=Number(e.target.value);
+    if(e.target.classList.contains('quote-price'))l.price=Number(e.target.value);
+    el.querySelector('.quote-line-total').textContent=money(l.quantity*l.price||0);updateQuote();
+  });
+  $('quote-lines').addEventListener('click',e=>{
+    if(!e.target.classList.contains('quote-remove'))return;
+    quoteLines=quoteLines.filter(l=>l.id!==e.target.closest('[data-quote-line]').dataset.quoteLine);renderQuote();
+  });
+  $('quote-discount').oninput=updateQuote;
+  $('save-quote').onclick=()=>saveQuote(false);
+  $('print-quote').onclick=()=>saveQuote(true);
+  $('new-quote').onclick=resetQuoteForm;
 
   function syncSettingsVisibility(){
     $('setting-owner-rate-wrap').hidden = !$('setting-include-owner-labor').checked;
@@ -1626,8 +1993,9 @@
   $('setting-min-charge-enabled').addEventListener('change',syncSettingsVisibility);
 
   function fillSettings(){
-    for(const [id,value] of Object.entries({'business-name':settings.name,'business-address':settings.address,'business-contact':settings.contact,'currency-symbol':settings.currency,'business-date-format':settings.dateFormat,'default-margin':settings.margin,'default-labor':settings.labor,'default-overhead':settings.overhead}))$(id).value=value;
+    for(const [id,value] of Object.entries({'business-name':settings.name,'business-address':settings.address,'business-contact':settings.contact,'currency-symbol':settings.currency,'business-date-format':settings.dateFormat,'default-margin':settings.margin,'target-margin':targetMargin(),'default-labor':settings.labor,'default-overhead':settings.overhead}))$(id).value=value;
     $('rounding-increment').value = String(settings.roundingIncrement || 1);
+    $('profit-target').value = targetMargin();
     $('setting-include-owner-labor').checked = Boolean(settings.includeOwnerLabor);
     $('default-owner-hourly-rate').value = settings.ownerHourlyRate != null ? String(settings.ownerHourlyRate) : '';
     $('setting-min-charge-enabled').checked = Boolean(settings.minChargeEnabled);
@@ -1643,9 +2011,10 @@
     const defOwnerRate = Number(defOwnerRateStr);
     const minChargeOn = $('setting-min-charge-enabled').checked;
     const defMinCharge = Number($('default-min-charge').value || 0);
-    if(!$('business-name').value.trim()||!$('currency-symbol').value.trim()||!['default-margin','default-labor','default-overhead'].every(id=>validAmount($(id).value))){
+    if(!$('business-name').value.trim()||!$('currency-symbol').value.trim()||!['default-margin','default-labor','default-overhead','target-margin'].every(id=>validAmount($(id).value))){
       showError('settings-error','Enter a business name, currency symbol, and non-negative defaults.');return;
     }
+    if(Number($('target-margin').value)<=0||Number($('target-margin').value)>=100){showError('settings-error','Target profit margin must be above 0% and below 100%.');return;}
     if(defLaborOn && (!defOwnerRateStr || !Number.isFinite(defOwnerRate) || defOwnerRate <= 0)){
       showError('settings-error','Enter your hourly rate to include labor.');return;
     }
@@ -1662,6 +2031,7 @@
       margin:Number($('default-margin').value),
       labor:Number($('default-labor').value),
       overhead:Number($('default-overhead').value),
+      targetMargin:Number($('target-margin').value),
       roundingIncrement:Number($('rounding-increment').value)||1,
       includeOwnerLabor:defLaborOn,
       ownerHourlyRate:defLaborOn ? defOwnerRate : (defOwnerRateStr ? defOwnerRate : null),
@@ -1676,10 +2046,10 @@
       }
       $('staff-labor-cost').value = settings.labor;
       $('cost-other').value = settings.overhead;
-      renderAllOrders();renderProducts();renderQuote();renderOrderLines();calculatePricing();calculateProfit();notify('Business settings saved.')
+      renderAllOrders();renderProducts();renderQuote();renderOrderLines();calculatePricing();$('profit-target').value=targetMargin();calculateProfit();renderCatalogueHealth();notify('Business settings saved.')
     }
   };
-  $('message-settings-form').onsubmit=e=>{e.preventDefault();const next={confirmMessenger:$('template-confirm-messenger').value,confirmSms:$('template-confirm-sms').value,readyMessenger:$('template-ready-messenger').value,readySms:$('template-ready-sms').value};if(Object.values(next).some(v=>!v.trim())){showError('template-error','All four message templates need text.');return}if(saveLegacy('message-templates',next)){templates=next;showError('template-error','');notify('Message templates saved in this browser.')}};
+  $('message-settings-form').onsubmit=e=>{e.preventDefault();const next={confirmMessenger:$('template-confirm-messenger').value,confirmSms:$('template-confirm-sms').value,readyMessenger:$('template-ready-messenger').value,readySms:$('template-ready-sms').value};if(Object.values(next).some(v=>!v.trim())){showError('template-error','All four message templates need text.');return}if(saveLegacy('message-templates',next)){templates=next;showError('template-error','');notify('Message templates saved.')}};
   $('tracking-settings-form').onsubmit=e=>{e.preventDefault();trackingPreview={title:$('tracking-title').value.trim()||'Track your print order',instructions:$('tracking-instructions').value.trim()||'Enter your order reference and registered contact number.',showBalance:$('show-balance').checked,descriptions:$('status-descriptions').value.trim()};notify('Local tracking preview updated. Public tracking is still not connected.')};
 
   const themes={sage:{name:'Sage & Beige',accent:'#456c5a',page:'#f7f4ed',surface:'#ffffff',sidebar:'#e8eee3',highlight:'#e8eee3'},pink:{name:'Pink & Cream',accent:'#a74264',page:'#fcf5ef',surface:'#ffffff',sidebar:'#f8e7ea',highlight:'#f8e7ea'},blue:{name:'Blue & White',accent:'#28639b',page:'#f3f7fb',surface:'#ffffff',sidebar:'#e5eff9',highlight:'#e5eff9'},lavender:{name:'Lavender & Gray',accent:'#65508d',page:'#f5f4f8',surface:'#ffffff',sidebar:'#eae7f0',highlight:'#eae7f0'},gold:{name:'Black & Gold',accent:'#9c701f',page:'#f5f3ee',surface:'#ffffff',sidebar:'#e7e4dc',highlight:'#f2e9d5'},terracotta:{name:'Terracotta & Cream',accent:'#a44d37',page:'#fbf4eb',surface:'#ffffff',sidebar:'#f4e6dc',highlight:'#f4e6dc'},mint:{name:'Mint & White',accent:'#277866',page:'#f2faf7',surface:'#ffffff',sidebar:'#def2eb',highlight:'#def2eb'}};
@@ -1727,7 +2097,7 @@
   }
   $('staff-labor-cost').value=settings.labor;
   $('cost-other').value=settings.overhead;
-  renderLibrary();renderRecipe();renderSaved();calculatePricing();calculateProfit();quoteLines.push({id:uid(),productId:'',quantity:1});renderQuote();
+  renderLibrary();renderRecipe();renderSaved();calculatePricing();calculateProfit();resetQuoteForm();
   (async()=>{await initializeCloudRepository();for(const key of ['products','recent','settings','message_templates','appearance']){try{const value=await readCloudSetting(key);const localKey=key==='message_templates'?'message-templates':key;const fallback=key==='products'?products:key==='recent'?recent:key==='settings'?settings:key==='message_templates'?templates:savedAppearance;if(value!==null){localStorage.setItem(PREFIX+localKey,JSON.stringify(value));if(key==='products'&&Array.isArray(value))products=value;if(key==='recent'&&Array.isArray(value))recent=value;if(key==='settings'&&value&&typeof value==='object')settings={...defaults,...value};if(key==='message_templates'&&value)templates={...defaultTemplates,...value};if(key==='appearance'&&value)savedAppearance=value;}else{await cloudSetting(key,fallback);}}catch(e){/* Preserve local copy if a cloud setting is not available. */}}fillSettings();applyAppearance(savedAppearance);renderProducts();renderDashboard();renderAllOrders();$('include-owner-labor').checked=Boolean(settings.includeOwnerLabor);if(settings.ownerHourlyRate!=null&&settings.ownerHourlyRate>0){$('owner-hourly-rate').value=String(settings.ownerHourlyRate)}$('staff-labor-cost').value=settings.labor;$('cost-other').value=settings.overhead;calculatePricing();})();
   if(window.lucide)lucide.createIcons();
   if(window.location.hash==='#track')showPublic();
