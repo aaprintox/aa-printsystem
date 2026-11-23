@@ -3,10 +3,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>AA PrintSystem | Printing Shop Management</title>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&amp;family=Fraunces:wght@600;700&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&amp;family=Fraunces:wght@600;700&amp;family=Inter:wght@400;500;600;700;800&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=DM+Serif+Display&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Nunito+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
   <style>
-    :root{--page:#f7f4ed;--surface:#fff;--sidebar:#e8eee3;--ink:#24352e;--muted:#586b63;--line:#e3e7de;--field:#fcfcf9;--accent:#456c5a;--accent-text:#fff;--accent-deep:#254739;--subtle:#edf2e9;--highlight:#e8eee3;--danger:#a64037;--focus:#af8b47}
-    *{box-sizing:border-box}html,body{width:100%;margin:0}html:not(.authenticated) body{visibility:hidden}body{background:var(--page);color:var(--ink);font-family:"DM Sans",sans-serif}h1,h2,h3,.brand,.metric{font-family:Fraunces,serif;letter-spacing:-.035em}button{cursor:pointer}button:disabled{opacity:.55;cursor:not-allowed}[hidden]{display:none!important}
+    :root{--page:#f7f4ed;--surface:#fff;--sidebar:#e8eee3;--ink:#24352e;--muted:#586b63;--line:#e3e7de;--field:#fcfcf9;--accent:#456c5a;--accent-text:#fff;--accent-deep:#254739;--subtle:#edf2e9;--highlight:#e8eee3;--danger:#a64037;--focus:#af8b47;--font-body:"Inter",sans-serif;--font-heading:"Inter",sans-serif;--radius-card:8px;--radius-control:8px;--shadow-card:none}
+    *{box-sizing:border-box}html,body{width:100%;margin:0}html:not(.authenticated) body{visibility:hidden}body{background:var(--page);color:var(--ink);font-family:var(--font-body)}h1,h2,h3,.brand,.metric{font-family:var(--font-heading);letter-spacing:-.035em}button{cursor:pointer}button:disabled{opacity:.55;cursor:not-allowed}[hidden]{display:none!important}
     button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
     .app-shell{width:100%;height:100vh;height:100dvh;min-height:0;display:flex;overflow:hidden}.sidebar{width:242px;height:100vh;height:100dvh;flex:none;background:var(--sidebar);border-right:1px solid var(--line);padding:28px 16px;display:flex;flex-direction:column;gap:27px;overflow-y:auto;overscroll-behavior:contain}.brand{font-size:27px;color:var(--accent-deep);font-weight:700;letter-spacing:-1.3px}.brand-dot{color:#c18753}
     .nav-button{width:100%;text-align:left;display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:13px;color:var(--muted);font-weight:700}.nav-button svg{width:19px;height:19px;flex:none}.nav-button:hover,.nav-button.active{background:var(--surface);color:var(--accent-deep);box-shadow:0 4px 14px #17241c12}
@@ -18,8 +18,8 @@
     .nav-button{min-height:42px;padding:10px 13px;font-size:14px}
     .sidebar #logout-button{margin-top:auto!important;flex:none}
     @media(max-width:850px){.sidebar{overflow-y:auto;gap:20px}.sidebar-navigation{gap:16px}.nav-group{gap:2px}}
-    .workspace{flex:1;min-width:0;width:calc(100% - 242px);height:100vh;height:100dvh;min-height:0;padding:32px clamp(18px,3vw,48px) 16px;display:flex;flex-direction:column;overflow:hidden}.content-width{width:100%;max-width:1230px;margin:0 auto;flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:0 2px 24px;scrollbar-gutter:stable}.workspace>.site-footer{flex:none;margin-top:8px}.panel{background:var(--surface);border:1px solid var(--line);border-radius:22px;box-shadow:0 8px 30px #17241c10}.eyebrow{color:var(--accent-deep);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.17em}.page-heading{font-size:clamp(28px,3vw,42px);line-height:1.12;margin:8px 0}.section-title{font-size:23px;line-height:1.2}.muted{color:var(--muted)}.field-label{display:block;font-size:13px;font-weight:700;margin-bottom:7px}.field{width:100%;min-height:44px;background:var(--field);color:var(--ink);border:1px solid var(--line);border-radius:11px;padding:10px 12px}textarea.field{min-height:88px;resize:vertical}
-    .primary,.secondary,.danger{display:inline-flex;align-items:center;justify-content:center;gap:7px;border-radius:12px;font-weight:700;padding:11px 16px}.primary{background:var(--accent);color:var(--accent-text)}.secondary{background:var(--subtle);color:var(--accent-deep)}.danger{background:#fff1ed;color:var(--danger)}.primary:hover,.secondary:hover{filter:brightness(.93)}.metric{font-size:clamp(24px,2.6vw,34px);font-weight:700}.pill{border-radius:99px;background:var(--subtle);color:var(--accent-deep);font-size:11px;font-weight:800;padding:5px 9px;display:inline-block}.item-row,.draft-line{border:1px solid var(--line);border-radius:14px;padding:14px}.result-row{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding:10px 0}.result-row:last-child{border:0}.highlight-panel{background:var(--highlight)}.error{color:var(--danger)}.notice{border-left:4px solid var(--focus);background:var(--highlight);border-radius:10px;padding:15px 18px}.toast{position:fixed;right:20px;bottom:20px;z-index:70;background:var(--accent-deep);color:#fff;border-radius:12px;padding:14px 18px;max-width:min(430px,calc(100% - 40px));box-shadow:0 12px 30px #17241c40}
+    .workspace{flex:1;min-width:0;width:calc(100% - 242px);height:100vh;height:100dvh;min-height:0;padding:32px clamp(18px,3vw,48px) 16px;display:flex;flex-direction:column;overflow:hidden}.content-width{width:100%;max-width:1230px;margin:0 auto;flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:0 2px 24px;scrollbar-gutter:stable}.workspace>.site-footer{flex:none;margin-top:8px}.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-card);box-shadow:var(--shadow-card)}.eyebrow{color:var(--accent-deep);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.17em}.page-heading{font-size:clamp(28px,3vw,42px);line-height:1.12;margin:8px 0}.section-title{font-size:23px;line-height:1.2}.muted{color:var(--muted)}.field-label{display:block;font-size:13px;font-weight:700;margin-bottom:7px}.field{width:100%;min-height:44px;background:var(--field);color:var(--ink);border:1px solid var(--line);border-radius:var(--radius-control);padding:10px 12px}textarea.field{min-height:88px;resize:vertical}
+    .primary,.secondary,.danger{display:inline-flex;align-items:center;justify-content:center;gap:7px;border-radius:var(--radius-control);font-weight:700;padding:11px 16px}.primary{background:var(--accent);color:var(--accent-text)}.secondary{background:var(--subtle);color:var(--accent-deep)}.danger{background:#fff1ed;color:var(--danger)}.primary:hover,.secondary:hover{filter:brightness(.93)}.metric{font-size:clamp(24px,2.6vw,34px);font-weight:700}.pill{border-radius:99px;background:var(--subtle);color:var(--accent-deep);font-size:11px;font-weight:800;padding:5px 9px;display:inline-block}.item-row,.draft-line{border:1px solid var(--line);border-radius:14px;padding:14px}.result-row{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding:10px 0}.result-row:last-child{border:0}.highlight-panel{background:var(--highlight)}.error{color:var(--danger)}.notice{border-left:4px solid var(--focus);background:var(--highlight);border-radius:10px;padding:15px 18px}.toast{position:fixed;right:20px;bottom:20px;z-index:70;background:var(--accent-deep);color:#fff;border-radius:12px;padding:14px 18px;max-width:min(430px,calc(100% - 40px));box-shadow:0 12px 30px #17241c40}
     .inventory-tabs{display:flex;align-items:stretch;gap:clamp(10px,2.2vw,28px);border-bottom:1px solid var(--line);margin:0 0 20px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin}
     .inventory-tab{flex:none;background:transparent;color:var(--muted);font:700 14px "DM Sans",sans-serif;padding:13px 3px 12px;border:0;border-bottom:3px solid transparent;margin-bottom:-1px;white-space:nowrap}
     .inventory-tab:hover{color:var(--accent-deep)}
@@ -1093,31 +1093,63 @@
       <header class="mb-7">
        <p class="eyebrow">YOUR WORKSPACE, YOUR WAY</p>
        <h1 class="page-heading">Appearance &amp; Themes</h1>
-       <p class="muted">Find a palette that feels right for your print shop. Preview changes across AA PrintSystem before saving.</p>
+       <p class="muted">Choose a visual style, then pick a color palette that suits your print shop. Preview everything before applying.</p>
       </header>
       <section class="panel p-6 mb-5">
-       <h2 class="section-title">Theme gallery</h2>
-       <p class="muted mt-1 mb-5">Choose a palette, then preview or apply it.</p>
-       <div id="theme-gallery" class="grid sm:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+       <h2 class="section-title">1. Choose your visual style</h2>
+       <p class="muted mt-1 mb-5">Each style includes its own typography, shape language and interface details.</p>
+       <div id="style-gallery" class="grid sm:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+      </section>
+      <section class="panel p-6 mb-5">
+       <h2 class="section-title">2. Choose a color palette</h2>
+       <p id="palette-intro" class="muted mt-1 mb-5">Select a palette for your chosen style.</p>
+       <div id="palette-gallery" class="grid sm:grid-cols-2 xl:grid-cols-4 gap-4"></div>
       </section>
       <div class="grid lg:grid-cols-2 gap-5 mb-5">
        <section class="panel p-6">
         <h2 class="section-title mb-2">Custom accent</h2>
-        <p class="muted mb-5">Pick a color visually. AA PrintSystem adjusts button text for readability.</p><label class="field-label" for="accent-picker">Choose an accent color</label><input id="accent-picker" class="color-control" type="color" value="#456c5a"><button id="reset-accent" type="button" class="secondary block mt-5">Reset to selected preset</button>
+        <p class="muted mb-5">Optional: fine-tune the main accent color. Text contrast adjusts automatically.</p>
+        <label class="field-label" for="accent-picker">Choose an accent color</label>
+        <input id="accent-picker" class="color-control" type="color" value="#456c5a">
+        <button id="reset-accent" type="button" class="secondary block mt-5">Reset to selected palette</button>
        </section>
        <section class="panel p-6">
         <h2 class="section-title mb-2">Display mode</h2>
-        <p class="muted mb-5">Switch between a bright workspace and a darker one.</p>
+        <p class="muted mb-5">Dark Mode stays separate and works with every visual style and palette.</p>
         <div class="flex gap-2">
-         <button id="mode-light" type="button" class="secondary" aria-pressed="true">Light Mode</button><button id="mode-dark" type="button" class="secondary" aria-pressed="false">Dark Mode</button>
+         <button id="mode-light" type="button" class="secondary" aria-pressed="true">Light Mode</button>
+         <button id="mode-dark" type="button" class="secondary" aria-pressed="false">Dark Mode</button>
         </div>
        </section>
       </div>
+      <section class="panel p-6 mb-5">
+       <h2 class="section-title mb-2">3. Live preview</h2>
+       <p class="muted mb-4">This sample updates when you preview a style or palette.</p>
+       <div id="appearance-preview" class="rounded-xl border p-4" style="border-color:var(--line);background:var(--page)">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+         <div><p class="eyebrow">AA PRINTSYSTEM</p><h3 class="text-xl font-bold">Workspace overview</h3></div>
+         <span class="pill">Preview</span>
+        </div>
+        <div class="grid sm:grid-cols-3 gap-3 mb-4">
+         <div class="panel p-3"><p class="muted text-xs">Today's orders</p><p class="metric">12</p></div>
+         <div class="panel p-3"><p class="muted text-xs">Pending payments</p><p class="metric">₱8,450</p></div>
+         <div class="panel p-3"><p class="muted text-xs">Ready for pickup</p><p class="metric">5</p></div>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+         <button type="button" class="primary">Primary action</button>
+         <button type="button" class="secondary">Secondary action</button>
+         <span class="pill">Status label</span>
+        </div>
+       </div>
+      </section>
       <section class="panel p-6">
-       <h2 class="section-title mb-2">Ready to make it yours?</h2>
+       <h2 class="section-title mb-2">4. Apply your appearance</h2>
        <p id="appearance-status" class="muted mb-4" aria-live="polite"></p>
        <div class="flex flex-wrap gap-2">
-        <button id="preview-theme" type="button" class="secondary">Preview Theme</button><button id="apply-theme" type="button" class="primary">Apply Theme</button><button id="cancel-theme" type="button" class="secondary">Cancel</button><button id="reset-theme" type="button" class="secondary">Reset to Default</button>
+        <button id="preview-theme" type="button" class="secondary">Preview Theme</button>
+        <button id="apply-theme" type="button" class="primary">Apply Theme</button>
+        <button id="cancel-theme" type="button" class="secondary">Cancel</button>
+        <button id="reset-theme" type="button" class="secondary">Reset to Default</button>
        </div>
       </section>
      </section>
@@ -3063,23 +3095,103 @@
 
   document.querySelectorAll('.sidebar .nav-button[data-view]').forEach(button=>{const label=button.querySelector('span')?.textContent?.trim();if(label){button.title=label;button.setAttribute('aria-label',label)}});
 
-  const themes={sage:{name:'Sage & Beige',accent:'#456c5a',page:'#f7f4ed',surface:'#ffffff',sidebar:'#e8eee3',highlight:'#e8eee3'},pink:{name:'Pink & Cream',accent:'#a74264',page:'#fcf5ef',surface:'#ffffff',sidebar:'#f8e7ea',highlight:'#f8e7ea'},blue:{name:'Blue & White',accent:'#28639b',page:'#f3f7fb',surface:'#ffffff',sidebar:'#e5eff9',highlight:'#e5eff9'},lavender:{name:'Lavender & Gray',accent:'#65508d',page:'#f5f4f8',surface:'#ffffff',sidebar:'#eae7f0',highlight:'#eae7f0'},gold:{name:'Black & Gold',accent:'#9c701f',page:'#f5f3ee',surface:'#ffffff',sidebar:'#e7e4dc',highlight:'#f2e9d5'},terracotta:{name:'Terracotta & Cream',accent:'#a44d37',page:'#fbf4eb',surface:'#ffffff',sidebar:'#f4e6dc',highlight:'#f4e6dc'},mint:{name:'Mint & White',accent:'#277866',page:'#f2faf7',surface:'#ffffff',sidebar:'#def2eb',highlight:'#def2eb'}};
-  function normalizeAppearance(a){return {theme:themes[a?.theme]?a.theme:'sage',dark:a?.dark===true,accent:typeof a?.accent==='string'&&/^#[0-9a-f]{6}$/i.test(a.accent)?a.accent:null}}
+  const appearanceStyles={
+    minimalist:{name:'Minimalist',description:'Clean, quiet and uncluttered',heading:'Inter',body:'Inter',radius:8,shadow:'none',palettes:{
+      neutral:{name:'Pure Neutral',accent:'#475569',page:'#f5f6f7',surface:'#ffffff',sidebar:'#e9edf0',highlight:'#e9edf0'},
+      sage:{name:'Sage Green',accent:'#456c5a',page:'#f7f4ed',surface:'#ffffff',sidebar:'#e8eee3',highlight:'#e8eee3'},
+      ocean:{name:'Ocean Blue',accent:'#256b91',page:'#f2f7fa',surface:'#ffffff',sidebar:'#e2edf3',highlight:'#e2edf3'},
+      sand:{name:'Warm Sand',accent:'#9a7654',page:'#faf6ef',surface:'#ffffff',sidebar:'#eee5d8',highlight:'#eee5d8'}
+    }},
+    professional:{name:'Professional',description:'Structured, confident and businesslike',heading:'IBM Plex Sans',body:'IBM Plex Sans',radius:6,shadow:'0 3px 12px rgba(20,35,55,.07)',palettes:{
+      navy:{name:'Corporate Navy',accent:'#244a73',page:'#f2f5f9',surface:'#ffffff',sidebar:'#e3eaf2',highlight:'#e3eaf2'},
+      gray:{name:'Executive Gray',accent:'#4b5563',page:'#f3f4f6',surface:'#ffffff',sidebar:'#e5e7eb',highlight:'#e5e7eb'},
+      teal:{name:'Deep Teal',accent:'#176b68',page:'#f0f7f6',surface:'#ffffff',sidebar:'#dcecea',highlight:'#dcecea'},
+      royal:{name:'Royal Blue',accent:'#3157a4',page:'#f2f5fc',surface:'#ffffff',sidebar:'#e1e8f7',highlight:'#e1e8f7'}
+    }},
+    elegant:{name:'Elegant',description:'Refined typography and softer details',heading:'DM Serif Display',body:'DM Sans',radius:12,shadow:'0 8px 24px rgba(70,45,55,.08)',palettes:{
+      champagne:{name:'Champagne',accent:'#9b7950',page:'#faf6ef',surface:'#fffdf9',sidebar:'#eee5d7',highlight:'#eee5d7'},
+      rosewood:{name:'Rosewood',accent:'#9a5262',page:'#fbf3f4',surface:'#ffffff',sidebar:'#f0e0e3',highlight:'#f0e0e3'},
+      olive:{name:'Olive Luxe',accent:'#68734a',page:'#f6f6ef',surface:'#ffffff',sidebar:'#e8eadb',highlight:'#e8eadb'},
+      espresso:{name:'Espresso',accent:'#76513f',page:'#f7f2ed',surface:'#ffffff',sidebar:'#e9ded5',highlight:'#e9ded5'}
+    }},
+    creative:{name:'Modern Creative',description:'Contemporary, expressive and bold',heading:'Plus Jakarta Sans',body:'Plus Jakarta Sans',radius:14,shadow:'0 8px 24px rgba(50,45,90,.10)',palettes:{
+      violet:{name:'Electric Violet',accent:'#7041c6',page:'#f6f2fc',surface:'#ffffff',sidebar:'#e9e0f7',highlight:'#e9e0f7'},
+      coral:{name:'Coral Pop',accent:'#d45d50',page:'#fff5f1',surface:'#ffffff',sidebar:'#f8e3dc',highlight:'#f8e3dc'},
+      aqua:{name:'Aqua Fresh',accent:'#168b91',page:'#eff9f8',surface:'#ffffff',sidebar:'#d9efed',highlight:'#d9efed'},
+      sunset:{name:'Sunset',accent:'#c65e37',page:'#fff5ed',surface:'#ffffff',sidebar:'#f5e2d3',highlight:'#f5e2d3'}
+    }},
+    friendly:{name:'Soft & Friendly',description:'Warm, approachable and rounded',heading:'Nunito Sans',body:'Nunito Sans',radius:16,shadow:'0 6px 20px rgba(70,80,90,.07)',palettes:{
+      lavender:{name:'Lavender Dream',accent:'#8063a8',page:'#f7f4fb',surface:'#ffffff',sidebar:'#ebe4f4',highlight:'#ebe4f4'},
+      blush:{name:'Blush Pink',accent:'#b65f7c',page:'#fcf4f5',surface:'#ffffff',sidebar:'#f4e3e8',highlight:'#f4e3e8'},
+      matcha:{name:'Matcha Milk',accent:'#66865d',page:'#f5f8f1',surface:'#ffffff',sidebar:'#e5eddc',highlight:'#e5eddc'},
+      babyblue:{name:'Baby Blue',accent:'#4e83b5',page:'#f2f7fc',surface:'#ffffff',sidebar:'#e0ebf6',highlight:'#e0ebf6'}
+    }}
+  };
+  const legacyAppearance={
+    sage:['minimalist','sage'],pink:['friendly','blush'],blue:['professional','royal'],
+    lavender:['friendly','lavender'],gold:['elegant','champagne'],
+    terracotta:['elegant','espresso'],mint:['friendly','matcha']
+  };
+  function normalizeAppearance(a){
+    let style=a?.style,palette=a?.palette;
+    if(!appearanceStyles[style]){
+      const legacy=legacyAppearance[a?.theme]||['minimalist','sage'];
+      style=legacy[0];palette=legacy[1];
+    }
+    if(!appearanceStyles[style].palettes[palette])palette=Object.keys(appearanceStyles[style].palettes)[0];
+    return {style,palette,dark:a?.dark===true,accent:typeof a?.accent==='string'&&/^#[0-9a-f]{6}$/i.test(a.accent)?a.accent:null};
+  }
   let savedAppearance=normalizeAppearance(readLegacy('appearance',{})),pendingAppearance={...savedAppearance},previewing=false;
+  function selectedPalette(state){return appearanceStyles[state.style].palettes[state.palette]}
   function mix(a,b,w){const parse=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));const x=parse(a),y=parse(b);return '#'+x.map((n,i)=>Math.round(n*(1-w)+y[i]*w).toString(16).padStart(2,'0')).join('')}
   function readable(hex){const v=[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)/255).map(n=>n<=.04045?n/12.92:((n+.055)/1.055)**2.4);return v[0]*.2126+v[1]*.7152+v[2]*.0722>.179?'#17241c':'#ffffff'}
-  function applyAppearance(state){const p=themes[state.theme],accent=state.accent||p.accent,dark=state.dark;const color=dark?{page:'#141b1d',surface:'#202b2c',sidebar:'#1a2425',ink:'#f1f3ef',muted:'#b4c3bf',line:'#344446',field:'#263335',accent:mix(accent,'#ffffff',.22),deep:mix(accent,'#ffffff',.58),subtle:mix(accent,'#202b2c',.72),highlight:mix(accent,'#202b2c',.83)}:{page:p.page,surface:p.surface,sidebar:p.sidebar,ink:'#24352e',muted:'#586b63',line:mix(p.sidebar,'#d2d7d1',.35),field:'#fcfcf9',accent,deep:mix(accent,'#17241c',.35),subtle:mix(accent,'#ffffff',.9),highlight:p.highlight};Object.entries({'--page':color.page,'--surface':color.surface,'--sidebar':color.sidebar,'--ink':color.ink,'--muted':color.muted,'--line':color.line,'--field':color.field,'--accent':color.accent,'--accent-text':readable(color.accent),'--accent-deep':color.deep,'--subtle':color.subtle,'--highlight':color.highlight}).forEach(([name,value])=>document.documentElement.style.setProperty(name,value));document.querySelectorAll('.field').forEach(el=>el.style.colorScheme=dark?'dark':'light')}
-  function renderAppearance(){document.querySelectorAll('.theme-card').forEach(card=>{card.classList.toggle('selected',card.dataset.theme===pendingAppearance.theme);card.querySelector('button').setAttribute('aria-pressed',String(card.dataset.theme===pendingAppearance.theme))});$('accent-picker').value=pendingAppearance.accent||themes[pendingAppearance.theme].accent;$('mode-light').setAttribute('aria-pressed',String(!pendingAppearance.dark));$('mode-dark').setAttribute('aria-pressed',String(pendingAppearance.dark));$('appearance-status').textContent=previewing?'Previewing · not saved':JSON.stringify(savedAppearance)===JSON.stringify(pendingAppearance)?'Current appearance':'Changes not saved'}
-  Object.entries(themes).forEach(([key,p])=>{const card=document.createElement('article');card.className='theme-card';card.dataset.theme=key;card.innerHTML=`<h3 class="font-bold mb-4"></h3><div class="flex gap-2 mb-4"><span class="w-7 h-7 rounded-full" style="background:${p.accent}"></span><span class="w-7 h-7 rounded-full" style="background:${p.sidebar}"></span><span class="w-7 h-7 rounded-full border" style="background:${p.page}"></span></div><button type="button" class="secondary w-full" aria-pressed="false">Select Theme</button>`;card.querySelector('h3').textContent=p.name;$('theme-gallery').appendChild(card)});
-  $('theme-gallery').onclick=e=>{const b=e.target.closest('button');if(!b)return;pendingAppearance={...pendingAppearance,theme:b.closest('.theme-card').dataset.theme,accent:null};previewing=true;applyAppearance(pendingAppearance);renderAppearance()};
+  function applyAppearance(state){
+    const style=appearanceStyles[state.style],p=selectedPalette(state),accent=state.accent||p.accent,dark=state.dark;
+    const color=dark?{page:'#141b1d',surface:'#202b2c',sidebar:'#1a2425',ink:'#f1f3ef',muted:'#b4c3bf',line:'#344446',field:'#263335',accent:mix(accent,'#ffffff',.22),deep:mix(accent,'#ffffff',.58),subtle:mix(accent,'#202b2c',.72),highlight:mix(accent,'#202b2c',.83)}:{page:p.page,surface:p.surface,sidebar:p.sidebar,ink:'#24352e',muted:'#586b63',line:mix(p.sidebar,'#d2d7d1',.35),field:'#fcfcf9',accent,deep:mix(accent,'#17241c',.35),subtle:mix(accent,'#ffffff',.9),highlight:p.highlight};
+    Object.entries({'--page':color.page,'--surface':color.surface,'--sidebar':color.sidebar,'--ink':color.ink,'--muted':color.muted,'--line':color.line,'--field':color.field,'--accent':color.accent,'--accent-text':readable(color.accent),'--accent-deep':color.deep,'--subtle':color.subtle,'--highlight':color.highlight,'--font-body':'"'+style.body+'",sans-serif','--font-heading':'"'+style.heading+'",sans-serif','--radius-card':style.radius+'px','--radius-control':Math.max(6,style.radius-2)+'px','--shadow-card':style.shadow}).forEach(([name,value])=>document.documentElement.style.setProperty(name,value));
+    document.querySelectorAll('.field').forEach(el=>el.style.colorScheme=dark?'dark':'light');
+  }
+  function renderAppearance(){
+    document.querySelectorAll('.style-card').forEach(card=>{const selected=card.dataset.style===pendingAppearance.style;card.classList.toggle('selected',selected);card.querySelector('button').setAttribute('aria-pressed',String(selected))});
+    const palettes=appearanceStyles[pendingAppearance.style].palettes;
+    $('palette-intro').textContent='Available palettes for '+appearanceStyles[pendingAppearance.style].name+'.';
+    $('palette-gallery').innerHTML='';
+    Object.entries(palettes).forEach(([key,p])=>{
+      const card=document.createElement('article');card.className='theme-card';card.dataset.palette=key;
+      const selected=key===pendingAppearance.palette;if(selected)card.classList.add('selected');
+      card.innerHTML=`<h3 class="font-bold mb-3"></h3><div class="flex gap-2 mb-4"><span class="w-7 h-7 rounded-full" style="background:${p.accent}"></span><span class="w-7 h-7 rounded-full" style="background:${p.sidebar}"></span><span class="w-7 h-7 rounded-full border" style="background:${p.page}"></span><span class="w-7 h-7 rounded-full border" style="background:${p.surface}"></span></div><button type="button" class="secondary w-full" aria-pressed="${selected}">${selected?'Selected':'Select palette'}</button>`;
+      card.querySelector('h3').textContent=p.name;$('palette-gallery').appendChild(card);
+    });
+    $('accent-picker').value=pendingAppearance.accent||selectedPalette(pendingAppearance).accent;
+    $('mode-light').setAttribute('aria-pressed',String(!pendingAppearance.dark));$('mode-dark').setAttribute('aria-pressed',String(pendingAppearance.dark));
+    $('appearance-status').textContent=previewing?'Previewing · not saved':JSON.stringify(savedAppearance)===JSON.stringify(pendingAppearance)?'Current appearance':'Changes not saved';
+  }
+  Object.entries(appearanceStyles).forEach(([key,s])=>{
+    const card=document.createElement('article');card.className='theme-card style-card';card.dataset.style=key;
+    card.innerHTML=`<h3 class="font-bold mb-2"></h3><p class="muted text-sm mb-4"></p><div class="flex items-center justify-between gap-2 mb-4"><span class="text-sm">Aa PrintSystem</span><span class="pill">Aa 123</span></div><button type="button" class="secondary w-full" aria-pressed="false">Choose style</button>`;
+    card.querySelector('h3').textContent=s.name;card.querySelector('p').textContent=s.description;
+    card.querySelector('span').style.fontFamily='"'+s.heading+'",sans-serif';$('style-gallery').appendChild(card);
+  });
+  $('style-gallery').onclick=e=>{
+    const b=e.target.closest('button');if(!b)return;
+    const style=b.closest('.style-card').dataset.style,palettes=appearanceStyles[style].palettes;
+    pendingAppearance={...pendingAppearance,style,palette:palettes[pendingAppearance.palette]?pendingAppearance.palette:Object.keys(palettes)[0],accent:null};
+    previewing=true;applyAppearance(pendingAppearance);renderAppearance();
+  };
+  $('palette-gallery').onclick=e=>{
+    const b=e.target.closest('button');if(!b)return;
+    pendingAppearance={...pendingAppearance,palette:b.closest('[data-palette]').dataset.palette,accent:null};
+    previewing=true;applyAppearance(pendingAppearance);renderAppearance();
+  };
   $('accent-picker').oninput=e=>{pendingAppearance.accent=e.target.value;if(previewing)applyAppearance(pendingAppearance);renderAppearance()};
   $('reset-accent').onclick=()=>{pendingAppearance.accent=null;if(previewing)applyAppearance(pendingAppearance);renderAppearance()};
   function mode(dark){pendingAppearance.dark=dark;previewing=true;applyAppearance(pendingAppearance);renderAppearance()}
   $('mode-light').onclick=()=>mode(false);$('mode-dark').onclick=()=>mode(true);
   $('preview-theme').onclick=()=>{previewing=true;applyAppearance(pendingAppearance);renderAppearance()};
-  $('apply-theme').onclick=()=>{if(saveLegacy('appearance',pendingAppearance)){savedAppearance={...pendingAppearance};previewing=false;applyAppearance(savedAppearance);renderAppearance();notify('Theme applied.')}};
+  $('apply-theme').onclick=()=>{if(saveLegacy('appearance',pendingAppearance)){savedAppearance={...pendingAppearance};previewing=false;applyAppearance(savedAppearance);renderAppearance();notify('Appearance applied.')}};
   $('cancel-theme').onclick=()=>{pendingAppearance={...savedAppearance};previewing=false;applyAppearance(savedAppearance);renderAppearance();notify('Preview canceled.')};
-  $('reset-theme').onclick=()=>{const next={theme:'sage',dark:false,accent:null};if(saveLegacy('appearance',next)){savedAppearance={...next};pendingAppearance={...next};previewing=false;applyAppearance(next);renderAppearance();notify('Default theme restored.')}};
+  $('reset-theme').onclick=()=>{const next={style:'minimalist',palette:'sage',dark:false,accent:null};if(saveLegacy('appearance',next)){savedAppearance={...next};pendingAppearance={...next};previewing=false;applyAppearance(next);renderAppearance();notify('Default appearance restored.')}};
+  applyAppearance(savedAppearance);renderAppearance();
 
   statuses.forEach(s=>$('detail-status').add(new Option(s,s)));
   $('logout-button').onclick = async () => {
@@ -3188,8 +3300,8 @@
       {label:'Business Details'},{label:'Customer Messages'},{label:'Customer Tracking'}
     ],child=>child.id==='settings-form'?0:child.id==='message-settings-form'?1:2);
     setupFeatureTabs('view-appearance',[
-      {label:'Theme Gallery'},{label:'Customize Appearance'}
-    ],child=>child.querySelector('#theme-gallery')?0:1);
+      {label:'Styles & Palettes'},{label:'Customize Appearance'}
+    ],child=>child.querySelector('#style-gallery')?0:1);
   }
   setupAllFeatureTabs();
 
