@@ -343,7 +343,8 @@
       <section class="panel p-5 mt-6" id="tax-records-panel">
        <div class="flex flex-wrap items-start justify-between gap-3 mb-4">
         <div><p class="eyebrow mb-1">RECORDKEEPING SUPPORT</p><h2 class="section-title">Tax Records &amp; Reports</h2>
-         <p class="muted text-sm mt-1">Gather your saved business records for review and tax preparation.</p></div>
+         <p class="muted text-sm mt-1">A practical guide for gathering records and checking your official books before filing.</p>
+         <p class="text-sm font-semibold mt-2" style="color:var(--accent)">PREP GUIDE ONLY — This is a reference and document-gathering guide, not an official tax return, ledger, or substitute for BIR filings.</p></div>
         <span class="pill">Reference reports only</span>
        </div>
        <div class="rounded-xl p-3 mb-4 text-sm" style="background:var(--subtle);border:1px solid var(--line)">
@@ -354,15 +355,26 @@
          <button type="button" class="secondary" id="tax-print-summary">Print Summary</button>
         </div>
        </div>
-       <div class="grid sm:grid-cols-3 gap-3 mb-4">
-        <article class="rounded-xl p-3" style="background:var(--subtle)"><p class="text-xs muted">Orders recorded</p><strong id="tax-order-count" class="metric">—</strong><p id="tax-order-total" class="text-sm muted mt-1">—</p></article>
-        <article class="rounded-xl p-3" style="background:var(--subtle)"><p class="text-xs muted">Transactions recorded</p><strong id="tax-tx-count" class="metric">—</strong><p id="tax-tx-total" class="text-sm muted mt-1">—</p></article>
-        <article class="rounded-xl p-3" style="background:var(--subtle)"><p class="text-xs muted">Expenses recorded</p><strong id="tax-expense-count" class="metric">—</strong><p id="tax-expense-total" class="text-sm muted mt-1">—</p></article>
+       <div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-3 mb-4">
+        <article class="rounded-xl p-3" style="background:var(--subtle)"><p class="text-xs muted">Orders (excluding cancelled value)</p><strong id="tax-order-count" class="metric">—</strong><p id="tax-order-total" class="text-sm muted mt-1">—</p><p class="text-xs mt-3"><strong>What to check:</strong> Match order details against issued sales invoices/receipts, delivery or job records, and your official sales book.</p></article>
+        <article class="rounded-xl p-3" style="background:var(--subtle)"><p class="text-xs muted">Transactions (net of refunds)</p><strong id="tax-tx-count" class="metric">—</strong><p id="tax-tx-total" class="text-sm muted mt-1">—</p><p class="text-xs mt-3"><strong>What to check:</strong> Compare payment and refund entries with cash records, e-wallet statements, bank logs, and your official books.</p></article>
+        <article class="rounded-xl p-3" style="background:var(--subtle)"><p class="text-xs muted">Expenses</p><strong id="tax-expense-count" class="metric">—</strong><p id="tax-expense-total" class="text-sm muted mt-1">—</p><p class="text-xs mt-3"><strong>What to check:</strong> Match entries with supplier receipts, official receipts, utility bills, lease/rent records, and your expense book.</p></article>
         <article class="rounded-xl p-3" style="background:var(--subtle)"><p class="text-xs muted">Inventory movements</p><strong id="tax-stock-count" class="metric">—</strong><p class="text-sm muted mt-1">Stock in, out, and adjustments</p></article>
        </div>
-       <p class="text-xs muted mb-2">The download contains separate rows for orders, payments/refunds, and expenses, based only on records saved in this system. Keep your actual invoices, receipts, vouchers, and other supporting documents.</p>
+       <div class="rounded-xl p-4 mb-4" style="background:var(--subtle);border:1px solid var(--line)">
+        <h3 class="font-semibold mb-2">Tax-prep document checklist</h3>
+        <p class="text-xs muted mb-3">Use this as a reminder while gathering your actual records.</p>
+        <div class="grid sm:grid-cols-2 gap-2 text-sm">
+         <label class="flex items-start gap-2"><input type="checkbox" class="mt-1"> <span>Sales invoices and receipts for the selected year</span></label>
+         <label class="flex items-start gap-2"><input type="checkbox" class="mt-1"> <span>Expense receipts, official receipts, utility bills, and lease/rent records</span></label>
+         <label class="flex items-start gap-2"><input type="checkbox" class="mt-1"> <span>Registered books of accounts / ledgers, updated and cross-checked</span></label>
+         <label class="flex items-start gap-2"><input type="checkbox" class="mt-1"> <span>Applicable BIR forms and filing deadlines confirmed for the business</span></label>
+         <label class="flex items-start gap-2"><input type="checkbox" class="mt-1"> <span>Bank, e-wallet, cash, payment, and refund records</span></label>
+        </div>
+       </div>
+       <p class="text-xs muted mb-2">The CSV download contains separate rows for orders, payments/refunds, expenses, and inventory movements based only on records saved in this system. Use it to help cross-check your supporting documents and official books.</p>
        <div class="text-xs muted rounded-lg p-3" style="border:1px solid var(--line)">
-        <strong>Important notice:</strong> AA PrintSystem is an independent business recordkeeping and reporting tool. It is not affiliated with, endorsed by, or authorized by the Bureau of Internal Revenue (BIR). Reports are based on information entered and maintained by the user and are provided for reference and tax preparation assistance only. They are not official tax returns or a substitute for required invoices, receipts, books of accounts, or professional tax advice. The system does not determine taxable income or deductible expenses.
+        <strong>Important notice:</strong> AA PrintSystem is an independent business recordkeeping and reporting tool. It is not affiliated with, endorsed by, or authorized by the Bureau of Internal Revenue (BIR). Reports are based on information entered and maintained by the user and are provided for reference and tax preparation assistance only. They are not official tax returns or a substitute for required invoices, receipts, books of accounts, or professional tax advice. The system does not determine taxable income or deductible expenses. Always use the applicable BIR forms and your official books and supporting documents when preparing and filing.
        </div>
        <p id="tax-report-status" class="text-xs muted mt-3" aria-live="polite"></p>
       </section>
@@ -1872,9 +1884,29 @@
     const netTx=d.transactions.reduce((sum,t)=>sum+transactionNetAmount(t),0);
     const expenseTotal=d.expenses.reduce((sum,x)=>sum+Number(x.amount||0),0);
     const w=window.open('','_blank');if(!w){notify('Please allow pop-ups to print the summary.');return}
-    const safe=x=>String(x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
     w.onload=()=>w.print();
-    w.document.write(`<!doctype html><html><head><title>Year-End Records ${safe(d.year)}</title><style>body{font:14px Arial,sans-serif;margin:36px;color:#222}h1{font-size:22px}table{border-collapse:collapse;width:100%;margin:20px 0}td,th{border:1px solid #bbb;padding:10px;text-align:left}.notice{font-size:11px;line-height:1.5;margin-top:24px;border:1px solid #bbb;padding:12px}</style></head><body><h1>AA PrintSystem — Year-End Records Summary</h1><p>Tax year: ${safe(d.year)}</p><table><tr><th>Record group</th><th>Count</th><th>Recorded amount</th></tr><tr><td>Orders (excluding cancelled value)</td><td>${d.orders.length}</td><td>${safe(money(sales))}</td></tr><tr><td>Transactions (net of refunds)</td><td>${d.transactions.length}</td><td>${safe(money(netTx))}</td></tr><tr><td>Expenses</td><td>${d.expenses.length}</td><td>${safe(money(expenseTotal))}</td></tr></table><p>Figures summarize records saved in AA PrintSystem. Review detailed records and supporting documents before using these figures.</p><div class="notice"><strong>Important notice:</strong> AA PrintSystem is an independent business recordkeeping and reporting tool. It is not affiliated with, endorsed by, or authorized by the Bureau of Internal Revenue (BIR). Reports are based on information entered and maintained by the user and are provided for reference and tax preparation assistance only. They are not official tax returns or a substitute for required invoices, receipts, books of accounts, or professional tax advice. The system does not determine taxable income or deductible expenses. Keep actual invoices, receipts, vouchers, and other supporting documents.</div></body></html>`);
+    const safe=x=>String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const notice='AA PrintSystem is an independent business recordkeeping and reporting tool. It is not affiliated with, endorsed by, or authorized by the Bureau of Internal Revenue (BIR). Figures are based only on information entered and maintained by the user. This guide is for reference and document-gathering only. It is not an official tax return or ledger, and it does not replace required invoices, receipts, registered books of accounts, BIR forms or filings, or professional tax advice. The system does not calculate tax liabilities or determine deductible expenses.';
+    const checklist=[
+      'Sales invoices and receipts for the selected year',
+      'Expense receipts, official receipts, utility bills, and lease/rent records',
+      'Registered books of accounts / ledgers, updated and cross-checked',
+      'Applicable BIR forms and filing deadlines confirmed for the business',
+      'Bank, e-wallet, cash, payment, and refund records'
+    ];
+    w.document.write(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Year-End Records ${safe(d.year)}</title><style>
+      :root{color-scheme:light}*{box-sizing:border-box}body{font:14px/1.5 Arial,Helvetica,sans-serif;color:#20242a;margin:28px auto;padding:0 24px;max-width:900px}h1{font-size:22px;line-height:1.25;margin:0 0 6px}.year{font-size:15px;margin:0 0 12px}.prep{font-size:13px;font-weight:700;padding:10px 12px;border:1px solid #777;background:#f5f5f5;margin:0 0 18px}.intro{margin:0 0 16px;color:#444}table{border-collapse:collapse;width:100%;margin:12px 0 18px;table-layout:fixed}th,td{border:1px solid #aaa;padding:9px;text-align:left;vertical-align:top;overflow-wrap:anywhere}th{background:#f0f0f0}th:nth-child(1){width:22%}th:nth-child(2){width:10%}th:nth-child(3){width:20%}th:nth-child(4){width:48%}.checklist{border:1px solid #aaa;padding:12px 14px;margin:18px 0}.checklist h2{font-size:16px;margin:0 0 8px}.checklist ul{margin:0;padding-left:20px}.checklist li{margin:5px 0}.notice{font-size:11px;line-height:1.5;margin-top:18px;border:1px solid #999;padding:12px}.foot{font-size:11px;color:#555;margin-top:12px}@media print{ @page{size:auto;margin:15mm}body{margin:0;padding:0;max-width:none;font-size:11pt;color:#000} .screen-control,.no-print,button,nav,header[role="banner"]{display:none!important} .prep{background:#fff!important;print-color-adjust:exact;-webkit-print-color-adjust:exact}table{break-inside:avoid}tr{break-inside:avoid}.checklist,.notice{break-inside:avoid} }
+      @media(max-width:600px){body{padding:0 12px}table{font-size:12px}th,td{padding:6px}}
+      </style></head><body><h1>AA PrintSystem — Year-End Records Summary</h1><p class="year"><strong>Tax year:</strong> ${safe(d.year)}</p><p class="prep">PREP GUIDE ONLY — Reference and document-gathering guide only. This is not an official tax return, ledger, or substitute for BIR filings.</p><p class="intro">Use these system figures as a starting point to gather supporting records and cross-check your official books of accounts. Amounts below are summaries of entries saved in AA PrintSystem.</p>
+      <table><thead><tr><th>Record group</th><th>Count</th><th>Recorded amount</th><th>What to check</th></tr></thead><tbody>
+      <tr><td>Orders (excluding cancelled value)</td><td>${d.orders.length}</td><td>${safe(money(sales))}</td><td>Match order details with issued sales invoices/receipts, delivery or job records, and your official sales book.</td></tr>
+      <tr><td>Transactions (net of refunds)</td><td>${d.transactions.length}</td><td>${safe(money(netTx))}</td><td>Compare payments and refunds with cash records, e-wallet statements, bank logs, and your official books.</td></tr>
+      <tr><td>Expenses</td><td>${d.expenses.length}</td><td>${safe(money(expenseTotal))}</td><td>Match entries with supplier receipts, official receipts, utility bills, lease/rent records, and your expense book.</td></tr>
+      </tbody></table>
+      <section class="checklist"><h2>Tax-prep document checklist</h2><ul>${checklist.map(item=>`<li>□ ${safe(item)}</li>`).join('')}</ul></section>
+      <p class="intro">Before filing, compare this summary with the actual supporting documents and registered books of accounts. Confirm the applicable BIR forms and filing deadlines for your business.</p>
+      <div class="notice"><strong>Important notice:</strong> ${safe(notice)}</div><p class="foot">Prepared from AA PrintSystem records for reference only. Keep and rely on your official source documents and books.</p>
+      </body></html>`);
     w.document.close();
   });
 
