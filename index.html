@@ -1701,12 +1701,12 @@
   // Shared financial calculation foundation: Dashboard metrics use consistent rules.
   function withinFinancialRange(date,from,to){const d=String(date||"").slice(0,10);return d>=from&&d<=to}
   function getSales(orders,from,to){return orders.filter(o=>o.status!=="Cancelled"&&withinFinancialRange(o.orderDate,from,to))}
-  function getPaymentsReceived(transactions,activeOrderIds,from,to){return transactions.filter(t=>withinFinancialRange(t.date,from,to)&&(!t.orderId||activeOrderIds.has(t.orderId)))}
+  function getPaymentsReceived(transactions,from,to){return transactions.filter(t=>withinFinancialRange(t.date,from,to))}
   function getOutstandingBalances(orders){return orders.filter(o=>o.status!=="Cancelled").reduce((sum,o)=>sum+cents(balance(o)),0)}
   function getExpensesIncurred(expenses,from,to){return expenses.filter(x=>!isFixedTemplate(x)&&x.status!=="deleted"&&withinFinancialRange(x.date,from,to)).reduce((sum,x)=>sum+cents(isFixedOccurrence(x)?Number(x.billAmount??x.expectedAmount??x.amount??0):Number(x.amount||0)),0)}
   function getCashOut(expenses,from,to){return expenses.filter(x=>!isFixedTemplate(x)&&x.status!=="deleted").reduce((sum,x)=>sum+cents(isFixedOccurrence(x)?(x.payments||[]).filter(p=>withinFinancialRange(p.date,from,to)).reduce((v,p)=>v+Number(p.amount||0),0):(withinFinancialRange(x.date,from,to)?Number(x.amount||0):0)),0)}
   function getFinancialSummary(orders,transactions,expenses,from,to){
-    const activeOrders=orders.filter(o=>o.status!=="Cancelled"),activeOrderIds=new Set(activeOrders.map(o=>o.id)),periodOrders=getSales(orders,from,to),received=getPaymentsReceived(transactions,activeOrderIds,from,to),
+    const activeOrders=orders.filter(o=>o.status!=="Cancelled"),periodOrders=getSales(orders,from,to),received=getPaymentsReceived(transactions,from,to),
       salesCents=periodOrders.reduce((sum,o)=>sum+cents(o.total),0),receivedCents=received.reduce((sum,t)=>sum+cents(transactionNetAmount(t)),0),expensesIncurredCents=getExpensesIncurred(expenses,from,to),cashOutCents=getCashOut(expenses,from,to);
     return {periodOrders,received,salesCents,receivedCents,expensesIncurredCents,cashOutCents,outstandingCents:getOutstandingBalances(activeOrders),netCashCents:receivedCents-cashOutCents,operatingResultCents:salesCents-expensesIncurredCents};
   }
@@ -1911,7 +1911,7 @@
     e.currentTarget.disabled=true;
     try{
       if(commitRepo(next)){
-        if(action==='delete'||action==='cancel')removeOrderTransactions(d.id);
+        if(action==='delete')removeOrderTransactions(d.id);
         if(action==='delete'){selectedId=null;if(editingOrderId===d.id)resetOrderForm();renderAllOrders();setView('orders');notify('Order and linked transaction records permanently deleted.')}
         else{ $('delete-confirmation').hidden=true;renderAllOrders();notify(cancellationRefunded?'Order cancelled. Refund recorded and excluded from active dashboard totals.':'Order cancelled without a refund. It remains in Order History.') }
       }else showError('detail-error','Could not confirm the change. The saved order remains unchanged.')
@@ -2721,12 +2721,12 @@
   function syncPaymentTransactions(){
     if(!modulesLoaded||repoBlocked)return txSyncChain;
     txSyncChain=txSyncChain.then(async()=>{
-      const activeOrderIds=new Set(repo.orders.filter(o=>o.status!=='Cancelled').map(o=>o.id));
-      const list=moduleData.transactions.filter(t=>!t.orderId||activeOrderIds.has(t.orderId)).map(t=>({...t}));let changed=list.length!==moduleData.transactions.length;
+      const savedOrderIds=new Set(repo.orders.map(o=>o.id));
+      const list=moduleData.transactions.filter(t=>!t.orderId||savedOrderIds.has(t.orderId)).map(t=>({...t}));let changed=list.length!==moduleData.transactions.length;
       const linked=new Set(list.filter(t=>t.paymentId).map(t=>t.paymentId));
       const linkedRefunds=new Set(list.filter(t=>t.refundId).map(t=>t.refundId));
       for(const o of repo.orders){
-        if(o.status==='Cancelled')continue;
+        // Cancelled orders remain in the cash ledger; cancellation does not erase actual payments/refunds.
         for(const p of o.payments||[]){
           if(linked.has(p.id))continue;
           // Adopt a matching manually entered payment instead of double counting it.
