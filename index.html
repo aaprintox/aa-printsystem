@@ -1710,6 +1710,14 @@
       salesCents=periodOrders.reduce((sum,o)=>sum+cents(o.total),0),receivedCents=received.reduce((sum,t)=>sum+cents(transactionNetAmount(t)),0),expensesIncurredCents=getExpensesIncurred(expenses,from,to),cashOutCents=getCashOut(expenses,from,to);
     return {periodOrders,received,salesCents,receivedCents,expensesIncurredCents,cashOutCents,outstandingCents:getOutstandingBalances(activeOrders),netCashCents:receivedCents-cashOutCents,operatingResultCents:salesCents-expensesIncurredCents};
   }
+  function dashboardDonut(title,rows,totalLabel){
+    const valid=rows.filter(([,value])=>Number(value)>0),total=valid.reduce((sum,[,value])=>sum+Number(value),0);
+    if(!valid.length||total<=0)return `<div class="muted text-sm py-3">No data available for this period.</div>`;
+    const colors=['#6366f1','#14b8a6','#f59e0b','#ec4899','#8b5cf6','#64748b','#ef4444','#22c55e'];
+    const r=38,circ=2*Math.PI*r;let offset=0;
+    const arcs=valid.map(([name,value],i)=>{const part=Number(value)/total,arc=part*circ,html=`<circle cx="50" cy="50" r="${r}" fill="none" stroke="${colors[i%colors.length]}" stroke-width="17" stroke-dasharray="${arc} ${circ-arc}" stroke-dashoffset="${-offset}" transform="rotate(-90 50 50)" />`;offset+=arc;return html}).join('');
+    return `<div class="flex flex-col sm:flex-row items-center gap-4 py-2"><div class="shrink-0" style="width:148px;height:148px"><svg viewBox="0 0 100 100" role="img" aria-label="${esc(title)} donut chart">${arcs}<circle cx="50" cy="50" r="27" fill="var(--panel)"/><text x="50" y="47" text-anchor="middle" fill="currentColor" font-size="8">${esc(totalLabel||'Total')}</text><text x="50" y="58" text-anchor="middle" fill="currentColor" font-size="9" font-weight="700">${valid.length} groups</text></svg></div><div class="min-w-0 flex-1 w-full space-y-2">${valid.map(([name,value],i)=>`<div class="flex items-center justify-between gap-3 text-sm"><span class="flex items-center gap-2 min-w-0"><span class="shrink-0 rounded-full" style="width:10px;height:10px;background:${colors[i%colors.length]}"></span><span class="truncate">${esc(name)}</span></span><span class="font-semibold whitespace-nowrap">${esc(money(value))} <span class="muted text-xs">${(Number(value)/total*100).toFixed(0)}%</span></span></div>`).join('')}</div></div>`;
+  }
   function renderDashboard(){
     $('metric-products').textContent=products.filter(p=>(p.status||'active')==='active').length;
     const range=dashboardRange(),{from,to}=range,within=date=>{const d=String(date||'').slice(0,10);return d>=from&&d<=to};
@@ -1779,11 +1787,11 @@
     const statusCounts={};periodOrders.forEach(d=>{const key=d.status||'Pending';statusCounts[key]=(statusCounts[key]||0)+1});
     const cancelled=repo.orders.filter(d=>d.status==='Cancelled'&&within(d.orderDate)).length;if(cancelled)statusCounts.Cancelled=cancelled;
     const statusRows=Object.entries(statusCounts).sort((a,b)=>b[1]-a[1]);
-    $('dash-order-status').innerHTML=statusRows.length?statusRows.map(([name,count])=>`<div class="flex items-center justify-between gap-3 border-t pt-2"><span class="text-sm">${esc(name)}</span><strong>${count}</strong></div>`).join(''):'<p class="muted text-sm">No orders in this period yet.</p>';
+    $('dash-order-status').innerHTML=statusRows.length?dashboardDonut('Order status',statusRows.map(([name,count])=>[name,count]),'Orders'):'<p class="muted text-sm">No orders in this period yet.</p>';
     const categoryTotals=new Map();
-    if(modulesLoaded)moduleData.expenses.filter(x=>!isFixedTemplate(x)&&x.status!=='deleted'&&(isFixedOccurrence(x)?x.status==='paid':true)&&within(x.date)).forEach(x=>{const key=x.category||'Other';categoryTotals.set(key,(categoryTotals.get(key)||0)+Number(x.amount||0))});
-    const categoryRows=[...categoryTotals.entries()].sort((a,b)=>b[1]-a[1]).slice(0,6);
-    $('dash-expense-breakdown').innerHTML=!modulesLoaded?'<p class="muted text-sm">Loading expense records…</p>':categoryRows.length?categoryRows.map(([name,total])=>`<div class="flex items-center justify-between gap-3 border-t pt-2"><span class="text-sm">${esc(name)}</span><strong class="text-sm">${esc(money(total))}</strong></div>`).join(''):'<p class="muted text-sm">No completed expenses in this period.</p>';
+    if(modulesLoaded)moduleData.expenses.filter(x=>!isFixedTemplate(x)&&x.status!=="deleted"&&within(x.date)).forEach(x=>{const key=x.category||'Other';const amount=isFixedOccurrence(x)?Number(x.billAmount??x.expectedAmount??x.amount??0):Number(x.amount||0);categoryTotals.set(key,(categoryTotals.get(key)||0)+amount)});
+    const categoryRows=[...categoryTotals.entries()].sort((a,b)=>b[1]-a[1]).slice(0,8);
+    $('dash-expense-breakdown').innerHTML=!modulesLoaded?'<p class="muted text-sm">Loading expense records…</p>':categoryRows.length?dashboardDonut('Expense breakdown',categoryRows,'Expenses'):'<p class="muted text-sm">No expenses in this period.</p>';
     $('profit-overview').textContent=recent.length?`${recent.length} saved pricing calculation${recent.length===1?'':'s'}. These are estimates and are not counted in the figures above.`:'Save a pricing calculation to keep a copy of its recipe and price.';
     $('recent-list').innerHTML=recent.length?recent.slice(0,4).map(r=>`<div class="item-row mb-2">${r.snap?`<button type="button" class="text-left w-full" data-dashboard-load-calculation="${esc(r.id)}"><strong class="underline">${esc(r.name)}</strong><p class="text-xs muted">${esc(timeText(r.at))} · ${esc(money(r.profit))} estimated profit · Click to reopen</p></button>`:`<strong>${esc(r.name)}</strong><p class="text-xs muted">${esc(timeText(r.at))} · ${esc(money(r.profit))} estimated profit · Cannot reopen this older saved calculation</p>`}</div>`).join(''):'<p class="text-sm muted">No calculations saved yet.</p>';
     if($('tax-order-count'))renderTaxRecords();
