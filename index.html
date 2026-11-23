@@ -289,15 +289,15 @@
         <p id="metric-sales-note" class="text-xs muted mt-2"></p>
        </article>
        <article class="panel p-5 dashboard-shortcut" data-dashboard-view="transactions" role="button" tabindex="0" aria-label="Open Transactions">
-        <p class="muted mb-2">Cash collected</p><strong id="metric-cash" class="metric">—</strong>
+        <p class="muted mb-2">Money received</p><strong id="metric-cash" class="metric">—</strong>
         <p id="metric-cash-note" class="text-xs muted mt-2"></p>
        </article>
        <article class="panel p-5 dashboard-shortcut" data-dashboard-view="expenses" role="button" tabindex="0" aria-label="Open Expenses">
-        <p class="muted mb-2">Expenses</p><strong id="metric-expenses" class="metric">—</strong>
+        <p class="muted mb-2">Expenses incurred</p><strong id="metric-expenses" class="metric">—</strong>
         <p id="metric-expenses-note" class="text-xs muted mt-2"></p>
        </article>
        <article class="panel highlight-panel p-5 dashboard-shortcut" data-dashboard-view="profit" role="button" tabindex="0" aria-label="Open Profit">
-        <p class="mb-2">Net cash (collected − expenses)</p><strong id="metric-profit" class="metric">—</strong>
+        <p class="mb-2">Net cash flow (received − paid)</p><strong id="metric-profit" class="metric">—</strong>
         <p class="text-xs muted mt-2">Real money in minus real money out for the selected period.</p>
        </article>
        <article class="panel p-5 dashboard-shortcut" data-dashboard-view="orders" role="button" tabindex="0" aria-label="Open Orders" data-dashboard-filter="unpaid">
@@ -329,7 +329,7 @@
         </article>
        </div>
       </section>
-      <div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-4 mb-6"><article class="panel p-5 dashboard-shortcut" data-dashboard-view="expenses" role="button" tabindex="0" aria-label="Open Expenses"><p class="muted mb-2">Fixed expense target</p><strong id="metric-fixed-target" class="metric">—</strong><p id="metric-fixed-note" class="text-xs muted mt-2">Monthly equivalent of active recurring bills.</p></article><article class="panel p-5 dashboard-shortcut" data-dashboard-view="expenses" role="button" tabindex="0" aria-label="Open Expenses"><p class="muted mb-2">Fixed expense coverage</p><strong id="metric-fixed-coverage" class="metric">—</strong><p id="metric-fixed-coverage-note" class="text-xs muted mt-2">Revenue compared with fixed expenses.</p></article><article class="panel highlight-panel p-5 dashboard-shortcut" data-dashboard-view="profit" role="button" tabindex="0" aria-label="Open Profit"><p class="mb-2">Operating result</p><strong id="metric-operating-profit" class="metric">—</strong><p class="text-xs muted mt-2">Revenue minus recorded operating expenses. Product direct costs are not included yet.</p></article></div>
+      <div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-4 mb-6"><article class="panel p-5 dashboard-shortcut" data-dashboard-view="expenses" role="button" tabindex="0" aria-label="Open Expenses"><p class="muted mb-2">Fixed expense target</p><strong id="metric-fixed-target" class="metric">—</strong><p id="metric-fixed-note" class="text-xs muted mt-2">Monthly equivalent of active recurring bills.</p></article><article class="panel p-5 dashboard-shortcut" data-dashboard-view="expenses" role="button" tabindex="0" aria-label="Open Expenses"><p class="muted mb-2">Fixed expense coverage</p><strong id="metric-fixed-coverage" class="metric">—</strong><p id="metric-fixed-coverage-note" class="text-xs muted mt-2">Revenue compared with fixed expenses.</p></article><article class="panel highlight-panel p-5 dashboard-shortcut" data-dashboard-view="profit" role="button" tabindex="0" aria-label="Open Profit"><p class="mb-2">Operating result</p><strong id="metric-operating-profit" class="metric">—</strong><p class="text-xs muted mt-2">Sales minus recognized operating expenses. Direct material costs and other costs may not yet be included.</p></article></div>
       <div class="grid lg:grid-cols-2 gap-5 mb-6">
   <article class="panel p-5 dashboard-shortcut" data-dashboard-view="orders" role="button" tabindex="0" aria-label="Open Orders"><div class="flex flex-wrap justify-between items-center gap-2 mb-3"><h2 class="section-title">Sales trend</h2><span class="text-xs muted" id="dash-trend-label">Based on selected period</span></div><div id="dash-sales-trend" class="space-y-3"></div></article>
   <article class="panel p-5 dashboard-shortcut" data-dashboard-view="products" role="button" tabindex="0" aria-label="Open Products"><h2 class="section-title mb-3">Best-selling products & services</h2><div id="dash-top-products" class="space-y-3"></div></article>
@@ -1698,6 +1698,18 @@
     else if(preset==='custom'){from=$('dash-from').value||today;to=$('dash-to').value||today;if(from>to)[from,to]=[to,from]}
     return {from,to,preset};
   }
+  // Shared financial calculation foundation: Dashboard metrics use consistent rules.
+  function withinFinancialRange(date,from,to){const d=String(date||"").slice(0,10);return d>=from&&d<=to}
+  function getSales(orders,from,to){return orders.filter(o=>o.status!=="Cancelled"&&withinFinancialRange(o.orderDate,from,to))}
+  function getPaymentsReceived(transactions,activeOrderIds,from,to){return transactions.filter(t=>withinFinancialRange(t.date,from,to)&&(!t.orderId||activeOrderIds.has(t.orderId)))}
+  function getOutstandingBalances(orders){return orders.filter(o=>o.status!=="Cancelled").reduce((sum,o)=>sum+cents(balance(o)),0)}
+  function getExpensesIncurred(expenses,from,to){return expenses.filter(x=>!isFixedTemplate(x)&&x.status!=="deleted"&&withinFinancialRange(x.date,from,to)).reduce((sum,x)=>sum+cents(isFixedOccurrence(x)?Number(x.billAmount??x.expectedAmount??x.amount??0):Number(x.amount||0)),0)}
+  function getCashOut(expenses,from,to){return expenses.filter(x=>!isFixedTemplate(x)&&x.status!=="deleted").reduce((sum,x)=>sum+cents(isFixedOccurrence(x)?(x.payments||[]).filter(p=>withinFinancialRange(p.date,from,to)).reduce((v,p)=>v+Number(p.amount||0),0):(withinFinancialRange(x.date,from,to)?Number(x.amount||0):0)),0)}
+  function getFinancialSummary(orders,transactions,expenses,from,to){
+    const activeOrders=orders.filter(o=>o.status!=="Cancelled"),activeOrderIds=new Set(activeOrders.map(o=>o.id)),periodOrders=getSales(orders,from,to),received=getPaymentsReceived(transactions,activeOrderIds,from,to),
+      salesCents=periodOrders.reduce((sum,o)=>sum+cents(o.total),0),receivedCents=received.reduce((sum,t)=>sum+cents(transactionNetAmount(t)),0),expensesIncurredCents=getExpensesIncurred(expenses,from,to),cashOutCents=getCashOut(expenses,from,to);
+    return {periodOrders,received,salesCents,receivedCents,expensesIncurredCents,cashOutCents,outstandingCents:getOutstandingBalances(activeOrders),netCashCents:receivedCents-cashOutCents,operatingResultCents:salesCents-expensesIncurredCents};
+  }
   function renderDashboard(){
     $('metric-products').textContent=products.filter(p=>(p.status||'active')==='active').length;
     const range=dashboardRange(),{from,to}=range,within=date=>{const d=String(date||'').slice(0,10);return d>=from&&d<=to};
@@ -1705,11 +1717,13 @@
     $('dash-period').textContent=dateLabel+' · report figures';
     $('dash-range-note').textContent=`Showing orders, transactions, and expenses dated ${dateLabel}.`;
     $('dash-from-wrap').hidden=range.preset!=='custom';$('dash-to-wrap').hidden=range.preset!=='custom';
-    const allActive=repo.orders.filter(d=>d.status!=='Cancelled'),periodOrders=allActive.filter(d=>within(d.orderDate));
+    const allActive=repo.orders.filter(d=>d.status!=='Cancelled');
+    const financial=modulesLoaded?getFinancialSummary(repo.orders,moduleData.transactions,moduleData.expenses,from,to):null;
+    const periodOrders=financial?financial.periodOrders:allActive.filter(d=>within(d.orderDate));
     const revenueCents=periodOrders.reduce((sum,d)=>sum+cents(d.total),0),revenue=revenueCents/100;
     $('metric-sales').textContent=money(revenue);
     $('metric-sales-note').textContent=`${periodOrders.length} order${periodOrders.length===1?'':'s'} placed in this period, paid or not. Cancelled orders are excluded.`;
-    $('metric-outstanding').textContent=money(allActive.reduce((sum,d)=>sum+cents(balance(d)),0)/100);
+    $('metric-outstanding').textContent=money(financial?financial.outstandingCents/100:getOutstandingBalances(allActive)/100);
     const today=localDate(),soon=new Date(today+'T12:00:00');soon.setDate(soon.getDate()+7);const soonDate=soon.toISOString().slice(0,10);
     const dueSoon=allActive.filter(d=>d.pickupDate&&String(d.pickupDate).slice(0,10)<=soonDate).sort((a,b)=>String(a.pickupDate).localeCompare(String(b.pickupDate)));
     const unpaidOrders=allActive.filter(d=>balance(d)>0).sort((a,b)=>cents(balance(b))-cents(balance(a)));
@@ -1730,18 +1744,16 @@
       ['metric-cash','metric-expenses','metric-fixed-target','metric-fixed-coverage','metric-operating-profit'].forEach(id=>$(id).textContent='—');profit.textContent='—';profit.classList.remove('error');
       ['metric-cash-note','metric-expenses-note'].forEach(id=>$(id).textContent='Loading your transactions and expenses…');
     }else{
-      const activeOrderIds=new Set(allActive.map(d=>d.id));
-      const received=moduleData.transactions.filter(x=>within(x.date)&&(!x.orderId||activeOrderIds.has(x.orderId)));
-      const expenseRows=moduleData.expenses.filter(x=>!isFixedTemplate(x)&&x.status!=='deleted');
-      const incurredRows=expenseRows.filter(x=>isFixedOccurrence(x)?x.status==='paid'&&within(x.date):within(x.date));
-      const incurredCents=incurredRows.reduce((sum,x)=>sum+cents(x.amount),0);
-      const cashCents=received.reduce((sum,t)=>sum+cents(transactionNetAmount(t)),0);
-      const paidOutCents=expenseRows.reduce((sum,x)=>sum+cents(isFixedOccurrence(x)?(x.payments||[]).filter(p=>within(p.date)).reduce((v,p)=>v+Number(p.amount||0),0):(within(x.date)?(x.amount||0):0)),0);
+      const received=financial.received;
+      const incurredRows=moduleData.expenses.filter(x=>!isFixedTemplate(x)&&x.status!=="deleted"&&within(x.date));
+      const incurredCents=financial.expensesIncurredCents;
+      const cashCents=financial.receivedCents;
+      const paidOutCents=financial.cashOutCents;
       $('metric-cash').textContent=money(cashCents/100);
       const refundCount=received.filter(t=>t.type==='refund').length;
       $('metric-cash-note').textContent=`Net of ${refundCount} refund${refundCount===1?'':'s'} recorded in this period.`;
       $('metric-expenses').textContent=money(incurredCents/100);
-      $('metric-expenses-note').textContent=`${incurredRows.length} completed expense${incurredRows.length===1?'':'s'} counted. Pending or partial fixed bills are not counted as completed expenses.`;
+      $('metric-expenses-note').textContent=`${incurredRows.length} expense record${incurredRows.length===1?'':'s'} and scheduled bills in this period, whether paid or not.`;
       profit.textContent=signedMoney((cashCents-paidOutCents)/100);profit.classList.toggle('error',cashCents-paidOutCents<0);
       const fixedTemplates=moduleData.expenses.filter(x=>isFixedTemplate(x)&&x.active!==false),fixedMonthly=fixedTemplates.reduce((sum,t)=>sum+fixedMonthlyEquivalent(t),0);
       const days=Math.max(1,Math.round((new Date(to+'T12:00:00')-new Date(from+'T12:00:00'))/86400000)+1),fixedTarget=fixedMonthly*days/30.4375;
@@ -1749,7 +1761,7 @@
       const coverage=fixedTarget?revenue/fixedTarget*100:0;
       $('metric-fixed-coverage').textContent=fixedTarget?coverage.toFixed(0)+'%':'—';
       $('metric-fixed-coverage-note').textContent=fixedTarget?(revenue>=fixedTarget?'Revenue is above the estimated fixed expense target by '+money(revenue-fixedTarget)+'.':'Revenue is '+money(fixedTarget-revenue)+' below the estimated fixed expense target for this period.'):'Set up fixed expenses to track coverage.';
-      const operatingResult=revenue-incurredCents/100;
+      const operatingResult=financial.operatingResultCents/100;
       $('metric-operating-profit').textContent=signedMoney(operatingResult);$('metric-operating-profit').classList.toggle('error',operatingResult<0);
     }
     // Sales trend: daily when the selected range is short, monthly for longer reports.
