@@ -885,7 +885,7 @@
          <h3 class="font-bold mt-6 mb-2">Tracking timeline</h3>
          <ol id="detail-timeline" class="border-l-2 pl-5 space-y-3 text-sm" style="border-color:var(--line)"></ol>
          <div class="flex flex-wrap gap-2 mt-6">
-          <button id="edit-order" type="button" class="secondary">Edit order</button><button id="share-order" type="button" class="secondary">Share Order</button><button id="generate-notification" type="button" class="secondary">Generate Notification Again</button><button id="copy-order-ref" type="button" class="secondary">Copy Order Reference</button><button id="print-order" type="button" class="secondary">Print receipt</button><button id="cancel-order" type="button" class="secondary">Cancel order</button><button id="delete-order" type="button" class="danger">Delete order</button>
+          <button id="edit-order" type="button" class="secondary">Edit order</button><button id="share-order" type="button" class="secondary">Share Order</button><button id="generate-notification" type="button" class="secondary">Generate Notification Again</button><button id="copy-order-ref" type="button" class="secondary">Copy Order Reference</button><button id="print-order" type="button" class="secondary">Print order summary</button><button id="cancel-order" type="button" class="secondary">Cancel order</button><button id="delete-order" type="button" class="danger">Delete order</button>
          </div>
          <div id="delete-confirmation" class="notice mt-4" hidden="">
           <p id="order-action-prompt" class="mb-3">Confirm this order action.</p>
@@ -1140,6 +1140,7 @@
    <p id="print-contact"></p>
    <hr>
    <h2 id="print-kind"></h2>
+   <p id="print-reference"></p>
    <p id="print-date"></p>
    <p id="print-customer"></p>
    <p id="print-customer-contact"></p>
@@ -1159,6 +1160,11 @@
     <p id="print-discount"></p><strong id="print-total"></strong>
    </div>
    <p id="print-notes" style="margin-top:35px;white-space:pre-wrap"></p>
+   <div style="margin-top:30px;padding-top:14px;border-top:2px solid #222;font-size:12px;line-height:1.5">
+    <p style="font-weight:800;font-size:14px;margin-bottom:8px">THIS DOCUMENT IS NOT VALID FOR CLAIM OF INPUT TAX.</p>
+    <p>This is an internal order summary for tracking purposes only. It is not a BIR-registered Sales Invoice or VAT Invoice. Please request the shop's duly registered invoice for tax purposes.</p>
+    <p style="margin-top:8px">Generated using AA PrintSystem.</p>
+   </div>
   </div>
   <script>
 (async () => {
@@ -1788,11 +1794,11 @@
   $('share-close').onclick=()=>$('share-modal').hidden=true;
   $('native-share').onclick=async()=>{const d=selected();if(!d||!navigator.share)return;try{await navigator.share({title:`Order ${d.reference}`,text:$('share-messenger').value});notify('Share sheet closed. Messages are not sent automatically by AA PrintSystem.')}catch{/* Cancellation does not claim success. */}};
   function fillPrint(kind,customer,contact,items,subtotal,discount,total,notes){
-    $('print-business').textContent=settings.name;$('print-address').textContent=settings.address;$('print-contact').textContent=settings.contact;$('print-kind').textContent=kind;$('print-date').textContent=`Date: ${dateText(localDate())}`;$('print-customer').textContent=`Prepared for: ${customer}`;$('print-customer-contact').textContent=contact;
+    $('print-business').textContent=settings.name;$('print-address').textContent=settings.address;$('print-contact').textContent=settings.contact;$('print-kind').textContent=kind;$('print-reference').textContent=`Order Reference No.: ${selected()?.reference||''}`;$('print-date').textContent=`Date prepared: ${dateText(localDate())}`;$('print-customer').textContent=`Prepared for: ${customer}`;$('print-customer-contact').textContent=contact;
     $('print-items').replaceChildren();items.forEach(i=>{const tr=document.createElement('tr');[i.name,String(i.quantity),money(i.price),money(i.quantity*i.price)].forEach(value=>{const td=document.createElement('td');td.textContent=value;tr.appendChild(td)});$('print-items').appendChild(tr)});
     $('print-subtotal').textContent=`Subtotal: ${money(subtotal)}`;$('print-discount').textContent=discount?`Discount: −${money(discount)}`:'';$('print-total').textContent=`Total: ${money(total)}`;$('print-notes').textContent=notes;window.print()
   }
-  $('print-order').onclick=()=>{const d=selected();if(!d)return;fillPrint(`ORDER RECEIPT · ${d.reference}`,displayName(d),displayPhone(d),d.items,d.subtotal,d.discount,d.total,`Status: ${d.status}\nOrder date: ${dateText(d.orderDate)}\nExpected pickup: ${dateText(d.pickupDate)}\nPayments received: ${money(paid(d))}\nRemaining balance: ${money(balance(d))}${d.instructions?`\nInstructions: ${d.instructions}`:''}`)};
+  $('print-order').onclick=()=>{const d=selected();if(!d)return;fillPrint('JOB ORDER / ORDER SUMMARY',displayName(d),displayPhone(d),d.items,d.subtotal,d.discount,d.total,`Status: ${d.status}\nOrder date: ${dateText(d.orderDate)}\nExpected pickup: ${dateText(d.pickupDate)}\nPayments received: ${money(paid(d))}\nRemaining balance: ${money(balance(d))}${d.instructions?`\nInstructions: ${d.instructions}`:''}`)};
 
   function closeMenu(){$('sidebar').classList.remove('open');$('mobile-backdrop').hidden=true}
   function setView(view){
