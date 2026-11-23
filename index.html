@@ -303,6 +303,26 @@
         <p class="text-xs muted mt-2">Active products in your catalogue.</p>
        </article>
       </div>
+      <section class="panel p-5 mb-6" id="dashboard-morning-check">
+       <div class="flex flex-wrap items-start justify-between gap-2 mb-4">
+        <div><p class="eyebrow mb-1">DAILY SHOP CHECK</p><h2 class="section-title">Your morning overview</h2><p class="text-xs muted mt-1">Quick reminders for orders, customer balances, and supplies.</p></div>
+        <span class="pill" id="dash-morning-date"></span>
+       </div>
+       <div class="grid md:grid-cols-3 gap-4">
+        <article class="rounded-xl p-4" style="background:var(--subtle);border:1px solid var(--line)">
+         <div class="flex items-center justify-between gap-2"><h3 class="font-semibold">Pickup due soon</h3><strong id="dash-pickup-count" class="metric" style="font-size:22px">—</strong></div>
+         <p class="text-xs muted mt-1 mb-2">Overdue or due within 7 days</p><div id="dash-pickup-list" class="space-y-2 text-sm"></div>
+        </article>
+        <article class="rounded-xl p-4" style="background:var(--subtle);border:1px solid var(--line)">
+         <div class="flex items-center justify-between gap-2"><h3 class="font-semibold">Unpaid balances</h3><strong id="dash-unpaid-count" class="metric" style="font-size:22px">—</strong></div>
+         <p class="text-xs muted mt-1 mb-2">Open orders with money still owed</p><div id="dash-unpaid-list" class="space-y-2 text-sm"></div>
+        </article>
+        <article class="rounded-xl p-4" style="background:var(--subtle);border:1px solid var(--line)">
+         <div class="flex items-center justify-between gap-2"><h3 class="font-semibold">Low-stock items</h3><strong id="dash-low-stock-count" class="metric" style="font-size:22px">—</strong></div>
+         <p class="text-xs muted mt-1 mb-2">At or below your stock alert level</p><div id="dash-low-stock-list" class="space-y-2 text-sm"></div>
+        </article>
+       </div>
+      </section>
       <div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-4 mb-6"><article class="panel p-5"><p class="muted mb-2">Fixed expense target</p><strong id="metric-fixed-target" class="metric">—</strong><p id="metric-fixed-note" class="text-xs muted mt-2">Monthly equivalent of active recurring bills.</p></article><article class="panel p-5"><p class="muted mb-2">Fixed expense coverage</p><strong id="metric-fixed-coverage" class="metric">—</strong><p id="metric-fixed-coverage-note" class="text-xs muted mt-2">Revenue compared with fixed expenses.</p></article><article class="panel highlight-panel p-5"><p class="mb-2">Operating result</p><strong id="metric-operating-profit" class="metric">—</strong><p class="text-xs muted mt-2">Revenue minus recorded operating expenses. Product direct costs are not included yet.</p></article></div>
       <div class="grid lg:grid-cols-2 gap-5 mb-6">
   <article class="panel p-5"><div class="flex flex-wrap justify-between items-center gap-2 mb-3"><h2 class="section-title">Sales trend</h2><span class="text-xs muted" id="dash-trend-label">Based on selected period</span></div><div id="dash-sales-trend" class="space-y-3"></div></article>
@@ -1617,6 +1637,17 @@
     const order=repo.orders.find(d=>d.id===select.dataset.orderStatus);
     if(order)changeOrderStatus(order,select.value,select);
   });
+  $('view-dashboard').addEventListener('click',e=>{
+    const orderButton=e.target.closest('[data-dashboard-open-order]');
+    if(orderButton){selectedId=orderButton.dataset.dashboardOpenOrder;renderDetail();setView('order-detail');return}
+    if(e.target.closest('[data-dashboard-open-inventory]')){setView('inventory');return}
+    const calculationButton=e.target.closest('[data-dashboard-load-calculation]');
+    if(calculationButton){
+      const rec=recent.find(x=>x.id===calculationButton.dataset.dashboardLoadCalculation);
+      if(!rec||!rec.snap){notify('This older calculation does not have a saved recipe to reopen.');return}
+      setView('pricing');applySnapshot(rec.snap);window.scrollTo({top:0,behavior:'smooth'});notify(`Loaded “${rec.name}”. Edit it and save again if you like.`);
+    }
+  });
   function renderDetail(){
     const d=selected();$('detail-empty').hidden=!!d;$('order-detail').hidden=!d;if(!d)return;
     $('detail-ref').textContent=d.reference;
@@ -1675,6 +1706,20 @@
     $('metric-sales').textContent=money(revenue);
     $('metric-sales-note').textContent=`${periodOrders.length} order${periodOrders.length===1?'':'s'} placed in this period, paid or not. Cancelled orders are excluded.`;
     $('metric-outstanding').textContent=money(allActive.reduce((sum,d)=>sum+cents(balance(d)),0)/100);
+    const today=localDate(),soon=new Date(today+'T12:00:00');soon.setDate(soon.getDate()+7);const soonDate=soon.toISOString().slice(0,10);
+    const dueSoon=allActive.filter(d=>d.pickupDate&&String(d.pickupDate).slice(0,10)<=soonDate).sort((a,b)=>String(a.pickupDate).localeCompare(String(b.pickupDate)));
+    const unpaidOrders=allActive.filter(d=>balance(d)>0).sort((a,b)=>cents(balance(b))-cents(balance(a)));
+    $('dash-morning-date').textContent=dateText(today);
+    $('dash-pickup-count').textContent=dueSoon.length;
+    $('dash-pickup-list').innerHTML=dueSoon.length?dueSoon.slice(0,5).map(d=>`<button type="button" class="block w-full text-left border-t pt-2" data-dashboard-open-order="${esc(d.id)}"><strong>${esc(d.reference)}</strong><span class="block text-xs muted">${esc(displayName(d))} · ${esc(dateText(d.pickupDate))}</span></button>`).join(''):'<p class="text-xs muted">No upcoming or overdue pickups.</p>';
+    $('dash-unpaid-count').textContent=unpaidOrders.length;
+    $('dash-unpaid-list').innerHTML=unpaidOrders.length?unpaidOrders.slice(0,5).map(d=>`<button type="button" class="block w-full text-left border-t pt-2" data-dashboard-open-order="${esc(d.id)}"><strong>${esc(d.reference)}</strong><span class="block text-xs muted">${esc(displayName(d))} · ${esc(money(balance(d)))} due</span></button>`).join(''):'<p class="text-xs muted">No outstanding customer balances.</p>';
+    if(!modulesLoaded){$('dash-low-stock-count').textContent='—';$('dash-low-stock-list').innerHTML='<p class="text-xs muted">Loading inventory…</p>'}
+    else{
+      const lowStock=moduleData.inventory.filter(x=>Number(x.quantity)<=Number(x.reorder)).sort((a,b)=>Number(a.quantity)-Number(b.quantity));
+      $('dash-low-stock-count').textContent=lowStock.length;
+      $('dash-low-stock-list').innerHTML=lowStock.length?lowStock.slice(0,5).map(x=>`<button type="button" class="block w-full text-left border-t pt-2" data-dashboard-open-inventory><strong>${esc(x.name)}</strong><span class="block text-xs muted">${esc(inventoryDisplay(x))} remaining · alert at ${esc(String(x.reorder))}</span></button>`).join(''):'<p class="text-xs muted">No low-stock items. Supplies look good!</p>';
+    }
     $('metric-sales').title=`${periodOrders.length} active orders from ${from} to ${to}`;
     const profit=$('metric-profit');
     if(!modulesLoaded){
@@ -1724,7 +1769,7 @@
     const categoryRows=[...categoryTotals.entries()].sort((a,b)=>b[1]-a[1]).slice(0,6);
     $('dash-expense-breakdown').innerHTML=!modulesLoaded?'<p class="muted text-sm">Loading expense records…</p>':categoryRows.length?categoryRows.map(([name,total])=>`<div class="flex items-center justify-between gap-3 border-t pt-2"><span class="text-sm">${esc(name)}</span><strong class="text-sm">${esc(money(total))}</strong></div>`).join(''):'<p class="muted text-sm">No completed expenses in this period.</p>';
     $('profit-overview').textContent=recent.length?`${recent.length} saved pricing calculation${recent.length===1?'':'s'}. These are estimates and are not counted in the figures above.`:'Save a pricing calculation to keep a copy of its recipe and price.';
-    $('recent-list').innerHTML=recent.length?recent.slice(0,4).map(r=>`<div class="item-row mb-2"><strong>${esc(r.name)}</strong><p class="text-xs muted">${esc(timeText(r.at))} · ${esc(money(r.profit))} estimated profit</p></div>`).join(''):'<p class="text-sm muted">No calculations saved yet.</p>';
+    $('recent-list').innerHTML=recent.length?recent.slice(0,4).map(r=>`<div class="item-row mb-2">${r.snap?`<button type="button" class="text-left w-full" data-dashboard-load-calculation="${esc(r.id)}"><strong class="underline">${esc(r.name)}</strong><p class="text-xs muted">${esc(timeText(r.at))} · ${esc(money(r.profit))} estimated profit · Click to reopen</p></button>`:`<strong>${esc(r.name)}</strong><p class="text-xs muted">${esc(timeText(r.at))} · ${esc(money(r.profit))} estimated profit · Cannot reopen this older saved calculation</p>`}</div>`).join(''):'<p class="text-sm muted">No calculations saved yet.</p>';
     if($('tax-order-count'))renderTaxRecords();
   }
 
