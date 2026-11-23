@@ -1088,6 +1088,23 @@
        </form>
        <p class="text-sm muted mt-6">Activation requires authenticated owner writes, server-enforced reference uniqueness, protected reference-plus-contact verification, rate limiting, and a public response allow-list. Owner-side browser records must never be exposed through the public page.</p>
       </section>
+      <section id="backup-restore-section" class="panel p-6 sm:p-8 max-w-3xl mt-5">
+       <h2 class="section-title">Backup &amp; Restore</h2>
+       <p class="muted mt-2">Create a downloadable backup of your business records and workspace settings, or restore from a previously created AA PrintSystem backup.</p>
+       <div class="grid sm:grid-cols-2 gap-4 mt-5">
+        <div class="rounded-xl p-4" style="background:var(--subtle);border:1px solid var(--line)">
+         <h3 class="font-bold">Create full backup</h3><p class="text-sm muted mt-2">Download a JSON file containing your saved orders, customers, module records, and local workspace data.</p>
+         <button type="button" id="backup-download-btn" class="primary mt-4">Download Full Backup</button>
+        </div>
+        <div class="rounded-xl p-4" style="background:var(--subtle);border:1px solid var(--line)">
+         <h3 class="font-bold">Restore from backup</h3><p class="text-sm muted mt-2">Select a valid AA PrintSystem backup file. Restoration replaces supported records and settings.</p>
+         <input type="file" id="backup-restore-file" accept=".json,application/json" class="field mt-4">
+         <button type="button" id="backup-restore-btn" class="secondary mt-3">Restore Backup</button>
+        </div>
+       </div>
+       <p id="backup-restore-status" class="text-sm muted mt-4" role="status" aria-live="polite"></p>
+       <p class="text-xs muted mt-3">Keep backup files in a safe place. Restoring replaces data; create a backup of your current system first. This feature does not include login credentials or server-side account access information.</p>
+      </section>
      </section>
      <section id="view-appearance" class="view" hidden="">
       <header class="mb-7">
@@ -3111,6 +3128,38 @@
   renderLibrary();renderRecipe();renderSaved();calculatePricing();calculateProfit();resetQuoteForm();
   (async()=>{await initializeCloudRepository();for(const key of ['products','recent','settings','message_templates','appearance']){try{const value=await readCloudSetting(key);const localKey=key==='message_templates'?'message-templates':key;const fallback=key==='products'?products:key==='recent'?recent:key==='settings'?settings:key==='message_templates'?templates:savedAppearance;if(value!==null){localStorage.setItem(PREFIX+localKey,JSON.stringify(value));if(key==='products'&&Array.isArray(value))products=value;if(key==='recent'&&Array.isArray(value))recent=value;if(key==='settings'&&value&&typeof value==='object')settings={...defaults,...value};if(key==='message_templates'&&value)templates={...defaultTemplates,...value};if(key==='appearance'&&value)savedAppearance=value;}else{await cloudSetting(key,fallback);}}catch(e){/* Preserve local copy if a cloud setting is not available. */}}fillSettings();applyAppearance(savedAppearance);renderProducts();renderDashboard();renderAllOrders();$('include-owner-labor').checked=Boolean(settings.includeOwnerLabor);if(settings.ownerHourlyRate!=null&&settings.ownerHourlyRate>0){$('owner-hourly-rate').value=String(settings.ownerHourlyRate)}$('staff-labor-cost').value=settings.labor;$('cost-other').value=settings.overhead;calculatePricing();})();
   if(window.lucide)lucide.createIcons();
+  // Full-system backup and restore (schema version 1).
+  const backupStatus=msg=>{const el=$('backup-restore-status');if(el)el.textContent=msg||''};
+  async function createSystemBackup(){
+    backupStatus('Preparing backup…');
+    const cloudRepo=validateRepo(repo);
+    const cloudCollections={};
+    for(const c of Object.keys(moduleData)){const result=await moduleRequest(c);cloudCollections[c]=Array.isArray(result.records)?result.records:[]}
+    const cloudSettings={};
+    for(const key of ['products','recent','settings','message_templates','appearance']){try{cloudSettings[key]=await readCloudSetting(key)}catch(e){cloudSettings[key]=null}}
+    const localEntries={};for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&(k.startsWith(PREFIX)||k===STORE||k===LEGACY)){localEntries[k]=localStorage.getItem(k)}}
+    const backup={format:'AA PrintSystem Backup',schemaVersion:1,createdAt:new Date().toISOString(),data:{repository:cloudRepo,collections:cloudCollections,cloudSettings,localStorage:localEntries}};
+    const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='AA-PrintSystem-Backup-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);backupStatus('Backup downloaded. Keep this file in a safe location.');
+  }
+  $('backup-download-btn')?.addEventListener('click',async()=>{try{await createSystemBackup()}catch(e){backupStatus('Backup could not be completed: '+(e.message||'Unknown error'));notify('Backup failed: '+(e.message||'Unknown error'))}});
+  $('backup-restore-btn')?.addEventListener('click',async()=>{
+    const file=$('backup-restore-file')?.files?.[0];if(!file){backupStatus('Choose a backup file first.');return}
+    if(!confirm('Restore this backup? Supported records and settings will be replaced. Create a current backup first.'))return;
+    backupStatus('Validating backup…');
+    try{
+      const parsed=JSON.parse(await file.text());if(parsed?.format!=='AA PrintSystem Backup'||parsed.schemaVersion!==1||!parsed.data||!parsed.data.repository||!parsed.data.collections)throw Error('This is not a supported AA PrintSystem backup file.');
+      const safeRepo=validateRepo(parsed.data.repository),cols=parsed.data.collections;for(const c of Object.keys(moduleData)){if(!Array.isArray(cols[c]))throw Error('Backup is missing or malformed: '+c)}
+      const backupSettings=parsed.data.cloudSettings||{};
+      // Write cloud records first; only update local state after successful cloud writes.
+      await cloudRecords('orders','PUT',safeRepo.orders);await cloudRecords('customers','PUT',safeRepo.customers);
+      for(const c of Object.keys(moduleData))await moduleRequest(c,'PUT',cols[c]);
+      for(const key of ['products','recent','settings','message_templates','appearance']){if(backupSettings[key]!==null&&backupSettings[key]!==undefined)await cloudSetting(key,backupSettings[key]);}
+      const localEntries=parsed.data.localStorage||{};for(const [k,v] of Object.entries(localEntries)){if((k.startsWith(PREFIX)||k===STORE||k===LEGACY)&&typeof v==='string')localStorage.setItem(k,v)}
+      localStorage.setItem(STORE,JSON.stringify(safeRepo));repo=safeRepo;for(const c of Object.keys(moduleData))moduleData[c]=cols[c];
+      if(Array.isArray(backupSettings.products))products=backupSettings.products;if(Array.isArray(backupSettings.recent))recent=backupSettings.recent;if(backupSettings.settings&&typeof backupSettings.settings==='object')settings={...defaults,...backupSettings.settings};if(backupSettings.message_templates)templates={...defaultTemplates,...backupSettings.message_templates};if(backupSettings.appearance)savedAppearance=backupSettings.appearance;
+      renderAllOrders();renderModules();fillSettings();renderProducts();renderDashboard();applyAppearance(savedAppearance);backupStatus('Restore completed. Reload the page to refresh all workspace views.');notify('Backup restored. Reload AA PrintSystem to finish refreshing.');
+    }catch(e){backupStatus('Restore failed: '+(e.message||'Unknown error'));notify('Restore failed: '+(e.message||'Unknown error'))}
+  });
   if(window.location.hash==='#track')showPublic();
 })();
 
@@ -3185,8 +3234,8 @@
       return 3;
     });
     setupFeatureTabs('view-settings',[
-      {label:'Business Details'},{label:'Customer Messages'},{label:'Customer Tracking'}
-    ],child=>child.id==='settings-form'?0:child.id==='message-settings-form'?1:2);
+      {label:'Business Details'},{label:'Customer Messages'},{label:'Customer Tracking'},{label:'Backup & Restore'}
+    ],child=>child.id==='settings-form'?0:child.id==='message-settings-form'?1:child.id==='backup-restore-section'?3:2);
     setupFeatureTabs('view-appearance',[
       {label:'Theme Gallery'},{label:'Customize Appearance'}
     ],child=>child.querySelector('#theme-gallery')?0:1);
