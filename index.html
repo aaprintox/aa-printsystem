@@ -218,6 +218,7 @@
 </style>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.577.0/dist/umd/lucide.min.js" type="text/javascript"></script>
   <script src="https://cdn.tailwindcss.com/3.4.17" type="text/javascript"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
  </head>
  <body data-template-id="__page-root" class="w-full" style="background: rgb(247, 244, 237);">
   <header class="mobile-top">
@@ -351,7 +352,7 @@
         <strong>Choose a year</strong>
         <div class="flex flex-wrap items-end gap-3 mt-2">
          <label class="text-sm">Tax year<input id="tax-report-year" class="field mt-1" type="number" min="2000" max="2100" step="1"></label>
-         <button type="button" class="primary" id="tax-export-csv">Download Year-End Records (CSV)</button>
+         <button type="button" class="primary" id="tax-export-csv">Download Year-End Records (Excel Workbook)</button>
          <button type="button" class="secondary" id="tax-print-summary">Print Summary</button>
         </div>
        </div>
@@ -372,7 +373,7 @@
          <label class="flex items-start gap-2"><input type="checkbox" class="mt-1"> <span>Bank, e-wallet, cash, payment, and refund records</span></label>
         </div>
        </div>
-       <p class="text-xs muted mb-2">The CSV download contains separate rows for orders, payments/refunds, expenses, and inventory movements based only on records saved in this system. Use it to help cross-check your supporting documents and official books.</p>
+       <p class="text-xs muted mb-2">The Excel workbook contains separate tabs for Orders, Transactions, Expenses, and Inventory, plus a Summary & Guide. It includes only records saved in this system for the selected year. Use it to cross-check your actual supporting documents, registered books of accounts, and applicable BIR filings.</p>
        <div class="text-xs muted rounded-lg p-3" style="border:1px solid var(--line)">
         <strong>Important notice:</strong> AA PrintSystem is an independent business recordkeeping and reporting tool. It is not affiliated with, endorsed by, or authorized by the Bureau of Internal Revenue (BIR). Reports are based on information entered and maintained by the user and are provided for reference and tax preparation assistance only. They are not official tax returns or a substitute for required invoices, receipts, books of accounts, or professional tax advice. The system does not determine taxable income or deductible expenses. Always use the applicable BIR forms and your official books and supporting documents when preparing and filing.
        </div>
@@ -1848,23 +1849,149 @@
     const movements=moduleData.inventory.flatMap(x=>(Array.isArray(x.movements)?x.movements:[]).filter(m=>inYear(String(m.at||'').slice(0,10))).map(m=>({...m,itemName:x.name,itemUnit:m.unit||x.unit,itemId:x.id})));
     return {year,orders,activeOrders,transactions,expenses,movements};
   }
-  function taxCsvCell(value){return '"'+String(value??'').replace(/"/g,'""').replace(/\r?\n/g,' ')+'"'}
-  function taxExportCsv(){
-    if(!modulesLoaded){notify('Please wait until your transactions and expenses finish loading.');return}
-    const d=taxReportData(),rows=[
-      ['AA PrintSystem — Year-End Records',''],['Tax year',d.year],
-      ['Purpose','Recordkeeping and tax preparation reference only'],
-      ['Notice','Not affiliated with or endorsed by BIR. Not an official tax return. Based on user-entered records.'],[],
-      ['RECORD TYPE','DATE','REFERENCE / DESCRIPTION','CUSTOMER / CATEGORY','STATUS / METHOD','AMOUNT','NOTES']
+  // Builds a multi-sheet Excel workbook from the same selected-year data used by the on-screen report.
+  // Requires the SheetJS-compatible XLSX library loaded in the document head.
+  function taxWorkbookSheet(headers, rows, reminder, widths, numberFormats={}){
+    const data=[headers,...rows,[],[reminder]];
+    const ws=XLSX.utils.aoa_to_sheet(data);
+    const lastDataRow=rows.length;
+    const headerStyle={font:{bold:true,color:{rgb:'FFFFFF'}},fill:{fgColor:{rgb:'315B4B'}},alignment:{vertical:'center',wrapText:true},border:{bottom:{style:'thin',color:{rgb:'244638'}}}};
+    const footerRow=rows.length+2;
+    headers.forEach((_,c)=>{const cell=ws[XLSX.utils.encode_cell({r:0,c})];if(cell)cell.s=headerStyle});
+    Object.entries(numberFormats).forEach(([col,format])=>{
+      for(let r=1;r<=lastDataRow;r++){
+        const cell=ws[XLSX.utils.encode_cell({r,c:Number(col)})];
+        if(cell&&typeof cell.v==='number')cell.z=format;
+      }
+    });
+    const footerCell=ws[XLSX.utils.encode_cell({r:footerRow,c:0})];
+    if(footerCell)footerCell.s={font:{italic:true,color:{rgb:'5A5140'}},fill:{fgColor:{rgb:'FFF8E7'}},alignment:{wrapText:true,vertical:'center'}};
+    ws['!merges']=[{s:{r:footerRow,c:0},e:{r:footerRow,c:headers.length-1}}];
+    ws['!cols']=(widths||headers.map(h=>Math.min(36,Math.max(14,String(h).length+3)))).map(w=>({wch:w}));
+    ws['!autofilter']={ref:XLSX.utils.encode_range({s:{r:0,c:0},e:{r:Math.max(0,lastDataRow),c:headers.length-1}})};
+    ws['!rows']=[{hpt:30}];
+    return ws;
+  }
+  function taxBuildSummarySheet(d){
+    const sales=d.activeOrders.reduce((sum,o)=>sum+Number(o.total||0),0);
+    const netTx=d.transactions.reduce((sum,t)=>sum+transactionNetAmount(t),0);
+    const expenseTotal=d.expenses.reduce((sum,x)=>sum+Number(x.amount||0),0);
+    const notice='AA PrintSystem is an independent recordkeeping tool. It is not affiliated with, endorsed by, or authorized by the Bureau of Internal Revenue (BIR). This workbook is for reference and document-gathering only; it is not an official tax return or ledger and does not replace required receipts, registered books of accounts, BIR forms, or filings.';
+    const rows=[
+      ['AA PrintSystem — Year-End Records',''],
+      ['Tax year',d.year],
+      ['PREP GUIDE ONLY','Reference and document-gathering guide only — not an official tax return, ledger, or substitute for BIR filings.'],
+      ['BIR notice',notice],
+      ['Source','Figures and rows are based only on records saved in AA PrintSystem. Verify against your actual source documents and official books.'],
+      [],
+      ['Record group','Record count','Recorded amount','What to check'],
+      ['Orders (excluding cancelled value)',d.orders.length,sales,'Match orders against issued sales invoices/receipts, delivery or job records, and the official sales book. Cancelled orders remain listed on the Orders tab but are excluded from this amount.'],
+      ['Transactions (net of refunds)',d.transactions.length,netTx,'Compare payments and refunds with cash records, e-wallet statements, bank logs, payment references, and official books.'],
+      ['Expenses',d.expenses.length,expenseTotal,'Match entries with supplier receipts, official receipts, utility bills, lease/rent records, and the expense book.'],
+      ['Inventory movements',d.movements.length,'','Check stock-in, stock-out, and adjustment history against purchase documents, usage records, and inventory records.'],
+      [],
+      ['DOCUMENT CHECKLIST','Gather and cross-check these real-world records before filing:'],
+      ['☐','Sales invoices and receipts for the selected year'],
+      ['☐','Expense receipts, utility bills, and lease/rent records'],
+      ['☐','Registered books of accounts and supporting ledgers'],
+      ['☐','Applicable BIR forms and filing deadlines confirmed for the business'],
+      ['☐','Bank, e-wallet, cash, payment, and refund records'],
+      [],
+      ['REFERENCE REMINDER', 'Use this workbook only as a starting point. Verify every figure against official receipts/invoices, registered books of accounts, and applicable BIR forms and filings. The workbook does not calculate tax liabilities or classify deductible expenses.']
     ];
-    d.orders.forEach(o=>rows.push(['Order',o.orderDate,o.reference,displayName(o),o.status,Number(o.total||0),o.notes||'']));
-    d.transactions.forEach(t=>rows.push([t.type==='refund'?'Refund':'Payment',t.date,t.order||t.orderId||'',t.customer||'',t.method||'',transactionNetAmount(t),t.notes||'']));
-    d.expenses.forEach(x=>rows.push(['Expense',x.date,x.description||'',x.category||'Other',x.method||'',Number(x.amount||0),x.notes||'']));
-    d.movements.forEach(m=>rows.push(['Inventory '+(m.type==='in'?'Stock in':m.type==='out'?'Stock out':'Adjustment'),String(m.at||'').slice(0,10),m.itemName||'',m.orderReference||'',m.type||'',Number(m.quantity||0),m.reason||'']));
-    const blob=new Blob(['\uFEFF'+rows.map(r=>r.map(taxCsvCell).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8;'});
-    const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`AA-PrintSystem-Records-${d.year}.csv`;
-    document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
-    $('tax-report-status').textContent=`CSV prepared for ${d.year}: ${d.orders.length} orders, ${d.transactions.length} transactions, and ${d.expenses.length} expenses.`;
+    const ws=XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols']=[{wch:34},{wch:18},{wch:20},{wch:92}];
+    ws['!merges']=[
+      {s:{r:0,c:0},e:{r:0,c:3}},
+      {s:{r:2,c:1},e:{r:2,c:3}},
+      {s:{r:3,c:1},e:{r:3,c:3}},
+      {s:{r:4,c:1},e:{r:4,c:3}},
+      {s:{r:12,c:0},e:{r:12,c:3}},
+      {s:{r:19,c:1},e:{r:19,c:3}}
+    ];
+    const style=(r,c,spec)=>{const cell=ws[XLSX.utils.encode_cell({r,c})];if(cell)cell.s=spec};
+    const titleStyle={font:{bold:true,size:16,color:{rgb:'244638'}},alignment:{vertical:'center'}};
+    const headerStyle={font:{bold:true,color:{rgb:'FFFFFF'}},fill:{fgColor:{rgb:'315B4B'}},alignment:{vertical:'center',wrapText:true}};
+    const prepStyle={font:{bold:true,color:{rgb:'7A4B00'}},fill:{fgColor:{rgb:'FFF1D6'}},alignment:{wrapText:true,vertical:'center'}};
+    const noticeStyle={font:{color:{rgb:'5A5140'}},fill:{fgColor:{rgb:'F5F5F2'}},alignment:{wrapText:true,vertical:'top'}};
+    style(0,0,titleStyle);style(2,0,prepStyle);style(2,1,prepStyle);style(3,0,noticeStyle);style(3,1,noticeStyle);style(4,0,noticeStyle);style(4,1,noticeStyle);
+    for(let c=0;c<4;c++)style(6,c,headerStyle);
+    [7,8,9].forEach(r=>{const cell=ws[XLSX.utils.encode_cell({r,c:2})];if(cell){cell.z='₱#,##0.00;[Red](₱#,##0.00);-';cell.s={alignment:{horizontal:'right'}}}});
+    style(12,0,{font:{bold:true,color:{rgb:'FFFFFF'}},fill:{fgColor:{rgb:'315B4B'}}});style(12,1,{font:{bold:true,color:{rgb:'FFFFFF'}},fill:{fgColor:{rgb:'315B4B'}}});
+    style(19,0,{font:{bold:true,color:{rgb:'5A5140'}},fill:{fgColor:{rgb:'FFF8E7'}}});style(19,1,{font:{italic:true,color:{rgb:'5A5140'}},fill:{fgColor:{rgb:'FFF8E7'}},alignment:{wrapText:true,vertical:'top'}});
+    ws['!rows']=[{hpt:26},{hpt:22},{hpt:34},{hpt:48},{hpt:36},{hpt:8},{hpt:30}];
+    return ws;
+  }
+  function taxExportWorkbook(){
+    if(!modulesLoaded){notify('Please wait until your transactions and expenses finish loading.');return}
+    if(typeof XLSX==='undefined'||!XLSX.utils||!XLSX.writeFile){notify('The Excel workbook library did not load. Check your internet connection, reload AA PrintSystem, and try again.');return}
+    try{
+      const d=taxReportData();
+      const wb=XLSX.utils.book_new();
+      wb.Props={Title:`AA PrintSystem Year-End Records ${d.year}`,Subject:'Tax preparation reference and document-gathering guide only',Author:'AA PrintSystem',CreatedDate:new Date()};
+      XLSX.utils.book_append_sheet(wb,taxBuildSummarySheet(d),'Summary & Guide');
+
+      const orderRows=d.orders.map(o=>[
+        o.orderDate||'',o.reference||'',displayName(o),o.phone||'',o.status||'',o.pickupDate||'',
+        Number(o.subtotal||0),Number(o.discount||0),Number(o.total||0),paid(o),refunded(o),netReceived(o),
+        o.status==='Cancelled'?'Excluded (Cancelled)':'Included in order summary',
+        (o.items||[]).map(i=>`${i.name} × ${i.quantity}`).join('; '),o.instructions||'',o.notes||''
+      ]);
+      const orderWs=taxWorkbookSheet(
+        ['Order date','Order reference','Customer','Contact','Status','Pickup date','Subtotal','Discount','Order total','Payments received','Refunds','Net received','Summary value treatment','Items / services','Instructions','Internal notes'],
+        orderRows,
+        'REFERENCE ONLY — Verify order details and cancelled status against issued sales invoices/receipts, job records, and your registered sales book. This sheet is not an official sales ledger.',
+        [13,20,26,18,16,13,15,13,15,17,14,15,24,42,36,36],
+        {6:'₱#,##0.00;[Red](₱#,##0.00);-',7:'₱#,##0.00;[Red](₱#,##0.00);-',8:'₱#,##0.00;[Red](₱#,##0.00);-',9:'₱#,##0.00;[Red](₱#,##0.00);-',10:'₱#,##0.00;[Red](₱#,##0.00);-',11:'₱#,##0.00;[Red](₱#,##0.00);-'}
+      );
+      XLSX.utils.book_append_sheet(wb,orderWs,'Orders');
+
+      const transactionRows=d.transactions.map(t=>[
+        t.date||'',txReference(t),String(t.id||''),t.type==='refund'?'Refund':'Payment',t.order||t.orderId||'',t.customer||'',t.method||'',
+        Number(t.amount||0),transactionNetAmount(t),t.notes||''
+      ]);
+      const transactionWs=taxWorkbookSheet(
+        ['Date','Reference','Record ID','Type','Order reference / link','Customer / payer','Payment method','Amount','Net amount (+ payment / − refund)','Notes'],
+        transactionRows,
+        'REFERENCE ONLY — Match every payment and refund with cash records, e-wallet/bank statements, transaction references, and your official books. Refunds have a negative net amount; the original amount remains shown as a positive value.',
+        [13,22,28,14,24,26,20,15,24,42],
+        {7:'₱#,##0.00;[Red](₱#,##0.00);-',8:'₱#,##0.00;[Red](₱#,##0.00);-'}
+      );
+      XLSX.utils.book_append_sheet(wb,transactionWs,'Transactions');
+
+      const expenseRows=d.expenses.map(x=>[
+        x.date||'',x.description||'',x.category||'Other',x.method||'',Number(x.amount||0),x.status||'Recorded',x.paymentReference||'',x.notes||''
+      ]);
+      const expenseWs=taxWorkbookSheet(
+        ['Date','Description','Category','Payment method','Amount','Record status','Payment reference','Notes'],
+        expenseRows,
+        'REFERENCE ONLY — Verify each expense against supplier invoices/receipts, utility bills, lease/rent records, proof of payment, and your registered expense books. No deductible/non-deductible classification is made here.',
+        [13,36,22,20,16,18,24,42],
+        {4:'₱#,##0.00;[Red](₱#,##0.00);-'}
+      );
+      XLSX.utils.book_append_sheet(wb,expenseWs,'Expenses');
+
+      const inventoryRows=d.movements.map(m=>[
+        String(m.at||'').slice(0,10),m.itemName||'',String(m.itemId||''),m.orderReference||'',
+        m.type==='in'?'Stock in':m.type==='out'?'Stock out':'Adjustment',m.type||'',m.adjustmentDirection||'',
+        Number(m.quantity||0),m.itemUnit||'',m.enteredQuantity==null?'':Number(m.enteredQuantity),m.enteredUnit||'',m.reason||''
+      ]);
+      const inventoryWs=taxWorkbookSheet(
+        ['Date','Item','Item ID','Reference / linked order','Movement type','Direction code','Adjustment direction','Quantity moved','Unit','Entered count','Entered unit','Notes / reason'],
+        inventoryRows,
+        'REFERENCE ONLY — Check stock movements against supplier documents, job usage records, physical counts, and your inventory records. Quantities are operational records, not a tax valuation.',
+        [13,30,28,25,18,16,22,16,14,16,16,42],
+        {7:'#,##0.####;[Red](#,##0.####);-',9:'#,##0.####;[Red](#,##0.####);-'}
+      );
+      XLSX.utils.book_append_sheet(wb,inventoryWs,'Inventory');
+
+      const fileName=`AA-PrintSystem-Year-End-Records-${d.year}.xlsx`;
+      XLSX.writeFile(wb,fileName,{bookType:'xlsx',compression:true});
+      $('tax-report-status').textContent=`Excel workbook prepared for ${d.year}: ${d.orders.length} orders, ${d.transactions.length} transactions, ${d.expenses.length} expenses, and ${d.movements.length} inventory movements. Five sheets included.`;
+    }catch(error){
+      console.error('Year-End Records workbook export failed:',error);
+      notify('The Excel workbook could not be created. Please try again.');
+    }
   }
   function renderTaxRecords(){
     const d=taxReportData(),sales=d.activeOrders.reduce((sum,o)=>sum+Number(o.total||0),0);
@@ -1878,7 +2005,7 @@
   }
   $('tax-report-year').value=String(new Date().getFullYear());
   $('tax-report-year').addEventListener('change',renderTaxRecords);
-  $('tax-export-csv').addEventListener('click',taxExportCsv);
+  $('tax-export-csv').addEventListener('click',taxExportWorkbook);
   $('tax-print-summary').addEventListener('click',()=>{
     const d=taxReportData(),sales=d.activeOrders.reduce((sum,o)=>sum+Number(o.total||0),0);
     const netTx=d.transactions.reduce((sum,t)=>sum+transactionNetAmount(t),0);
