@@ -303,6 +303,32 @@
   <article class="panel p-5"><h2 class="section-title mb-3">Order status</h2><div id="dash-order-status" class="space-y-3"></div></article>
   <article class="panel p-5"><h2 class="section-title mb-3">Expense breakdown</h2><div id="dash-expense-breakdown" class="space-y-3"></div></article>
  </div>
+      <section class="panel p-5 mt-6" id="tax-records-panel">
+       <div class="flex flex-wrap items-start justify-between gap-3 mb-4">
+        <div><p class="eyebrow mb-1">RECORDKEEPING SUPPORT</p><h2 class="section-title">Tax Records &amp; Reports</h2>
+         <p class="muted text-sm mt-1">Gather your saved business records for review and tax preparation.</p></div>
+        <span class="pill">Reference reports only</span>
+       </div>
+       <div class="rounded-xl p-3 mb-4 text-sm" style="background:var(--subtle);border:1px solid var(--line)">
+        <strong>Choose a year</strong>
+        <div class="flex flex-wrap items-end gap-3 mt-2">
+         <label class="text-sm">Tax year<input id="tax-report-year" class="field mt-1" type="number" min="2000" max="2100" step="1"></label>
+         <button type="button" class="primary" id="tax-export-csv">Download Year-End Records (CSV)</button>
+         <button type="button" class="secondary" id="tax-print-summary">Print Summary</button>
+        </div>
+       </div>
+       <div class="grid sm:grid-cols-3 gap-3 mb-4">
+        <article class="rounded-xl p-3" style="background:var(--subtle)"><p class="text-xs muted">Orders recorded</p><strong id="tax-order-count" class="metric">—</strong><p id="tax-order-total" class="text-sm muted mt-1">—</p></article>
+        <article class="rounded-xl p-3" style="background:var(--subtle)"><p class="text-xs muted">Transactions recorded</p><strong id="tax-tx-count" class="metric">—</strong><p id="tax-tx-total" class="text-sm muted mt-1">—</p></article>
+        <article class="rounded-xl p-3" style="background:var(--subtle)"><p class="text-xs muted">Expenses recorded</p><strong id="tax-expense-count" class="metric">—</strong><p id="tax-expense-total" class="text-sm muted mt-1">—</p></article>
+        <article class="rounded-xl p-3" style="background:var(--subtle)"><p class="text-xs muted">Inventory movements</p><strong id="tax-stock-count" class="metric">—</strong><p class="text-sm muted mt-1">Stock in, out, and adjustments</p></article>
+       </div>
+       <p class="text-xs muted mb-2">The download contains separate rows for orders, payments/refunds, and expenses, based only on records saved in this system. Keep your actual invoices, receipts, vouchers, and other supporting documents.</p>
+       <div class="text-xs muted rounded-lg p-3" style="border:1px solid var(--line)">
+        <strong>Important notice:</strong> AA PrintSystem is an independent business recordkeeping and reporting tool. It is not affiliated with, endorsed by, or authorized by the Bureau of Internal Revenue (BIR). Reports are based on information entered and maintained by the user and are provided for reference and tax preparation assistance only. They are not official tax returns or a substitute for required invoices, receipts, books of accounts, or professional tax advice. The system does not determine taxable income or deductible expenses.
+       </div>
+       <p id="tax-report-status" class="text-xs muted mt-3" aria-live="polite"></p>
+      </section>
       <div class="grid lg:grid-cols-2 gap-5">
        <article class="panel p-6">
         <p class="eyebrow mb-3">READY WHEN YOU ARE</p>
@@ -1680,7 +1706,62 @@
     $('dash-expense-breakdown').innerHTML=!modulesLoaded?'<p class="muted text-sm">Loading expense records…</p>':categoryRows.length?categoryRows.map(([name,total])=>`<div class="flex items-center justify-between gap-3 border-t pt-2"><span class="text-sm">${esc(name)}</span><strong class="text-sm">${esc(money(total))}</strong></div>`).join(''):'<p class="muted text-sm">No completed expenses in this period.</p>';
     $('profit-overview').textContent=recent.length?`${recent.length} saved pricing calculation${recent.length===1?'':'s'}. These are estimates and are not counted in the figures above.`:'Save a pricing calculation to keep a copy of its recipe and price.';
     $('recent-list').innerHTML=recent.length?recent.slice(0,4).map(r=>`<div class="item-row mb-2"><strong>${esc(r.name)}</strong><p class="text-xs muted">${esc(timeText(r.at))} · ${esc(money(r.profit))} estimated profit</p></div>`).join(''):'<p class="text-sm muted">No calculations saved yet.</p>';
+    if($('tax-order-count'))renderTaxRecords();
   }
+
+  function taxReportData(){
+    const year=String($('tax-report-year').value||new Date().getFullYear());
+    const from=year+'-01-01',to=year+'-12-31';
+    const inYear=d=>{const v=String(d||'').slice(0,10);return v>=from&&v<=to};
+    const orders=repo.orders.filter(o=>inYear(o.orderDate));
+    const activeOrders=orders.filter(o=>o.status!=='Cancelled');
+    const transactions=moduleData.transactions.filter(t=>inYear(t.date));
+    const expenses=moduleData.expenses.filter(x=>!isFixedTemplate(x)&&x.status!=='deleted'&&inYear(x.date)&&(!isFixedOccurrence(x)||x.status==='paid'));
+    const movements=moduleData.inventory.flatMap(x=>(Array.isArray(x.movements)?x.movements:[]).filter(m=>inYear(String(m.at||'').slice(0,10))).map(m=>({...m,itemName:x.name,itemUnit:m.unit||x.unit,itemId:x.id})));
+    return {year,orders,activeOrders,transactions,expenses,movements};
+  }
+  function taxCsvCell(value){return '"'+String(value??'').replace(/"/g,'""').replace(/\r?\n/g,' ')+'"'}
+  function taxExportCsv(){
+    if(!modulesLoaded){notify('Please wait until your transactions and expenses finish loading.');return}
+    const d=taxReportData(),rows=[
+      ['AA PrintSystem — Year-End Records',''],['Tax year',d.year],
+      ['Purpose','Recordkeeping and tax preparation reference only'],
+      ['Notice','Not affiliated with or endorsed by BIR. Not an official tax return. Based on user-entered records.'],[],
+      ['RECORD TYPE','DATE','REFERENCE / DESCRIPTION','CUSTOMER / CATEGORY','STATUS / METHOD','AMOUNT','NOTES']
+    ];
+    d.orders.forEach(o=>rows.push(['Order',o.orderDate,o.reference,displayName(o),o.status,Number(o.total||0),o.notes||'']));
+    d.transactions.forEach(t=>rows.push([t.type==='refund'?'Refund':'Payment',t.date,t.order||t.orderId||'',t.customer||'',t.method||'',transactionNetAmount(t),t.notes||'']));
+    d.expenses.forEach(x=>rows.push(['Expense',x.date,x.description||'',x.category||'Other',x.method||'',Number(x.amount||0),x.notes||'']));
+    d.movements.forEach(m=>rows.push(['Inventory '+(m.type==='in'?'Stock in':m.type==='out'?'Stock out':'Adjustment'),String(m.at||'').slice(0,10),m.itemName||'',m.orderReference||'',m.type||'',Number(m.quantity||0),m.reason||'']));
+    const blob=new Blob(['\uFEFF'+rows.map(r=>r.map(taxCsvCell).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8;'});
+    const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`AA-PrintSystem-Records-${d.year}.csv`;
+    document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+    $('tax-report-status').textContent=`CSV prepared for ${d.year}: ${d.orders.length} orders, ${d.transactions.length} transactions, and ${d.expenses.length} expenses.`;
+  }
+  function renderTaxRecords(){
+    const d=taxReportData(),sales=d.activeOrders.reduce((sum,o)=>sum+Number(o.total||0),0);
+    const netTx=d.transactions.reduce((sum,t)=>sum+transactionNetAmount(t),0);
+    const expenseTotal=d.expenses.reduce((sum,x)=>sum+Number(x.amount||0),0);
+    $('tax-order-count').textContent=String(d.orders.length);$('tax-order-total').textContent=`Recorded order value: ${money(sales)}`;
+    $('tax-tx-count').textContent=String(d.transactions.length);$('tax-tx-total').textContent=`Net recorded payments: ${money(netTx)}`;
+    $('tax-expense-count').textContent=String(d.expenses.length);$('tax-expense-total').textContent=`Recorded expenses: ${money(expenseTotal)}`;
+    $('tax-stock-count').textContent=String(d.movements.length);
+    $('tax-report-status').textContent=`Showing records dated January 1 to December 31, ${d.year}. Cancelled orders are included in the order count but excluded from the order value.`;
+  }
+  $('tax-report-year').value=String(new Date().getFullYear());
+  $('tax-report-year').addEventListener('change',renderTaxRecords);
+  $('tax-export-csv').addEventListener('click',taxExportCsv);
+  $('tax-print-summary').addEventListener('click',()=>{
+    const d=taxReportData(),sales=d.activeOrders.reduce((sum,o)=>sum+Number(o.total||0),0);
+    const netTx=d.transactions.reduce((sum,t)=>sum+transactionNetAmount(t),0);
+    const expenseTotal=d.expenses.reduce((sum,x)=>sum+Number(x.amount||0),0);
+    const w=window.open('','_blank');if(!w){notify('Please allow pop-ups to print the summary.');return}
+    const safe=x=>String(x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    w.onload=()=>w.print();
+    w.document.write(`<!doctype html><html><head><title>Year-End Records ${safe(d.year)}</title><style>body{font:14px Arial,sans-serif;margin:36px;color:#222}h1{font-size:22px}table{border-collapse:collapse;width:100%;margin:20px 0}td,th{border:1px solid #bbb;padding:10px;text-align:left}.notice{font-size:11px;line-height:1.5;margin-top:24px;border:1px solid #bbb;padding:12px}</style></head><body><h1>AA PrintSystem — Year-End Records Summary</h1><p>Tax year: ${safe(d.year)}</p><table><tr><th>Record group</th><th>Count</th><th>Recorded amount</th></tr><tr><td>Orders (excluding cancelled value)</td><td>${d.orders.length}</td><td>${safe(money(sales))}</td></tr><tr><td>Transactions (net of refunds)</td><td>${d.transactions.length}</td><td>${safe(money(netTx))}</td></tr><tr><td>Expenses</td><td>${d.expenses.length}</td><td>${safe(money(expenseTotal))}</td></tr></table><p>Figures summarize records saved in AA PrintSystem. Review detailed records and supporting documents before using these figures.</p><div class="notice"><strong>Important notice:</strong> AA PrintSystem is an independent business recordkeeping and reporting tool. It is not affiliated with, endorsed by, or authorized by the Bureau of Internal Revenue (BIR). Reports are based on information entered and maintained by the user and are provided for reference and tax preparation assistance only. They are not official tax returns or a substitute for required invoices, receipts, books of accounts, or professional tax advice. The system does not determine taxable income or deductible expenses. Keep actual invoices, receipts, vouchers, and other supporting documents.</div></body></html>`);
+    w.document.close();
+  });
+
   $('dash-range').addEventListener('change',()=>{if($('dash-range').value==='custom'){const today=localDate();$('dash-from').value=today.slice(0,7)+'-01';$('dash-to').value=today}renderDashboard()});
   ['dash-from','dash-to'].forEach(id=>$(id).addEventListener('change',renderDashboard));
   function renderAllOrders(){renderCustomerSelect();renderQuoteCustomerOptions();renderReferencePreview();renderOrderList();renderDetail();renderCustomers();renderDashboard()}
@@ -2465,7 +2546,7 @@
   }
   function updateInventoryPreview(){const item=moduleData.inventory.find(x=>x.id===$('iv-adjust-item').value),qty=Number($('iv-adjust-qty').value),type=$('iv-adjust-type').value;if(!item){$('iv-current-stock').textContent='Select an item';$('iv-new-stock').textContent='—';$('iv-quantity-help').textContent=type==='in'?'Enter the number of purchase units received.':type==='adjust'?'Enter the correct total stock count in usage units.':'Enter the number of usage units used.';$('iv-adjust-qty-label').textContent=type==='in'?'Quantity received (purchase units)':type==='adjust'?'Correct total stock (usage units)':'Quantity used (usage units)';return}const current=Number(item.quantity)||0,factor=inventoryConversion(item),unit=inventoryUsageUnit(item),purchase=inventoryPurchaseUnit(item),baseQty=qty*(type==='in'?factor:1),valid=Number.isFinite(qty)&&qty>=0&&(type==='adjust'||qty>0),newQty=type==='in'?current+baseQty:type==='adjust'?qty:current-qty;$('iv-current-stock').textContent=inventoryDisplay(item);$('iv-new-stock').textContent=valid?inventoryDisplay({...item,quantity:newQty}):inventoryDisplay(item);$('iv-adjust-qty-label').textContent=type==='in'?`Quantity received (${purchase})`:type==='adjust'?`Correct total stock (${unit})`:`Quantity used (${unit})`;$('iv-quantity-help').textContent=type==='in'?`Enter purchase units (${purchase}). Each ${purchase} adds ${factor} ${unit}.`:type==='adjust'?`Enter the actual total quantity you counted, in ${unit}. The difference will be saved in Stock Movement History.`:`Enter the amount used in ${unit}. Stock will decrease by that exact amount.`;}
   function setInventoryMode(type){$('iv-adjust-type').value=type;$('iv-stock-in').className=type==='in'?'primary':'secondary';$('iv-stock-out').className=type==='out'?'primary':'secondary';$('iv-stock-edit').className=type==='adjust'?'primary':'secondary';$('iv-order-wrap').hidden=type!=='out';if(type!=='out')$('iv-adjust-order').value='';$('iv-adjust-qty').value='';$('iv-adjust-qty').min=type==='adjust'?'0':'0.0001';$('iv-adjust-qty').placeholder=type==='adjust'?'Enter actual total stock':'Enter quantity';$('iv-adjust-form').querySelector('button[type="submit"]').textContent=type==='adjust'?'Save stock correction':'Save stock update';updateInventoryPreview();}
-  function renderModules(){renderTransactions();renderExpenses();renderInventory();renderDashboard();renderQuoteList();updateQuoteHeading()}
+  function renderModules(){renderTransactions();renderExpenses();renderInventory();if($('tax-order-count'))renderTaxRecords();renderDashboard();renderQuoteList();updateQuoteHeading()}
   setInventoryTab('add');
   $('tx-date').value=localDate();$('ex-date').value=localDate();
   $('transaction-form').onsubmit=async e=>{e.preventDefault();const amount=Number($('tx-amount').value),date=$('tx-date').value,customer=$('tx-customer').value.trim();if(!date||!customer||!Number.isFinite(amount)||amount<=0)return notify('Enter a date, payer, and valid transaction amount.');const values={date,customer,order:$('tx-order').value.trim(),amount,method:$('tx-method').value,notes:$('tx-notes').value.trim()};let next;if(editingTransactionId){const old=moduleData.transactions.find(x=>x.id===editingTransactionId);if(!old||old.paymentId||old.refundId)return notify('Order-linked transactions must be changed on the original order.');next=moduleData.transactions.map(x=>x.id===editingTransactionId?{...x,...values,updatedAt:now()}:x)}else next=[{id:moduleId(),...values,createdAt:now()},...moduleData.transactions];if(await saveModuleData('transactions',next))resetTransactionForm()};
