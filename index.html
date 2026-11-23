@@ -197,6 +197,11 @@
     }
     @supports not (overflow:clip){@media screen and (max-width:850px){#view-orders{overflow-x:hidden}}}
 
+
+      .order-tabs{display:flex;gap:1.5rem;overflow-x:auto;border-bottom:1px solid var(--line);white-space:nowrap}
+      .order-tabs .module-tab{background:transparent;border:0;border-bottom:3px solid transparent;color:var(--muted);padding:12px 4px;margin-bottom:-1px;font:inherit;font-weight:600;cursor:pointer}
+      .order-tabs .module-tab.active{color:var(--ink);border-bottom-color:var(--accent)}
+      .order-tabs .module-tab:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 </style>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.577.0/dist/umd/lucide.min.js" type="text/javascript"></script>
   <script src="https://cdn.tailwindcss.com/3.4.17" type="text/javascript"></script>
@@ -707,18 +712,23 @@
        <p id="cloud-status" class="text-sm muted mt-2" role="status">Connecting to your shop account…</p>
        <p id="repository-warning" class="error text-sm mt-2" hidden=""></p>
       </div>
-      <nav class="inventory-tabs" role="tablist" aria-label="Order sections">
-       <button type="button" class="inventory-tab" id="orders-tab-new" role="tab" aria-controls="orders-panel-new" aria-selected="true" data-orders-tab="new">New Order</button>
-       <button type="button" class="inventory-tab" id="orders-tab-list" role="tab" aria-controls="orders-panel-list" aria-selected="false" data-orders-tab="list" tabindex="-1">All Orders</button>
-       <button type="button" class="inventory-tab" id="orders-tab-tracking" role="tab" aria-controls="orders-panel-tracking" aria-selected="false" data-orders-tab="tracking" tabindex="-1">Order Tracking</button>
-      </nav>
-      <div class="space-y-5">
-       <section id="orders-panel-new" class="inventory-tab-panel" role="tabpanel" aria-labelledby="orders-tab-new">
+      <div class="order-tabs mb-5" role="tablist" aria-label="Orders sections">
+       <button type="button" id="orders-tab-create" class="module-tab active" role="tab" aria-selected="true" aria-controls="orders-panel-create">Create Order</button>
+       <button type="button" id="orders-tab-list" class="module-tab" role="tab" aria-selected="false" aria-controls="orders-panel-list">Saved Orders</button>
+      </div>
+      <div class="grid gap-5 items-start">
+       <div class="space-y-5">
+        <div id="orders-panel-create" class="order-tab-panel" role="tabpanel" aria-labelledby="orders-tab-create">
         <form id="order-form" class="panel p-6" novalidate="">
          <div class="flex justify-between items-start gap-3 mb-5">
           <h2 id="order-form-heading" class="section-title">Create an order</h2><span id="order-ref-preview" class="pill"></span>
          </div>
          <div class="grid sm:grid-cols-2 gap-4">
+          <div class="sm:col-span-2 rounded-lg p-3" style="background:var(--subtle);border:1px solid var(--line)">
+           <label class="flex items-center gap-2 font-semibold cursor-pointer" for="order-add-customer-details"><input id="order-add-customer-details" type="checkbox" class="w-4 h-4"> Add customer details? <span class="muted text-sm font-normal">(Optional)</span></label>
+           <p class="muted text-sm mt-1">Turn this on if you want to save a customer name or contact number for this order. You can leave either field blank.</p>
+          </div>
+          <div id="order-customer-details-area" class="sm:col-span-2 grid sm:grid-cols-2 gap-4" hidden>
           <div>
            <label class="field-label" for="order-customer-search">Find existing customer</label><input id="order-customer-search" class="field" list="order-customer-options" placeholder="Search name or contact number..." autocomplete="off"><datalist id="order-customer-options"></datalist><select id="order-customer-select" class="field" hidden><option value="">Choose a customer or add new</option></select>
           </div>
@@ -732,6 +742,7 @@
            <div>
             <label class="field-label" for="order-phone">Contact number</label><input id="order-phone" class="field" type="tel" maxlength="25" autocomplete="tel">
            </div>
+          </div>
           </div>
           <div>
            <label class="field-label" for="order-date">Order date</label><input id="order-date" class="field" type="date" required="">
@@ -774,12 +785,11 @@
          </div>
          <p id="order-error" class="error text-sm mt-3" role="alert" hidden=""></p>
          <div class="flex flex-wrap gap-2 mt-5">
-          <button id="save-order" type="submit" class="primary">Save order</button><button id="cancel-order-edit" type="button" class="secondary" hidden="">Cancel editing</button>
+          <button id="save-order" type="submit" class="primary">Save order</button><button id="cancel-order-edit" type="button" class="secondary">Cancel</button>
          </div>
         </form>
-       </section>
-       <section id="orders-panel-list" class="inventory-tab-panel" role="tabpanel" aria-labelledby="orders-tab-list" hidden>
-        <section class="panel p-6">
+        </div>
+        <section id="orders-panel-list" class="panel p-6 order-tab-panel" role="tabpanel" aria-labelledby="orders-tab-list" hidden>
          <h2 class="section-title mb-4">Saved orders</h2>
          <div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-3 mb-4">
           <div>
@@ -800,15 +810,8 @@
          </div>
          <div id="order-list" class="table-scroll"></div><div id="order-pagination" class="mt-4"></div>
         </section>
-       </section>
-       <section id="orders-panel-tracking" class="inventory-tab-panel" role="tabpanel" aria-labelledby="orders-tab-tracking" hidden>
-        <div class="panel p-6">
-         <h2 class="section-title mb-2">Customer Order Tracking</h2>
-         <p class="muted text-sm mb-4">Open the customer-facing tracking page to preview what customers see when they try to check an order.</p>
-         <div class="notice mb-4" role="status"><strong>Live tracking is not connected yet.</strong><p class="text-sm mt-1">The current tracking page cannot look up or verify saved orders. It displays this notice and asks customers to contact the shop directly. No order information is exposed.</p></div>
-         <button type="button" class="primary" id="open-customer-tracking">Open customer tracking page</button>
-        </div>
-       </section>
+       </div>
+
       </div>
      </section>
      <section id="view-order-detail" class="view" hidden="">
@@ -1339,8 +1342,8 @@
   }
   function renderReferencePreview(){if(editingOrderId){$('order-ref-preview').textContent=selected()?.reference||'Existing reference';return}const date=isDate($('order-date').value)?$('order-date').value:localDate();$('order-ref-preview').textContent=repoBlocked?'Storage unavailable':nextReference(date).reference+' · assigned on save'}
   function customerFor(d){return repo.customers.find(c=>c.id===d.customerId)}
-  function displayName(d){return customerFor(d)?.name||d.customer}
-  function displayPhone(d){return customerFor(d)?.phone||d.phone}
+  function displayName(d){return customerFor(d)?.name||d.customer||'Walk-in order'}
+  function displayPhone(d){return customerFor(d)?.phone||d.phone||'—'}
   function renderCustomerSelect(){
     const current=$('order-customer-select').value;
     $('order-customer-select').replaceChildren(new Option('Choose a customer or add new',''));
@@ -1368,6 +1371,19 @@
     if(c)$('order-customer-search').value=`${c.name} · ${c.phone}`;
     else if($('order-customer-search').value.trim())notify('Choose a customer from the suggestions, or add a new customer.');
   });
+  function setOrdersTab(tab){
+    const create=tab==='create';
+    $('orders-panel-create').hidden=!create;$('orders-panel-list').hidden=create;
+    $('orders-tab-create').classList.toggle('active',create);$('orders-tab-list').classList.toggle('active',!create);
+    $('orders-tab-create').setAttribute('aria-selected',String(create));$('orders-tab-list').setAttribute('aria-selected',String(!create));
+  }
+  $('orders-tab-create').onclick=()=>setOrdersTab('create');
+  $('orders-tab-list').onclick=()=>setOrdersTab('list');
+  function toggleOrderCustomerDetails(show){
+    $('order-customer-details-area').hidden=!show;
+    if(!show){showNewCustomer(false);$('order-customer').value='';$('order-phone').value='';$('order-customer-search').value='';$('order-customer-select').value=''}
+  }
+  $('order-add-customer-details').addEventListener('change',e=>toggleOrderCustomerDetails(e.target.checked));
   function showNewCustomer(show){$('new-customer-fields').hidden=!show;$('new-customer-toggle').textContent=show?'Use existing customer':' + Add new customer inline';$('order-customer-select').disabled=show;$('order-customer-search').disabled=show;if(show){$('order-customer-select').value='';$('order-customer-search').value=''}}
   $('new-customer-toggle').onclick=()=>showNewCustomer($('new-customer-fields').hidden);
   function orderMath(){
@@ -1413,19 +1429,24 @@
   document.querySelectorAll('.order-math').forEach(el=>el.addEventListener('input',orderMath));
   $('order-date').addEventListener('change',renderReferencePreview);
   function resetOrderForm(){
-    editingOrderId=null;convertingQuoteId=null;$('cancel-order-edit').textContent='Cancel editing';$('order-form').reset();$('order-date').value=localDate();$('order-pickup').value=localDate();$('order-discount').value='0';$('order-deposit').value='0';$('order-form-heading').textContent='Create an order';$('save-order').textContent='Save order';$('cancel-order-edit').hidden=true;showNewCustomer(false);$('order-customer-search').value='';$('order-customer-select').value='';orderLines=[{id:uid(),name:'',category:'',productId:'',custom:false,quantity:1,price:0}];renderOrderLines();renderReferencePreview();showError('order-error','')
+    editingOrderId=null;convertingQuoteId=null;$('cancel-order-edit').textContent='Cancel';$('order-form').reset();$('order-add-customer-details').checked=false;toggleOrderCustomerDetails(false);$('order-date').value=localDate();$('order-pickup').value=localDate();$('order-discount').value='0';$('order-deposit').value='0';$('order-form-heading').textContent='Create an order';$('save-order').textContent='Save order';$('cancel-order-edit').hidden=false;showNewCustomer(false);$('order-customer-search').value='';$('order-customer-select').value='';orderLines=[{id:uid(),name:'',category:'',productId:'',custom:false,quantity:1,price:0}];renderOrderLines();renderReferencePreview();showError('order-error','');setOrdersTab('create')
   }
-  $('cancel-order-edit').onclick=resetOrderForm;
+  $('cancel-order-edit').onclick=()=>{
+    const hasContent=editingOrderId||$('order-add-customer-details').checked||$('order-customer-search').value||$('order-customer').value||$('order-phone').value||$('order-instructions').value||$('order-notes').value||orderLines.some(l=>l.name||l.price||l.quantity!==1);
+    if(hasContent&&!window.confirm('Cancel and clear the order form? Any unsaved details will be lost.'))return;
+    resetOrderForm();
+  };
   function saveOrder(e){
     e.preventDefault();
     if(repoBlocked){showError('order-error',repoBlocked);return}
     const existing=editingOrderId?repo.orders.find(d=>d.id===editingOrderId):null;
     if(editingOrderId&&!existing){showError('order-error','The order being edited is no longer available.');return}
-    const creatingCustomer=!$('new-customer-fields').hidden;
-    let customer=creatingCustomer?null:repo.customers.find(c=>c.id===$('order-customer-select').value);
-    let name=creatingCustomer?$('order-customer').value.trim():customer?.name||'';
-    let phone=creatingCustomer?$('order-phone').value.trim():customer?.phone||'';
-    if(!name||!/^[+()\d\s-]{7,25}$/.test(phone)){showError('order-error','Select a customer or enter a name and valid contact number.');return}
+    const includeCustomerDetails=$('order-add-customer-details').checked;
+    const creatingCustomer=includeCustomerDetails&&!$('new-customer-fields').hidden;
+    let customer=includeCustomerDetails&&!creatingCustomer?repo.customers.find(c=>c.id===$('order-customer-select').value):null;
+    let name=includeCustomerDetails?(creatingCustomer?$('order-customer').value.trim():customer?.name||''):'';
+    let phone=includeCustomerDetails?(creatingCustomer?$('order-phone').value.trim():customer?.phone||''):'';
+    if(phone&&!/^[+()\d\s-]{7,25}$/.test(phone)){showError('order-error','Please enter a valid contact number, or leave it blank.');return}
     // A contact number may be shared by multiple customers. Keep new inline customers as separate records.
     const orderDate=$('order-date').value,pickupDate=$('order-pickup').value,math=orderMath();
     if(!isDate(orderDate)||!isDate(pickupDate)||pickupDate<orderDate){showError('order-error','Enter valid order and pickup dates; pickup cannot precede the order date.');return}
@@ -1434,8 +1455,8 @@
     }
     if(existing && cents(paid(existing))>cents(math.total)){showError('order-error','The edited total cannot be less than payments already received.');return}
     const at=now(), next=structuredClone(repo);
-    if(!customer){customer={id:uid(),name,phone,createdAt:at};next.customers.push(customer)}
-    const details={customerId:customer.id,customer:name,phone,orderDate,pickupDate,date:pickupDate,items:orderLines.map(l=>({id:l.id,name:l.name.trim(),quantity:l.quantity,price:l.price})),subtotal:math.subtotal,discount:math.discount,total:math.total,instructions:$('order-instructions').value.trim(),notes:$('order-notes').value.trim(),updatedAt:at};
+    if(!customer&&name){customer={id:uid(),name,phone,createdAt:at};next.customers.push(customer)}
+    const details={customerId:customer?.id||null,customer:name,phone,orderDate,pickupDate,date:pickupDate,items:orderLines.map(l=>({id:l.id,name:l.name.trim(),quantity:l.quantity,price:l.price})),subtotal:math.subtotal,discount:math.discount,total:math.total,instructions:$('order-instructions').value.trim(),notes:$('order-notes').value.trim(),updatedAt:at};
     let d;
     if(existing){d=next.orders.find(o=>o.id===existing.id);Object.assign(d,details)}
     else{
@@ -1599,11 +1620,11 @@
     try{if(commitRepo(next)){input.value='';notify('Payment saved and added to Transactions.')}else showError('detail-error','Could not save this payment. Amount and method have been preserved.')}finally{e.currentTarget.disabled=false;renderDetail()}
   };
   $('edit-order').onclick=()=>{
-    const d=selected();if(!d)return;editingOrderId=d.id;$('order-form-heading').textContent='Edit order';$('save-order').textContent='Save changes';$('cancel-order-edit').hidden=false;
-    $('order-customer-select').value=d.customerId;const exists=repo.customers.some(c=>c.id===d.customerId);if(exists){const c=repo.customers.find(c=>c.id===d.customerId);$('order-customer-search').value=`${c.name} · ${c.phone}`}else $('order-customer-search').value='';showNewCustomer(!exists);
-    if(!exists){$('order-customer').value=d.customer;$('order-phone').value=d.phone}
+    const d=selected();if(!d)return;editingOrderId=d.id;$('order-form-heading').textContent='Edit order';$('save-order').textContent='Save changes';$('cancel-order-edit').textContent='Cancel';$('cancel-order-edit').hidden=false;
+    const hasCustomerDetails=!!(d.customer||d.phone||d.customerId);$('order-add-customer-details').checked=hasCustomerDetails;toggleOrderCustomerDetails(hasCustomerDetails);$('order-customer-select').value=d.customerId||'';const exists=!!d.customerId&&repo.customers.some(c=>c.id===d.customerId);if(exists){const c=repo.customers.find(c=>c.id===d.customerId);$('order-customer-search').value=`${c.name} · ${c.phone}`;showNewCustomer(false)}else{ $('order-customer-search').value='';showNewCustomer(hasCustomerDetails)}
+    if(!exists){$('order-customer').value=d.customer||'';$('order-phone').value=d.phone||''}
     $('order-date').value=d.orderDate;$('order-pickup').value=d.pickupDate;$('order-discount').value=d.discount;$('order-deposit').value='0';$('order-payment-method').value='Cash';$('order-instructions').value=d.instructions;$('order-notes').value=d.notes;
-    orderLines=d.items.map(i=>{const p=products.find(p=>p.name.toLowerCase()===String(i.name||'').trim().toLowerCase());return {...i,category:p?.category||'',productId:p?.id||'__custom__',custom:!p}});renderOrderLines();renderReferencePreview();setView('orders');setOrdersTab('new');$('order-form').scrollIntoView({behavior:'smooth',block:'start'})
+    orderLines=d.items.map(i=>{const p=products.find(p=>p.name.toLowerCase()===String(i.name||'').trim().toLowerCase());return {...i,category:p?.category||'',productId:p?.id||'__custom__',custom:!p}});renderOrderLines();renderReferencePreview();setOrdersTab('create');setView('orders');$('order-form').scrollIntoView({behavior:'smooth',block:'start'})
   };
   $('cancel-order').onclick=()=>{const d=selected();if(!d||d.status==='Cancelled')return;openCancellation(d)};
   $('delete-order').onclick=()=>{const d=selected();if(!d)return;$('delete-confirmation').hidden=false;$('cancellation-fields').hidden=true;$('order-action-prompt').textContent=`Permanently delete ${d.reference}? This removes the order and its linked payment/refund transaction records from the system and cannot be undone.`;$('confirm-delete').textContent='Permanently delete order';$('confirm-delete').dataset.action='delete';$('confirm-delete').className='danger';$('order-action-error').hidden=true};
@@ -1699,14 +1720,6 @@
     closeMenu();document.querySelector('.content-width')?.scrollTo({top:0,behavior:'auto'});if(view==='orders'){renderAllOrders();renderOrderLines()}if(view==='order-detail')renderDetail();if(view==='dashboard')renderDashboard();if(view==='products')renderProducts();if(view==='quotes'){renderQuote();renderQuoteList()}if(view==='profit')renderCatalogueHealth();if(['transactions','expenses','inventory'].includes(view))renderModules()
   }
   function showPublic(){closeMenu();$('internal-app').hidden=true;document.querySelector('.mobile-top').hidden=true;$('public-page').hidden=false;$('public-title').textContent=trackingPreview.title;$('public-instructions').textContent=trackingPreview.instructions;showError('public-error','');window.scrollTo(0,0)}
-  function setOrdersTab(name){
-    const allowed=['new','list','tracking'];if(!allowed.includes(name))return;
-    allowed.forEach(key=>{const active=key===name,tab=$('orders-tab-'+key),panel=$('orders-panel-'+key);tab.setAttribute('aria-selected',active?'true':'false');tab.tabIndex=active?0:-1;panel.hidden=!active;});
-    if(name==='list')renderAllOrders();
-  }
-  document.querySelectorAll('[data-orders-tab]').forEach(tab=>tab.addEventListener('click',()=>setOrdersTab(tab.dataset.ordersTab)));
-  document.querySelector('[role="tablist"][aria-label="Order sections"]')?.addEventListener('keydown',e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();const tabs=[...document.querySelectorAll('[data-orders-tab]')],index=tabs.indexOf(document.activeElement);const next=e.key==='Home'?0:e.key==='End'?tabs.length-1:(index+(e.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length;tabs[next].focus();setOrdersTab(tabs[next].dataset.ordersTab)});
-  $('open-customer-tracking').onclick=()=>showPublic();
   document.querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>setView(button.dataset.view)));
   $('back-orders').onclick=()=>setView('orders');
   $('menu-open').onclick=()=>{$('sidebar').classList.add('open');$('mobile-backdrop').hidden=false};$('menu-close').onclick=closeMenu;$('mobile-backdrop').onclick=closeMenu;$('back-internal').onclick=()=>setView('dashboard');
@@ -2530,7 +2543,7 @@
   }
   function convertQuote(id){
     const q=moduleData.quotations.find(x=>x.id===id);if(!q)return;
-    resetOrderForm();setOrdersTab('new');convertingQuoteId=id;
+    resetOrderForm();convertingQuoteId=id;
     const key=phoneKey(q.contact),name=String(q.customer||'').trim().toLowerCase();
     const match=repo.customers.find(c=>key&&phoneKey(c.phone)===key)||repo.customers.find(c=>c.name.trim().toLowerCase()===name);
     if(match){$('order-customer-select').value=match.id;$('order-customer-search').value=`${match.name} · ${match.phone}`}
