@@ -209,6 +209,12 @@
       .order-tabs .module-tab{background:transparent;border:0;border-bottom:3px solid transparent;color:var(--muted);padding:12px 4px;margin-bottom:-1px;font:inherit;font-weight:600;cursor:pointer}
       .order-tabs .module-tab.active{color:var(--ink);border-bottom-color:var(--accent)}
       .order-tabs .module-tab:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+
+  .dashboard-shortcut{cursor:pointer;transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease;position:relative}
+  .dashboard-shortcut:hover,.dashboard-shortcut:focus-visible{transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,0,0,.08);outline:none;border-color:var(--accent)}
+  .dashboard-shortcut:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+  .dashboard-shortcut::after{content:'View details →';display:block;margin-top:10px;font-size:11px;color:var(--muted);font-weight:600}
+
 </style>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.577.0/dist/umd/lucide.min.js" type="text/javascript"></script>
   <script src="https://cdn.tailwindcss.com/3.4.17" type="text/javascript"></script>
@@ -278,27 +284,27 @@
   <p class="text-xs muted mt-2" id="dash-range-note">Figures below update when you change the report period.</p>
  </article>
  <div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
-       <article class="panel p-5">
+       <article class="panel p-5 dashboard-shortcut" data-dashboard-view="orders" role="button" tabindex="0" aria-label="Open Orders">
         <p class="muted mb-2">Revenue (orders placed)</p><strong id="metric-sales" class="metric">—</strong>
         <p id="metric-sales-note" class="text-xs muted mt-2"></p>
        </article>
-       <article class="panel p-5">
+       <article class="panel p-5 dashboard-shortcut" data-dashboard-view="transactions" role="button" tabindex="0" aria-label="Open Transactions">
         <p class="muted mb-2">Cash collected</p><strong id="metric-cash" class="metric">—</strong>
         <p id="metric-cash-note" class="text-xs muted mt-2"></p>
        </article>
-       <article class="panel p-5">
+       <article class="panel p-5 dashboard-shortcut" data-dashboard-view="expenses" role="button" tabindex="0" aria-label="Open Expenses">
         <p class="muted mb-2">Expenses</p><strong id="metric-expenses" class="metric">—</strong>
         <p id="metric-expenses-note" class="text-xs muted mt-2"></p>
        </article>
-       <article class="panel highlight-panel p-5">
+       <article class="panel highlight-panel p-5 dashboard-shortcut" data-dashboard-view="profit" role="button" tabindex="0" aria-label="Open Profit">
         <p class="mb-2">Net cash (collected − expenses)</p><strong id="metric-profit" class="metric">—</strong>
         <p class="text-xs muted mt-2">Real money in minus real money out for the selected period.</p>
        </article>
-       <article class="panel p-5">
+       <article class="panel p-5 dashboard-shortcut" data-dashboard-view="orders" role="button" tabindex="0" aria-label="Open Orders" data-dashboard-filter="unpaid">
         <p class="muted mb-2">Outstanding balances</p><strong id="metric-outstanding" class="metric">—</strong>
         <p class="text-xs muted mt-2">Still owed on all open orders, any month.</p>
        </article>
-       <article class="panel p-5">
+       <article class="panel p-5 dashboard-shortcut" data-dashboard-view="products" role="button" tabindex="0" aria-label="Open Products">
         <p class="muted mb-2">Products &amp; services</p><strong id="metric-products" class="metric">0</strong>
         <p class="text-xs muted mt-2">Active products in your catalogue.</p>
        </article>
@@ -323,12 +329,12 @@
         </article>
        </div>
       </section>
-      <div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-4 mb-6"><article class="panel p-5"><p class="muted mb-2">Fixed expense target</p><strong id="metric-fixed-target" class="metric">—</strong><p id="metric-fixed-note" class="text-xs muted mt-2">Monthly equivalent of active recurring bills.</p></article><article class="panel p-5"><p class="muted mb-2">Fixed expense coverage</p><strong id="metric-fixed-coverage" class="metric">—</strong><p id="metric-fixed-coverage-note" class="text-xs muted mt-2">Revenue compared with fixed expenses.</p></article><article class="panel highlight-panel p-5"><p class="mb-2">Operating result</p><strong id="metric-operating-profit" class="metric">—</strong><p class="text-xs muted mt-2">Revenue minus recorded operating expenses. Product direct costs are not included yet.</p></article></div>
+      <div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-4 mb-6"><article class="panel p-5 dashboard-shortcut" data-dashboard-view="expenses" role="button" tabindex="0" aria-label="Open Expenses"><p class="muted mb-2">Fixed expense target</p><strong id="metric-fixed-target" class="metric">—</strong><p id="metric-fixed-note" class="text-xs muted mt-2">Monthly equivalent of active recurring bills.</p></article><article class="panel p-5 dashboard-shortcut" data-dashboard-view="expenses" role="button" tabindex="0" aria-label="Open Expenses"><p class="muted mb-2">Fixed expense coverage</p><strong id="metric-fixed-coverage" class="metric">—</strong><p id="metric-fixed-coverage-note" class="text-xs muted mt-2">Revenue compared with fixed expenses.</p></article><article class="panel highlight-panel p-5 dashboard-shortcut" data-dashboard-view="profit" role="button" tabindex="0" aria-label="Open Profit"><p class="mb-2">Operating result</p><strong id="metric-operating-profit" class="metric">—</strong><p class="text-xs muted mt-2">Revenue minus recorded operating expenses. Product direct costs are not included yet.</p></article></div>
       <div class="grid lg:grid-cols-2 gap-5 mb-6">
-  <article class="panel p-5"><div class="flex flex-wrap justify-between items-center gap-2 mb-3"><h2 class="section-title">Sales trend</h2><span class="text-xs muted" id="dash-trend-label">Based on selected period</span></div><div id="dash-sales-trend" class="space-y-3"></div></article>
-  <article class="panel p-5"><h2 class="section-title mb-3">Best-selling products & services</h2><div id="dash-top-products" class="space-y-3"></div></article>
-  <article class="panel p-5"><h2 class="section-title mb-3">Order status</h2><div id="dash-order-status" class="space-y-3"></div></article>
-  <article class="panel p-5"><h2 class="section-title mb-3">Expense breakdown</h2><div id="dash-expense-breakdown" class="space-y-3"></div></article>
+  <article class="panel p-5 dashboard-shortcut" data-dashboard-view="orders" role="button" tabindex="0" aria-label="Open Orders"><div class="flex flex-wrap justify-between items-center gap-2 mb-3"><h2 class="section-title">Sales trend</h2><span class="text-xs muted" id="dash-trend-label">Based on selected period</span></div><div id="dash-sales-trend" class="space-y-3"></div></article>
+  <article class="panel p-5 dashboard-shortcut" data-dashboard-view="products" role="button" tabindex="0" aria-label="Open Products"><h2 class="section-title mb-3">Best-selling products & services</h2><div id="dash-top-products" class="space-y-3"></div></article>
+  <article class="panel p-5 dashboard-shortcut" data-dashboard-view="orders" role="button" tabindex="0" aria-label="Open Orders"><h2 class="section-title mb-3">Order status</h2><div id="dash-order-status" class="space-y-3"></div></article>
+  <article class="panel p-5 dashboard-shortcut" data-dashboard-view="expenses" role="button" tabindex="0" aria-label="Open Expenses"><h2 class="section-title mb-3">Expense breakdown</h2><div id="dash-expense-breakdown" class="space-y-3"></div></article>
  </div>
       <section class="panel p-5 mt-6" id="tax-records-panel">
        <div class="flex flex-wrap items-start justify-between gap-3 mb-4">
@@ -1974,6 +1980,22 @@
   }
   function showPublic(){closeMenu();$('internal-app').hidden=true;document.querySelector('.mobile-top').hidden=true;$('public-page').hidden=false;$('public-title').textContent=trackingPreview.title;$('public-instructions').textContent=trackingPreview.instructions;showError('public-error','');window.scrollTo(0,0)}
   document.querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>setView(button.dataset.view)));
+  function openDashboardShortcut(card){
+    const view=card.dataset.dashboardView;
+    if(!view)return;
+    setView(view);
+    if(view==='orders' && card.dataset.dashboardFilter==='unpaid'){
+      $('order-payment-filter').value='Unpaid';
+      listPages.orders=1;
+      renderOrderList();
+    }
+  }
+  document.querySelectorAll('.dashboard-shortcut').forEach(card=>{
+    card.addEventListener('click',()=>openDashboardShortcut(card));
+    card.addEventListener('keydown',e=>{
+      if(e.key==='Enter'||e.key===' '){e.preventDefault();openDashboardShortcut(card)}
+    });
+  });
   function closeOrderDetailModal(){
     $('order-detail-modal').hidden=true;
     $('order-list')?.querySelector(`[data-open-order="${CSS.escape(selectedId||'')}"]`)?.focus();
