@@ -1549,7 +1549,7 @@
     $('order-results-count').textContent=`Showing ${matchingCount} ${matchingCount===1?'order':'orders'}${matchingCount<repo.orders.length?` · ${repo.orders.length} total`:''}`;
     const sort=$('order-sort').value;shown.sort((a,b)=>sort==='oldest'?a.createdAt.localeCompare(b.createdAt):sort==='pickup'?a.pickupDate.localeCompare(b.pickupDate):sort==='total'?b.total-a.total:b.createdAt.localeCompare(a.createdAt));
     const page=pageSlice(shown,'orders');
-    $('order-list').innerHTML=page.items.length?`<table class="order-table"><thead><tr><th>Reference / customer</th><th>Services</th><th>Order / pickup</th><th>Total / balance</th><th>Status / payment</th><th>Actions</th></tr></thead><tbody>${page.items.map(d=>`<tr><td><strong>${esc(d.reference)}</strong><br>${esc(displayName(d))}</td><td>${esc(d.items.map(i=>`${i.name} × ${i.quantity}`).join(', '))}</td><td>${esc(dateText(d.orderDate))}<br>${esc(dateText(d.pickupDate))}</td><td>${esc(money(d.total))}<br>${esc(money(balance(d)))} balance</td><td><span class="pill">${esc(d.status)}</span><br><span class="text-xs">${esc(paymentStatus(d))}</span></td><td><div class="flex flex-wrap gap-2"><button class="secondary" type="button" data-open-order="${esc(d.id)}">View details</button><button class="secondary" type="button" data-edit-order-row="${esc(d.id)}">Edit</button><button class="secondary" type="button" data-duplicate-order="${esc(d.id)}">Duplicate</button><button class="secondary" type="button" data-print-order-row="${esc(d.id)}">Print</button></div></td></tr>`).join('')}</tbody></table>`:'<p class="text-sm muted py-5">No matching orders. Adjust the filters or create an order above.</p>';
+    $('order-list').innerHTML=page.items.length?`<table class="order-table"><thead><tr><th>Reference / customer</th><th>Services</th><th>Order / pickup</th><th>Total / balance</th><th>Status / payment</th><th>Actions</th></tr></thead><tbody>${page.items.map(d=>`<tr><td><strong>${esc(d.reference)}</strong><br>${esc(displayName(d))}</td><td>${esc(d.items.map(i=>`${i.name} × ${i.quantity}`).join(', '))}</td><td>${esc(dateText(d.orderDate))}<br>${esc(dateText(d.pickupDate))}</td><td>${esc(money(d.total))}<br>${esc(money(balance(d)))} balance</td><td><label class="sr-only" for="order-status-${esc(d.id)}">Change order status for ${esc(d.reference)}</label><select id="order-status-${esc(d.id)}" class="field text-xs" style="min-width:145px;padding:.4rem .55rem" data-order-status="${esc(d.id)}" ${d.status==='Cancelled'?'disabled':''}>${statuses.filter(x=>x!=='Cancelled').map(x=>`<option value="${esc(x)}" ${d.status===x?'selected':''}>${esc(x)}</option>`).join('')}</select><br><span class="text-xs">${esc(paymentStatus(d))}</span> <button class="text-xs underline" type="button" data-payment-order="${esc(d.id)}">Update payment</button></td><td><div class="flex flex-wrap gap-2"><button class="secondary" type="button" data-open-order="${esc(d.id)}">View details</button><button class="secondary" type="button" data-edit-order-row="${esc(d.id)}">Edit</button><button class="secondary" type="button" data-duplicate-order="${esc(d.id)}">Duplicate</button><button class="secondary" type="button" data-print-order-row="${esc(d.id)}">Print</button></div></td></tr>`).join('')}</tbody></table>`:'<p class="text-sm muted py-5">No matching orders. Adjust the filters or create an order above.</p>';
     renderPagination('order-pagination','orders',page.total,page.page,page.pages);
     renderOrderTracking();
   }
@@ -1604,11 +1604,19 @@
     const editButton=e.target.closest('[data-edit-order-row]');
     const duplicateButton=e.target.closest('[data-duplicate-order]');
     const printButton=e.target.closest('[data-print-order-row]');
+    const paymentButton=e.target.closest('[data-payment-order]');
     if(viewButton){selectedId=viewButton.dataset.openOrder;renderDetail();setView('order-detail');return}
     if(editButton){selectedId=editButton.dataset.editOrderRow;$('edit-order').click();return}
     if(duplicateButton){duplicateOrder(duplicateButton.dataset.duplicateOrder);return}
-    if(printButton){selectedId=printButton.dataset.printOrderRow;$('print-order').click()}
+    if(printButton){selectedId=printButton.dataset.printOrderRow;$('print-order').click();return}
+    if(paymentButton){selectedId=paymentButton.dataset.paymentOrder;renderDetail();setView('order-detail');$('additional-payment').focus()}
   };
+  $('order-list').addEventListener('change',e=>{
+    const select=e.target.closest('[data-order-status]');
+    if(!select)return;
+    const order=repo.orders.find(d=>d.id===select.dataset.orderStatus);
+    if(order)changeOrderStatus(order,select.value,select);
+  });
   function renderDetail(){
     const d=selected();$('detail-empty').hidden=!!d;$('order-detail').hidden=!d;if(!d)return;
     $('detail-ref').textContent=d.reference;
@@ -1776,20 +1784,26 @@
   $('dash-range').addEventListener('change',()=>{if($('dash-range').value==='custom'){const today=localDate();$('dash-from').value=today.slice(0,7)+'-01';$('dash-to').value=today}renderDashboard()});
   ['dash-from','dash-to'].forEach(id=>$(id).addEventListener('change',renderDashboard));
   function renderAllOrders(){renderCustomerSelect();renderQuoteCustomerOptions();renderReferencePreview();renderOrderList();renderDetail();renderCustomers();renderDashboard()}
-  $('detail-status').onchange=e=>{
-    const d=selected();if(!d)return;const status=e.target.value;if(status===d.status)return;
-    if(status==='Cancelled'){e.target.value=d.status;showError('detail-error','Use the Cancel Order button to record who initiated the cancellation, the required reason, and any refund.');$('delete-confirmation').hidden=true;openCancellation(d);return}
+  function changeOrderStatus(d,status,control){
+    if(!d||status===d.status)return;
+    if(status==='Cancelled'){
+      if(control)control.value=d.status;
+      if($('detail-error'))showError('detail-error','Use the Cancel Order button to record who initiated the cancellation, the required reason, and any refund.');
+      $('delete-confirmation').hidden=true;openCancellation(d);selectedId=d.id;renderDetail();setView('order-detail');return;
+    }
     const next=structuredClone(repo),item=next.orders.find(o=>o.id===d.id),at=now(),firstReady=status==='Ready for Pickup'&&!item.history.some(h=>h.status==='Ready for Pickup');
     item.status=status;item.updatedAt=at;item.history.push({status,at,actor:'Owner · local browser'});
     if(firstReady){const msg=messages(item,'ready');item.notification={...(item.notification||{}),firstReadyAt:at,preparedAt:at,history:[...(item.notification?.history||[]),{at,action:'Prepared',kind:'Ready for Pickup'}],messenger:msg.messenger,sms:msg.sms}}
-    if(!commitRepo(next)){e.target.value=d.status;showError('detail-error','Could not save the status. Your previous status remains unchanged.');return}
+    if(!commitRepo(next)){if(control)control.value=d.status;if($('detail-status'))$('detail-status').value=d.status;if($('detail-error'))showError('detail-error','Could not save the status. Your previous status remains unchanged.');notify('Could not save order status.');return}
     notify('Order status saved.');
+    renderOrderList();renderDetail();
     if(firstReady)openMessageModal(item,'ready');
     if(status==='Completed'){
       const shouldPrint=window.confirm(`Order ${item.reference} has been marked as Completed.\n\nWould you like to print the Order Summary now?`);
-      if(shouldPrint)$('print-order').click();
+      if(shouldPrint){selectedId=item.id;$('print-order').click();}
     }
-  };
+  }
+  $('detail-status').onchange=e=>{const d=selected();if(d)changeOrderStatus(d,e.target.value,e.target)};
   function openCancellation(d){
     $('delete-confirmation').hidden=false;
     $('order-action-prompt').textContent=`Cancel ${d.reference}? The order will remain in Order History, but its linked payment/refund transactions will be removed from active financial totals.`;
