@@ -1506,7 +1506,7 @@
     $('order-results-count').textContent=`Showing ${matchingCount} ${matchingCount===1?'order':'orders'}${matchingCount<repo.orders.length?` · ${repo.orders.length} total`:''}`;
     const sort=$('order-sort').value;shown.sort((a,b)=>sort==='oldest'?a.createdAt.localeCompare(b.createdAt):sort==='pickup'?a.pickupDate.localeCompare(b.pickupDate):sort==='total'?b.total-a.total:b.createdAt.localeCompare(a.createdAt));
     const page=pageSlice(shown,'orders');
-    $('order-list').innerHTML=page.items.length?`<table class="order-table"><thead><tr><th>Reference / customer</th><th>Services</th><th>Order / pickup</th><th>Total / balance</th><th>Status / payment</th><th>Actions</th></tr></thead><tbody>${page.items.map(d=>`<tr><td><strong>${esc(d.reference)}</strong><br>${esc(displayName(d))}</td><td>${esc(d.items.map(i=>`${i.name} × ${i.quantity}`).join(', '))}</td><td>${esc(dateText(d.orderDate))}<br>${esc(dateText(d.pickupDate))}</td><td>${esc(money(d.total))}<br>${esc(money(balance(d)))} balance</td><td><span class="pill">${esc(d.status)}</span><br><span class="text-xs">${esc(paymentStatus(d))}</span></td><td><div class="flex flex-wrap gap-2"><button class="secondary" type="button" data-open-order="${esc(d.id)}">View details</button><button class="secondary" type="button" data-edit-order-row="${esc(d.id)}">Edit</button></div></td></tr>`).join('')}</tbody></table>`:'<p class="text-sm muted py-5">No matching orders. Adjust the filters or create an order above.</p>';
+    $('order-list').innerHTML=page.items.length?`<table class="order-table"><thead><tr><th>Reference / customer</th><th>Services</th><th>Order / pickup</th><th>Total / balance</th><th>Status / payment</th><th>Actions</th></tr></thead><tbody>${page.items.map(d=>`<tr><td><strong>${esc(d.reference)}</strong><br>${esc(displayName(d))}</td><td>${esc(d.items.map(i=>`${i.name} × ${i.quantity}`).join(', '))}</td><td>${esc(dateText(d.orderDate))}<br>${esc(dateText(d.pickupDate))}</td><td>${esc(money(d.total))}<br>${esc(money(balance(d)))} balance</td><td><span class="pill">${esc(d.status)}</span><br><span class="text-xs">${esc(paymentStatus(d))}</span></td><td><div class="flex flex-wrap gap-2"><button class="secondary" type="button" data-open-order="${esc(d.id)}">View details</button><button class="secondary" type="button" data-edit-order-row="${esc(d.id)}">Edit</button><button class="secondary" type="button" data-duplicate-order="${esc(d.id)}">Duplicate</button><button class="secondary" type="button" data-print-order-row="${esc(d.id)}">Print</button></div></td></tr>`).join('')}</tbody></table>`:'<p class="text-sm muted py-5">No matching orders. Adjust the filters or create an order above.</p>';
     renderPagination('order-pagination','orders',page.total,page.page,page.pages);
     renderOrderTracking();
   }
@@ -1535,11 +1535,36 @@
     ['order-search','order-filter','order-payment-filter','order-from','order-to'].forEach(id=>$(id).value='');
     $('order-sort').value='newest';$('order-date-quick').value='custom';listPages.orders=1;renderOrderList();
   });
+  function duplicateOrder(sourceId){
+    const source=repo.orders.find(order=>order.id===sourceId);
+    if(!source||repoBlocked)return;
+    const today=localDate(),orderDate=today;
+    const pickupDate=isDate(source.pickupDate)&&source.pickupDate>=today?source.pickupDate:today;
+    const ref=nextReference(orderDate),at=now(),next=structuredClone(repo);
+    next.counters[ref.day]=ref.n;
+    const duplicate={
+      id:uid(),reference:ref.reference,createdAt:at,
+      customerId:source.customerId||null,customer:source.customer||'',phone:source.phone||'',
+      orderDate,pickupDate,date:pickupDate,
+      items:source.items.map(item=>({...item,id:uid()})),
+      subtotal:source.subtotal,discount:source.discount,total:source.total,
+      instructions:source.instructions||'',notes:source.notes||'',updatedAt:at,
+      payments:[],status:'Pending',
+      history:[{status:'Pending',at,actor:'Owner · local browser'}],
+      notification:{},messages:{}
+    };
+    if(!commitRepo(next)){notify('Could not duplicate this order. The original order was not changed.');return}
+    selectedId=duplicate.id;renderAllOrders();notify(`Order duplicated as ${duplicate.reference}. No payments were copied.`);
+  }
   $('order-list').onclick=e=>{
     const viewButton=e.target.closest('[data-open-order]');
     const editButton=e.target.closest('[data-edit-order-row]');
+    const duplicateButton=e.target.closest('[data-duplicate-order]');
+    const printButton=e.target.closest('[data-print-order-row]');
     if(viewButton){selectedId=viewButton.dataset.openOrder;renderDetail();setView('order-detail');return}
-    if(editButton){selectedId=editButton.dataset.editOrderRow;$('edit-order').click()}
+    if(editButton){selectedId=editButton.dataset.editOrderRow;$('edit-order').click();return}
+    if(duplicateButton){duplicateOrder(duplicateButton.dataset.duplicateOrder);return}
+    if(printButton){selectedId=printButton.dataset.printOrderRow;$('print-order').click()}
   };
   function renderDetail(){
     const d=selected();$('detail-empty').hidden=!!d;$('order-detail').hidden=!d;if(!d)return;
