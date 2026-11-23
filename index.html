@@ -851,6 +851,7 @@
         </div>
         <section id="orders-panel-list" class="panel p-6 order-tab-panel" role="tabpanel" aria-labelledby="orders-tab-list" hidden>
          <h2 class="section-title mb-4">Saved orders</h2>
+         <div id="saved-order-status-tabs" class="order-tabs mb-4" role="tablist" aria-label="Saved orders by status"></div>
          <div class="grid sm:grid-cols-2 xl:grid-cols-3 gap-3 mb-4">
           <div>
            <label class="field-label" for="order-search">Search orders</label><input id="order-search" class="field" type="search" placeholder="Reference, customer, service">
@@ -1568,8 +1569,15 @@
     else{notify(fromQuote?'Order saved and the quotation is marked Accepted.':'Order saved.');openMessageModal(d,'confirm')}
   }
   $('order-form').addEventListener('submit',saveOrder);
+  let savedOrdersTab='All Orders';
+  function renderSavedOrderTabs(){
+    const labels=['All Orders',...statuses];
+    $('saved-order-status-tabs').innerHTML=labels.map(label=>{const count=label==='All Orders'?repo.orders.length:repo.orders.filter(o=>o.status===label).length;return `<button type="button" class="module-tab ${savedOrdersTab===label?'active':''}" role="tab" aria-selected="${savedOrdersTab===label}" data-saved-order-tab="${esc(label)}">${esc(label)} <span class="text-xs muted">(${count})</span></button>`}).join('');
+  }
+  $('saved-order-status-tabs').addEventListener('click',e=>{const tab=e.target.closest('[data-saved-order-tab]');if(!tab)return;savedOrdersTab=tab.dataset.savedOrderTab;$('order-filter').value=savedOrdersTab==='All Orders'?'':savedOrdersTab;listPages.orders=1;renderOrderList()});
   function renderOrderList(){
-    const term=$('order-search').value.toLowerCase().trim(),status=$('order-filter').value,payment=$('order-payment-filter').value,from=$('order-from').value,to=$('order-to').value;
+    renderSavedOrderTabs();
+    const term=$('order-search').value.toLowerCase().trim(),status=savedOrdersTab==='All Orders'?$('order-filter').value:savedOrdersTab,payment=$('order-payment-filter').value,from=$('order-from').value,to=$('order-to').value;
     let shown=repo.orders.filter(d=>(!status||d.status===status)&&(!payment||paymentStatus(d)===payment)&&(!from||d.orderDate>=from)&&(!to||d.orderDate<=to)&&`${d.reference} ${displayName(d)} ${displayPhone(d)} ${d.items.map(i=>i.name).join(' ')}`.toLowerCase().includes(term));
     const matchingCount=shown.length;
     $('order-results-count').textContent=`Showing ${matchingCount} ${matchingCount===1?'order':'orders'}${matchingCount<repo.orders.length?` · ${repo.orders.length} total`:''}`;
@@ -1589,7 +1597,7 @@
     $('order-tracking-list').innerHTML=activeOrders.length?`<div class="table-scroll"><table class="order-table"><thead><tr><th>Order</th><th>Current status</th><th>Pickup date</th><th>Balance</th><th>Action</th></tr></thead><tbody>${activeOrders.map(order=>`<tr><td><strong>${esc(order.reference)}</strong><br>${esc(displayName(order))}</td><td><span class="pill">${esc(order.status||'Pending')}</span></td><td>${esc(dateText(order.pickupDate))}</td><td>${esc(money(balance(order)))}</td><td><button class="secondary" type="button" data-open-tracking-order="${esc(order.id)}">View order</button></td></tr>`).join('')}</tbody></table></div>`:'<p class="muted text-sm py-5">There are no active orders to track right now.</p>';
   }
   $('order-tracking-list').onclick=e=>{const button=e.target.closest('[data-open-tracking-order]');if(button){selectedId=button.dataset.openTrackingOrder;renderDetail();setView('order-detail')}};
-  ['order-search','order-filter','order-payment-filter','order-sort','order-from','order-to'].forEach(id=>$(id).addEventListener(['order-search'].includes(id)?'input':'change',()=>{listPages.orders=1;renderOrderList()}));
+  ['order-search','order-filter','order-payment-filter','order-sort','order-from','order-to'].forEach(id=>$(id).addEventListener(['order-search'].includes(id)?'input':'change',()=>{if(id==='order-filter')savedOrdersTab='All Orders';listPages.orders=1;renderOrderList()}));
   $('order-date-quick').addEventListener('change',e=>{
     const preset=e.target.value;
     if(preset==='custom')return;
@@ -1602,7 +1610,7 @@
   });
   $('order-clear-filters').addEventListener('click',()=>{
     ['order-search','order-filter','order-payment-filter','order-from','order-to'].forEach(id=>$(id).value='');
-    $('order-sort').value='newest';$('order-date-quick').value='custom';listPages.orders=1;renderOrderList();
+    $('order-sort').value='newest';$('order-date-quick').value='custom';savedOrdersTab='All Orders';listPages.orders=1;renderOrderList();
   });
   function duplicateOrder(sourceId){
     const source=repo.orders.find(order=>order.id===sourceId);
