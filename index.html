@@ -1104,6 +1104,7 @@
        </div>
        <p id="backup-restore-status" class="text-sm muted mt-4" role="status" aria-live="polite"></p>
        <p class="text-xs muted mt-3">Keep backup files in a safe place. Restoring replaces data; create a backup of your current system first. This feature does not include login credentials or server-side account access information.</p>
+       <p class="text-xs muted mt-2">The system also keeps a local recovery snapshot of the latest successfully synced Transactions, Expenses, Inventory, and Quotations data on this browser. These snapshots are device-specific and are not a substitute for downloading a full backup.</p>
       </section>
      </section>
      <section id="view-appearance" class="view" hidden="">
@@ -2601,7 +2602,7 @@
   let modulesLoaded=false;
   async function moduleRequest(collection,method='GET',records){const response=await fetch('/api/shop/records/'+collection,{method,credentials:'same-origin',headers:method==='PUT'?{'Content-Type':'application/json'}:undefined,body:method==='PUT'?JSON.stringify({records}):undefined});let data={};try{data=await response.json()}catch{}if(!response.ok||data.success===false)throw Error(data.message||'Could not sync '+collection+'. Please sign in again.');return data}
   async function loadModuleData(){let ok=true;for(const c of Object.keys(moduleData)){try{const result=await moduleRequest(c);moduleData[c]=Array.isArray(result.records)?result.records:[]}catch(e){ok=false;notify(e.message);break}}modulesLoaded=ok;if(ok)await ensureFixedExpenseOccurrences();renderModules();if(ok)syncPaymentTransactions()}
-  async function saveModuleData(collection,nextRecords){const previous=moduleData[collection];const candidate=Array.isArray(nextRecords)?nextRecords:previous;try{await moduleRequest(collection,'PUT',candidate);moduleData[collection]=candidate;notify('Saved and synced to your shop account.');renderModules();return true}catch(e){moduleData[collection]=previous;notify('Not saved. Your previous '+collection+' records were kept: '+e.message);renderModules();return false}}
+  async function saveModuleData(collection,nextRecords){const previous=moduleData[collection];const candidate=Array.isArray(nextRecords)?nextRecords:previous;let lastError=null;for(let attempt=1;attempt<=2;attempt++){try{await moduleRequest(collection,'PUT',candidate);moduleData[collection]=candidate;try{localStorage.setItem('AA_PrintSystem_last_synced_'+collection,JSON.stringify({savedAt:new Date().toISOString(),records:candidate}));}catch(storageError){console.warn('Local recovery snapshot could not be stored for '+collection,storageError)}notify(attempt===2?'Saved and synced after retry.':'Saved and synced to your shop account.');renderModules();return true}catch(e){lastError=e;if(attempt===1){await new Promise(resolve=>setTimeout(resolve,650));continue}}}moduleData[collection]=previous;notify('Sync failed after one retry. Your previous displayed '+collection+' records were kept. Please check your connection and try again. '+(lastError?.message||''));renderModules();return false}
   const moduleId=()=>crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random().toString(16).slice(2);
   let editingTransactionId=null;
   function transactionNetAmount(x){return (x.type==='refund'?-1:1)*Number(x.amount||0)}
