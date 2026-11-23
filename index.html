@@ -1691,7 +1691,7 @@
     const allSales=all.reduce((sum,x)=>sum+x.total,0),allBalance=all.reduce((sum,x)=>sum+x.outstanding,0);
     $('customer-summary').innerHTML=[['CUSTOMERS',String(repo.customers.length)],['TOTAL PURCHASES',money(allSales)],['OUTSTANDING BALANCE',money(allBalance)]].map(([label,value])=>`<div class="panel p-3"><p class="muted text-xs">${label}</p><p class="text-lg font-semibold mt-1">${esc(value)}</p></div>`).join('');
     const shown=all.filter(({c})=>`${c.name} ${c.phone}`.toLowerCase().includes(query)).sort((a,b)=>a.c.name.localeCompare(b.c.name,undefined,{sensitivity:'base'}));
-    $('customer-list').innerHTML=shown.length?shown.map(({c,orders,total,outstanding})=>`<article class="item-row mb-3"><div class="flex flex-wrap items-start justify-between gap-3"><div class="min-w-0"><strong>${esc(c.name)}</strong><p class="text-sm muted">${esc(c.phone||'No contact number saved')}</p><p class="text-sm mt-2">${orders.length} order${orders.length===1?'':'s'} · ${esc(money(total))} purchases · ${esc(money(outstanding))} outstanding</p></div><button type="button" class="secondary" data-customer-edit="${esc(c.id)}">Edit details</button></div><details class="mt-3"><summary class="text-sm font-semibold cursor-pointer">View order history (${orders.length})</summary><div class="mt-3">${orders.length?orders.slice().sort((a,b)=>String(b.orderDate).localeCompare(String(a.orderDate))).map(d=>`<div class="py-2 border-t border-gray-200 text-sm"><div class="flex flex-wrap justify-between gap-2"><strong>${esc(d.reference)}</strong><span>${esc(d.status)}</span></div><p class="muted text-xs mt-1">Order date: ${esc(dateText(d.orderDate))} · Total: ${esc(money(d.total))} · Balance: ${esc(money(d.status==='Cancelled'?0:balance(d)))}</p></div>`).join(''):'<p class="muted text-sm mt-2">No orders linked to this customer yet.</p>'}</div></details></article>`).join(''):'<p class="text-sm muted py-4">'+(query?'No customers match your search.':'No customer records yet. Add a customer or create an order to get started.')+'</p>';
+    $('customer-list').innerHTML=shown.length?shown.map(({c,orders,total,outstanding})=>`<article class="item-row mb-3"><div class="flex flex-wrap items-start justify-between gap-3"><div class="min-w-0"><strong>${esc(c.name)}</strong><p class="text-sm muted">${esc(c.phone||'No contact number saved')}</p><p class="text-sm mt-2">${orders.length} order${orders.length===1?'':'s'} · ${esc(money(total))} purchases · ${esc(money(outstanding))} outstanding</p></div><button type="button" class="secondary" data-customer-edit="${esc(c.id)}">Edit details</button></div><details class="mt-3"><summary class="text-sm font-semibold cursor-pointer">Customer history · ${orders.length} order${orders.length===1?'':'s'} / ${(moduleData.quotations||[]).filter(q=>q.customerId===c.id||(q.customerId===''&&q.customer.trim().toLowerCase()===c.name.trim().toLowerCase()&&phoneKey(q.contact)&&phoneKey(c.phone)&&phoneKey(q.contact)===phoneKey(c.phone))).length} quotation${((moduleData.quotations||[]).filter(q=>q.customerId===c.id||(q.customerId===''&&q.customer.trim().toLowerCase()===c.name.trim().toLowerCase()&&phoneKey(q.contact)&&phoneKey(c.phone)&&phoneKey(q.contact)===phoneKey(c.phone))).length===1?'':'s')}</summary><div class="mt-3">${orders.length?orders.slice().sort((a,b)=>String(b.orderDate).localeCompare(String(a.orderDate))).map(d=>`<div class="py-2 border-t border-gray-200 text-sm"><div class="flex flex-wrap justify-between gap-2"><strong>${esc(d.reference)}</strong><span>${esc(d.status)}</span></div><p class="muted text-xs mt-1">Order date: ${esc(dateText(d.orderDate))} · Total: ${esc(money(d.total))} · Balance: ${esc(money(d.status==='Cancelled'?0:balance(d)))}</p></div>`).join(''):'<p class="muted text-sm mt-2">No orders linked to this customer yet.</p>'}${(()=>{const qs=(moduleData.quotations||[]).filter(q=>q.customerId===c.id||(q.customerId===''&&q.customer.trim().toLowerCase()===c.name.trim().toLowerCase()&&phoneKey(q.contact)&&phoneKey(c.phone)&&phoneKey(q.contact)===phoneKey(c.phone))).sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));return qs.length?`<div class="mt-3 pt-2 border-t"><strong class="text-sm">Quotations</strong>${qs.map(q=>`<div class="py-2 text-sm"><strong>${esc(q.reference)}</strong> · ${esc(quoteStatus(q))}<p class="muted text-xs">${esc(dateText(String(q.createdAt||'').slice(0,10)))} · ${esc(money(q.total))}</p></div>`).join('')}</div>`:'<p class="muted text-sm mt-2">No linked quotations yet.</p>'})()}</div></details></article>`).join(''):'<p class="text-sm muted py-4">'+(query?'No customers match your search.':'No customer records yet. Add a customer or create an order to get started.')+'</p>';
   }
   $('customer-add-toggle').addEventListener('click',()=>{$('customer-form').hidden?openCustomerForm(null):resetCustomerForm()});
   $('customer-cancel').addEventListener('click',resetCustomerForm);
@@ -2854,7 +2854,11 @@
     const items=quoteLines.map(l=>({name:l.name.trim(),quantity:l.quantity,price:l.price,productId:l.productId==='__custom__'?'':l.productId}));
     const subtotal=items.reduce((sum,i)=>sum+cents(i.quantity*i.price),0)/100,off=Math.round(cents(subtotal)*discount/100)/100;
     const existing=editingQuoteId?moduleData.quotations.find(q=>q.id===editingQuoteId):null;
-    return {...(existing||{}),id:existing?existing.id:moduleId(),reference:existing?existing.reference:nextQuoteRef(),customer,contact:$('quote-contact').value.trim(),items,subtotal,discountPct:discount,discount:off,total:(cents(subtotal)-cents(off))/100,notes:$('quote-notes').value.trim(),validUntil,status:$('quote-status').value,createdAt:existing?existing.createdAt:now(),updatedAt:now()};
+    const contact=$('quote-contact').value.trim(),key=phoneKey(contact),nameKey=customer.toLowerCase();
+    const linked=existing?.customerId&&repo.customers.find(c=>c.id===existing.customerId)
+      ||repo.customers.find(c=>key&&phoneKey(c.phone)===key&&phoneKey(c.phone))
+      ||repo.customers.find(c=>c.name.trim().toLowerCase()===nameKey);
+    return {...(existing||{}),id:existing?existing.id:moduleId(),reference:existing?existing.reference:nextQuoteRef(),customerId:linked?.id||'',customer,contact,items,subtotal,discountPct:discount,discount:off,total:(cents(subtotal)-cents(off))/100,notes:$('quote-notes').value.trim(),validUntil,status:$('quote-status').value,createdAt:existing?existing.createdAt:now(),updatedAt:now()};
   }
   function printQuote(q){
     const notes=(q.validUntil?`Valid until: ${dateText(q.validUntil)}\n`:'')+(q.notes||'');
@@ -2900,10 +2904,15 @@
     const list=$('quote-customer-options');list.replaceChildren();
     repo.customers.slice().sort((a,b)=>a.name.localeCompare(b.name,undefined,{sensitivity:'base'})).forEach(c=>list.appendChild(new Option(c.phone,c.name)));
   }
-  $('quote-customer').addEventListener('input',()=>{
-    const c=repo.customers.find(x=>x.name.toLowerCase()===$('quote-customer').value.trim().toLowerCase());
-    if(c&&!$('quote-contact').value.trim())$('quote-contact').value=c.phone;
-  });
+  function matchQuoteCustomer(){
+    const name=$('quote-customer').value.trim().toLowerCase(),contact=$('quote-contact').value.trim(),key=phoneKey(contact);
+    const byPhone=key?repo.customers.find(c=>phoneKey(c.phone)===key&&phoneKey(c.phone)):null;
+    const byName=name?repo.customers.find(c=>c.name.trim().toLowerCase()===name):null;
+    const match=byPhone||byName;
+    if(match&&!contact)$('quote-contact').value=match.phone||'';
+  }
+  $('quote-customer').addEventListener('input',matchQuoteCustomer);
+  $('quote-contact').addEventListener('input',matchQuoteCustomer);
   function renderQuoteOverview(){
     const all=moduleData.quotations||[];
     const pending=all.filter(q=>['Draft','Sent'].includes(quoteStatus(q))).length;
