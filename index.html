@@ -797,7 +797,10 @@
            <label class="field-label" for="order-search">Search orders</label><input id="order-search" class="field" type="search" placeholder="Reference, customer, service">
           </div>
           <div>
-           <label class="field-label" for="order-filter">Status</label><select id="order-filter" class="field"><option value="">All statuses</option></select>
+           <label class="field-label" for="order-filter">Order status</label><select id="order-filter" class="field"><option value="">All statuses</option></select>
+          </div>
+          <div>
+           <label class="field-label" for="order-payment-filter">Payment status</label><select id="order-payment-filter" class="field"><option value="">All payment statuses</option><option value="Unpaid">Unpaid</option><option value="Partially Paid">Partially Paid</option><option value="Fully Paid">Fully Paid</option></select>
           </div>
           <div>
            <label class="field-label" for="order-sort">Sort</label><select id="order-sort" class="field"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="pickup">Pickup date</option><option value="total">Highest total</option></select>
@@ -1489,8 +1492,8 @@
   }
   $('order-form').addEventListener('submit',saveOrder);
   function renderOrderList(){
-    const term=$('order-search').value.toLowerCase().trim(),status=$('order-filter').value,from=$('order-from').value,to=$('order-to').value;
-    let shown=repo.orders.filter(d=>(!status||d.status===status)&&(!from||d.orderDate>=from)&&(!to||d.orderDate<=to)&&`${d.reference} ${displayName(d)} ${displayPhone(d)} ${d.items.map(i=>i.name).join(' ')}`.toLowerCase().includes(term));
+    const term=$('order-search').value.toLowerCase().trim(),status=$('order-filter').value,payment=$('order-payment-filter').value,from=$('order-from').value,to=$('order-to').value;
+    let shown=repo.orders.filter(d=>(!status||d.status===status)&&(!payment||paymentStatus(d)===payment)&&(!from||d.orderDate>=from)&&(!to||d.orderDate<=to)&&`${d.reference} ${displayName(d)} ${displayPhone(d)} ${d.items.map(i=>i.name).join(' ')}`.toLowerCase().includes(term));
     const sort=$('order-sort').value;shown.sort((a,b)=>sort==='oldest'?a.createdAt.localeCompare(b.createdAt):sort==='pickup'?a.pickupDate.localeCompare(b.pickupDate):sort==='total'?b.total-a.total:b.createdAt.localeCompare(a.createdAt));
     const page=pageSlice(shown,'orders');
     $('order-list').innerHTML=page.items.length?`<table class="order-table"><thead><tr><th>Reference / customer</th><th>Services</th><th>Order / pickup</th><th>Total / balance</th><th>Status / payment</th><th>Details</th></tr></thead><tbody>${page.items.map(d=>`<tr><td><strong>${esc(d.reference)}</strong><br>${esc(displayName(d))}</td><td>${esc(d.items.map(i=>`${i.name} × ${i.quantity}`).join(', '))}</td><td>${esc(dateText(d.orderDate))}<br>${esc(dateText(d.pickupDate))}</td><td>${esc(money(d.total))}<br>${esc(money(balance(d)))} balance</td><td><span class="pill">${esc(d.status)}</span><br><span class="text-xs">${esc(paymentStatus(d))}</span></td><td><button class="secondary" type="button" data-open-order="${esc(d.id)}">Open</button></td></tr>`).join('')}</tbody></table>`:'<p class="text-sm muted py-5">No matching orders. Adjust the filters or create an order above.</p>';
@@ -1507,7 +1510,7 @@
     $('order-tracking-list').innerHTML=activeOrders.length?`<div class="table-scroll"><table class="order-table"><thead><tr><th>Order</th><th>Current status</th><th>Pickup date</th><th>Balance</th><th>Action</th></tr></thead><tbody>${activeOrders.map(order=>`<tr><td><strong>${esc(order.reference)}</strong><br>${esc(displayName(order))}</td><td><span class="pill">${esc(order.status||'Pending')}</span></td><td>${esc(dateText(order.pickupDate))}</td><td>${esc(money(balance(order)))}</td><td><button class="secondary" type="button" data-open-tracking-order="${esc(order.id)}">View order</button></td></tr>`).join('')}</tbody></table></div>`:'<p class="muted text-sm py-5">There are no active orders to track right now.</p>';
   }
   $('order-tracking-list').onclick=e=>{const button=e.target.closest('[data-open-tracking-order]');if(button){selectedId=button.dataset.openTrackingOrder;renderDetail();setView('order-detail')}};
-  ['order-search','order-filter','order-sort','order-from','order-to'].forEach(id=>$(id).addEventListener(['order-search'].includes(id)?'input':'change',()=>{listPages.orders=1;renderOrderList()}));
+  ['order-search','order-filter','order-payment-filter','order-sort','order-from','order-to'].forEach(id=>$(id).addEventListener(['order-search'].includes(id)?'input':'change',()=>{listPages.orders=1;renderOrderList()}));
   $('order-list').onclick=e=>{const b=e.target.closest('[data-open-order]');if(b){selectedId=b.dataset.openOrder;renderDetail();setView('order-detail')}};
   function renderDetail(){
     const d=selected();$('detail-empty').hidden=!!d;$('order-detail').hidden=!d;if(!d)return;
