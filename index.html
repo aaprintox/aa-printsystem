@@ -1989,6 +1989,8 @@
     $('order-detail-modal').hidden=true;
     $('public-page').hidden=true;$('internal-app').hidden=false;document.querySelector('.mobile-top').hidden=false;
     document.querySelectorAll('.view').forEach(el=>el.hidden=el.id!=='view-'+view);
+    // Keep the Dashboard-only wrapper (including its recordkeeping and pricing-support blocks) isolated from other workspaces.
+    const dashboardWrapper=document.querySelector('.content-width');if(dashboardWrapper)dashboardWrapper.hidden=view!=='dashboard';
     document.querySelectorAll('.nav-button').forEach(el=>el.classList.toggle('active',el.dataset.view===view));
     closeMenu();document.querySelector('.content-width')?.scrollTo({top:0,behavior:'auto'});if(view==='orders'){renderAllOrders();renderOrderLines()}if(view==='dashboard')renderDashboard();if(view==='products')renderProducts();if(view==='quotes'){renderQuote();renderQuoteList()}if(view==='profit')renderCatalogueHealth();if(['transactions','expenses','inventory'].includes(view))renderModules()
   }
