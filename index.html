@@ -1691,7 +1691,12 @@
     item.status=status;item.updatedAt=at;item.history.push({status,at,actor:'Owner · local browser'});
     if(firstReady){const msg=messages(item,'ready');item.notification={...(item.notification||{}),firstReadyAt:at,preparedAt:at,history:[...(item.notification?.history||[]),{at,action:'Prepared',kind:'Ready for Pickup'}],messenger:msg.messenger,sms:msg.sms}}
     if(!commitRepo(next)){e.target.value=d.status;showError('detail-error','Could not save the status. Your previous status remains unchanged.');return}
-    notify('Order status saved.');if(firstReady)openMessageModal(item,'ready')
+    notify('Order status saved.');
+    if(firstReady)openMessageModal(item,'ready');
+    if(status==='Completed'){
+      const shouldPrint=window.confirm(`Order ${item.reference} has been marked as Completed.\n\nWould you like to print the Order Summary now?`);
+      if(shouldPrint)$('print-order').click();
+    }
   };
   function openCancellation(d){
     $('delete-confirmation').hidden=false;
