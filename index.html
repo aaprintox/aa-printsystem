@@ -2011,7 +2011,7 @@
     document.querySelectorAll('.view').forEach(el=>{const active=el.id==='view-'+view;el.hidden=!active;el.style.display=active?'block':'none';});
     // Explicit per-view display is applied alongside hidden to prevent other layout rules from exposing inactive sections.
     document.querySelectorAll('.nav-button').forEach(el=>el.classList.toggle('active',el.dataset.view===view));
-    closeMenu();document.querySelector('.content-width')?.scrollTo({top:0,behavior:'auto'});if(view==='orders'){renderAllOrders();renderOrderLines()}if(view==='dashboard')renderDashboard();if(view==='products')renderProducts();if(view==='quotes'){renderQuote();renderQuoteList()}if(view==='profit')renderCatalogueHealth();if(['transactions','expenses','inventory'].includes(view))renderModules()
+    closeMenu();document.querySelector('.content-width')?.scrollTo({top:0,behavior:'auto'});if(view==='orders'){renderAllOrders();renderOrderLines()}if(view==='dashboard')renderDashboard();if(view==='products')renderProducts();if(view==='quotes'){renderQuote();renderQuoteList()}if(view==='profit')renderCatalogueHealth();if(view==='transactions')renderTransactions();if(view==='expenses')renderExpenses();if(view==='inventory')renderInventory()
   }
   function showPublic(){closeMenu();$('internal-app').hidden=true;document.querySelector('.mobile-top').hidden=true;$('public-page').hidden=false;$('public-title').textContent=trackingPreview.title;$('public-instructions').textContent=trackingPreview.instructions;showError('public-error','');window.scrollTo(0,0)}
   document.querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>setView(button.dataset.view)));
