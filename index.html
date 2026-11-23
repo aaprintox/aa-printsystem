@@ -1747,13 +1747,15 @@
     $('metric-sales-note').textContent=`${periodOrders.length} order${periodOrders.length===1?'':'s'} placed in this period, paid or not. Cancelled orders are excluded.`;
     $('metric-outstanding').textContent=money(financial?financial.outstandingCents/100:getOutstandingBalances(allActive)/100);
     const today=localDate(),soon=new Date(today+'T12:00:00');soon.setDate(soon.getDate()+7);const soonDate=soon.toISOString().slice(0,10);
-    const dueSoon=allActive.filter(d=>d.pickupDate&&String(d.pickupDate).slice(0,10)<=soonDate).sort((a,b)=>String(a.pickupDate).localeCompare(String(b.pickupDate)));
+    // Daily reminders exclude cancelled and completed orders; date urgency is calculated locally.
+    const pickupReminders=repo.orders.filter(d=>!['Cancelled','Completed'].includes(d.status)&&d.pickupDate&&String(d.pickupDate).slice(0,10)<=soonDate).sort((a,b)=>String(a.pickupDate).localeCompare(String(b.pickupDate)));
+    const dueSoon=pickupReminders;
     const unpaidOrders=allActive.filter(d=>balance(d)>0).sort((a,b)=>cents(balance(b))-cents(balance(a)));
     $('dash-morning-date').textContent=dateText(today);
     $('dash-pickup-count').textContent=dueSoon.length;
-    $('dash-pickup-list').innerHTML=dueSoon.length?dueSoon.slice(0,5).map(d=>`<button type="button" class="block w-full text-left border-t pt-2" data-dashboard-open-order="${esc(d.id)}"><strong>${esc(d.reference)}</strong><span class="block text-xs muted">${esc(displayName(d))} · ${esc(dateText(d.pickupDate))}</span></button>`).join(''):'<p class="text-xs muted">No upcoming or overdue pickups.</p>';
+    $('dash-pickup-list').innerHTML=dueSoon.length?dueSoon.slice(0,5).map(d=>{const pd=String(d.pickupDate).slice(0,10),late=pd<today,todayDue=pd===today;const urgency=late?'OVERDUE':todayDue?'DUE TODAY':'UPCOMING';return `<button type="button" class="block w-full text-left border-t pt-2" data-dashboard-open-order="${esc(d.id)}"><strong>${esc(d.reference)}</strong><span class="block text-xs muted">${esc(displayName(d))} · ${esc(dateText(d.pickupDate))}</span><span class="text-xs font-semibold" style="color:${late?'var(--danger)':todayDue?'var(--accent)':'var(--muted)'}">${urgency}</span></button>`}).join(''):'<p class="text-xs muted">No upcoming or overdue pickups.</p>';
     $('dash-unpaid-count').textContent=unpaidOrders.length;
-    $('dash-unpaid-list').innerHTML=unpaidOrders.length?unpaidOrders.slice(0,5).map(d=>`<button type="button" class="block w-full text-left border-t pt-2" data-dashboard-open-order="${esc(d.id)}"><strong>${esc(d.reference)}</strong><span class="block text-xs muted">${esc(displayName(d))} · ${esc(money(balance(d)))} due</span></button>`).join(''):'<p class="text-xs muted">No outstanding customer balances.</p>';
+    $('dash-unpaid-list').innerHTML=unpaidOrders.length?unpaidOrders.slice(0,5).map(d=>`<button type="button" class="block w-full text-left border-t pt-2" data-dashboard-open-order="${esc(d.id)}"><strong>${esc(d.reference)}</strong><span class="block text-xs muted">${esc(displayName(d))} · ${esc(money(balance(d)))} due</span><span class="text-xs font-semibold">PAYMENT PENDING</span></button>`).join(''):'<p class="text-xs muted">No outstanding customer balances.</p>';
     if(!modulesLoaded){$('dash-low-stock-count').textContent='—';$('dash-low-stock-list').innerHTML='<p class="text-xs muted">Loading inventory…</p>'}
     else{
       const lowStock=moduleData.inventory.filter(x=>Number(x.quantity)<=Number(x.reorder)).sort((a,b)=>Number(a.quantity)-Number(b.quantity));
