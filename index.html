@@ -867,14 +867,17 @@
 
       </div>
      </section>
-     <section id="view-order-detail" class="view" hidden="">
-      <header class="mb-7">
-       <button id="back-orders" type="button" class="secondary mb-5">← Back to orders</button>
-       <p class="eyebrow">ORDER WORKSPACE</p>
-       <h1 class="page-heading">Order details</h1>
-       <p class="muted">Review the order, update its status, record payments, and manage customer communication.</p>
-      </header>
-      <div class="panel p-6 max-w-4xl">
+     <div id="order-detail-modal" hidden class="fixed inset-0 z-50 flex items-start justify-center p-3 sm:p-6" style="background:rgba(20,30,25,.58);overflow-y:auto" role="dialog" aria-modal="true" aria-labelledby="order-detail-modal-title">
+      <div class="panel w-full max-w-4xl p-4 sm:p-6" style="max-height:calc(100vh - 2rem);overflow-y:auto">
+       <div class="flex items-start justify-between gap-4 mb-5">
+        <div>
+         <p class="eyebrow">ORDER WORKSPACE</p>
+         <h2 id="order-detail-modal-title" class="page-heading">Order details</h2>
+         <p class="muted text-sm mt-1">Review the order, update its status, record payments, and manage customer communication.</p>
+        </div>
+        <button id="close-order-detail" type="button" class="secondary shrink-0" aria-label="Close order details">✕ Close</button>
+       </div>
+      <div class="panel p-4 sm:p-6">
         <h2 class="section-title mb-2">Order details</h2>
         <p id="detail-empty" class="muted text-sm">Save or select an order to review its details.</p>
         <div id="order-detail" hidden=""><strong id="detail-ref" class="block break-all"></strong>
@@ -938,7 +941,8 @@
          </div>
         </div>
       </div>
-     </section>
+      </div>
+     </div>
      <section id="view-customers" class="view" hidden="">
       <header class="mb-7">
        <p class="eyebrow">YOUR PEOPLE</p>
@@ -1896,14 +1900,28 @@
   function closeMenu(){$('sidebar').classList.remove('open');$('mobile-backdrop').hidden=true}
   function setView(view){
     if(view==='tracking'){showPublic();return}
+    if(view==='order-detail'){
+      setView('orders');
+      renderDetail();
+      $('order-detail-modal').hidden=false;
+      $('close-order-detail').focus();
+      return;
+    }
+    $('order-detail-modal').hidden=true;
     $('public-page').hidden=true;$('internal-app').hidden=false;document.querySelector('.mobile-top').hidden=false;
     document.querySelectorAll('.view').forEach(el=>el.hidden=el.id!=='view-'+view);
-    document.querySelectorAll('.nav-button').forEach(el=>el.classList.toggle('active',el.dataset.view===(view==='order-detail'?'orders':view)));
-    closeMenu();document.querySelector('.content-width')?.scrollTo({top:0,behavior:'auto'});if(view==='orders'){renderAllOrders();renderOrderLines()}if(view==='order-detail')renderDetail();if(view==='dashboard')renderDashboard();if(view==='products')renderProducts();if(view==='quotes'){renderQuote();renderQuoteList()}if(view==='profit')renderCatalogueHealth();if(['transactions','expenses','inventory'].includes(view))renderModules()
+    document.querySelectorAll('.nav-button').forEach(el=>el.classList.toggle('active',el.dataset.view===view));
+    closeMenu();document.querySelector('.content-width')?.scrollTo({top:0,behavior:'auto'});if(view==='orders'){renderAllOrders();renderOrderLines()}if(view==='dashboard')renderDashboard();if(view==='products')renderProducts();if(view==='quotes'){renderQuote();renderQuoteList()}if(view==='profit')renderCatalogueHealth();if(['transactions','expenses','inventory'].includes(view))renderModules()
   }
   function showPublic(){closeMenu();$('internal-app').hidden=true;document.querySelector('.mobile-top').hidden=true;$('public-page').hidden=false;$('public-title').textContent=trackingPreview.title;$('public-instructions').textContent=trackingPreview.instructions;showError('public-error','');window.scrollTo(0,0)}
   document.querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>setView(button.dataset.view)));
-  $('back-orders').onclick=()=>setView('orders');
+  function closeOrderDetailModal(){
+    $('order-detail-modal').hidden=true;
+    $('order-list')?.querySelector(`[data-open-order="${CSS.escape(selectedId||'')}"]`)?.focus();
+  }
+  $('close-order-detail').onclick=closeOrderDetailModal;
+  $('order-detail-modal').addEventListener('click',e=>{if(e.target===$('order-detail-modal'))closeOrderDetailModal()});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('order-detail-modal').hidden)closeOrderDetailModal()});
   $('menu-open').onclick=()=>{$('sidebar').classList.add('open');$('mobile-backdrop').hidden=false};$('menu-close').onclick=closeMenu;$('mobile-backdrop').onclick=closeMenu;$('back-internal').onclick=()=>setView('dashboard');
   $('public-form').onsubmit=e=>{e.preventDefault();showError('public-error','Customer tracking is not connected to a live order service. No order was verified.')};
   window.addEventListener('hashchange',()=>{if(window.location.hash==='#track')showPublic()});
