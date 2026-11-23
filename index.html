@@ -811,6 +811,14 @@
           <div>
            <label class="field-label" for="order-to">Order date to</label><input id="order-to" class="field" type="date">
           </div>
+          <div>
+           <label class="field-label" for="order-date-quick">Quick date filter</label>
+           <select id="order-date-quick" class="field"><option value="custom">Custom date range</option><option value="today">Today</option><option value="week">This week</option><option value="month">This month</option></select>
+          </div>
+         </div>
+         <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <p id="order-results-count" class="text-sm muted" aria-live="polite">Showing 0 orders</p>
+          <button id="order-clear-filters" type="button" class="secondary">Clear filters</button>
          </div>
          <div id="order-list" class="table-scroll"></div><div id="order-pagination" class="mt-4"></div>
         </section>
@@ -1494,6 +1502,8 @@
   function renderOrderList(){
     const term=$('order-search').value.toLowerCase().trim(),status=$('order-filter').value,payment=$('order-payment-filter').value,from=$('order-from').value,to=$('order-to').value;
     let shown=repo.orders.filter(d=>(!status||d.status===status)&&(!payment||paymentStatus(d)===payment)&&(!from||d.orderDate>=from)&&(!to||d.orderDate<=to)&&`${d.reference} ${displayName(d)} ${displayPhone(d)} ${d.items.map(i=>i.name).join(' ')}`.toLowerCase().includes(term));
+    const matchingCount=shown.length;
+    $('order-results-count').textContent=`Showing ${matchingCount} ${matchingCount===1?'order':'orders'}${matchingCount<repo.orders.length?` · ${repo.orders.length} total`:''}`;
     const sort=$('order-sort').value;shown.sort((a,b)=>sort==='oldest'?a.createdAt.localeCompare(b.createdAt):sort==='pickup'?a.pickupDate.localeCompare(b.pickupDate):sort==='total'?b.total-a.total:b.createdAt.localeCompare(a.createdAt));
     const page=pageSlice(shown,'orders');
     $('order-list').innerHTML=page.items.length?`<table class="order-table"><thead><tr><th>Reference / customer</th><th>Services</th><th>Order / pickup</th><th>Total / balance</th><th>Status / payment</th><th>Details</th></tr></thead><tbody>${page.items.map(d=>`<tr><td><strong>${esc(d.reference)}</strong><br>${esc(displayName(d))}</td><td>${esc(d.items.map(i=>`${i.name} × ${i.quantity}`).join(', '))}</td><td>${esc(dateText(d.orderDate))}<br>${esc(dateText(d.pickupDate))}</td><td>${esc(money(d.total))}<br>${esc(money(balance(d)))} balance</td><td><span class="pill">${esc(d.status)}</span><br><span class="text-xs">${esc(paymentStatus(d))}</span></td><td><button class="secondary" type="button" data-open-order="${esc(d.id)}">Open</button></td></tr>`).join('')}</tbody></table>`:'<p class="text-sm muted py-5">No matching orders. Adjust the filters or create an order above.</p>';
@@ -1511,6 +1521,20 @@
   }
   $('order-tracking-list').onclick=e=>{const button=e.target.closest('[data-open-tracking-order]');if(button){selectedId=button.dataset.openTrackingOrder;renderDetail();setView('order-detail')}};
   ['order-search','order-filter','order-payment-filter','order-sort','order-from','order-to'].forEach(id=>$(id).addEventListener(['order-search'].includes(id)?'input':'change',()=>{listPages.orders=1;renderOrderList()}));
+  $('order-date-quick').addEventListener('change',e=>{
+    const preset=e.target.value;
+    if(preset==='custom')return;
+    const now=new Date(),toDate=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+    let fromDate=new Date(toDate);
+    if(preset==='week'){const day=(toDate.getDay()+6)%7;fromDate.setDate(toDate.getDate()-day)}
+    else if(preset==='month')fromDate=new Date(toDate.getFullYear(),toDate.getMonth(),1);
+    const iso=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    $('order-from').value=iso(fromDate);$('order-to').value=iso(toDate);listPages.orders=1;renderOrderList();
+  });
+  $('order-clear-filters').addEventListener('click',()=>{
+    ['order-search','order-filter','order-payment-filter','order-from','order-to'].forEach(id=>$(id).value='');
+    $('order-sort').value='newest';$('order-date-quick').value='custom';listPages.orders=1;renderOrderList();
+  });
   $('order-list').onclick=e=>{const b=e.target.closest('[data-open-order]');if(b){selectedId=b.dataset.openOrder;renderDetail();setView('order-detail')}};
   function renderDetail(){
     const d=selected();$('detail-empty').hidden=!!d;$('order-detail').hidden=!d;if(!d)return;
