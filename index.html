@@ -5,8 +5,9 @@
   <title>AA PrintSystem | Printing Shop Management</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&amp;family=Fraunces:wght@600;700&amp;family=Inter:wght@400;500;600;700;800&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=DM+Serif+Display&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Nunito+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
   <style>
-    :root{--page:#f7f4ed;--surface:#fff;--sidebar:#e8eee3;--ink:#24352e;--muted:#586b63;--line:#e3e7de;--field:#fcfcf9;--accent:#456c5a;--accent-text:#fff;--accent-deep:#254739;--subtle:#edf2e9;--highlight:#e8eee3;--danger:#a64037;--focus:#af8b47;--font-body:"Inter",sans-serif;--font-heading:"Inter",sans-serif;--radius-card:8px;--radius-control:8px;--shadow-card:none}
-    *{box-sizing:border-box}html,body{width:100%;margin:0}html:not(.authenticated) body{visibility:hidden}body{background:var(--page);color:var(--ink);font-family:var(--font-body)}h1,h2,h3,.brand,.metric{font-family:var(--font-heading);letter-spacing:-.035em}button{cursor:pointer}button:disabled{opacity:.55;cursor:not-allowed}[hidden]{display:none!important}
+    :root{--page:#f7f4ed;--surface:#fff;--sidebar:#e8eee3;--ink:#24352e;--muted:#586b63;--line:#e3e7de;--field:#fcfcf9;--accent:#456c5a;--accent-text:#fff;--accent-deep:#254739;--subtle:#edf2e9;--highlight:#e8eee3;--danger:#a64037;--focus:#af8b47;--font-body:"Inter",sans-serif;--font-heading:"Plus Jakarta Sans",sans-serif;--radius-card:8px;--radius-control:8px;--shadow-card:none}
+    *{box-sizing:border-box}html,body{width:100%;margin:0}html:not(.authenticated) body{visibility:hidden}body{background:var(--page);color:var(--ink);font-family:var(--font-body);font-variant-numeric:tabular-nums}h1,h2,h3,.brand,.metric{font-family:var(--font-heading);letter-spacing:-.035em}
+    input[type="number"],.metric,.money,.currency,.amount,.numeric,.tabular-nums{font-variant-numeric:tabular-nums}button{cursor:pointer}button:disabled{opacity:.55;cursor:not-allowed}[hidden]{display:none!important}
     button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
     .app-shell{width:100%;height:100vh;height:100dvh;min-height:0;display:flex;overflow:hidden}.sidebar{width:242px;height:100vh;height:100dvh;flex:none;background:var(--sidebar);border-right:1px solid var(--line);padding:28px 16px;display:flex;flex-direction:column;gap:27px;overflow-y:auto;overscroll-behavior:contain}.brand{font-size:27px;color:var(--accent-deep);font-weight:700;letter-spacing:-1.3px}.brand-dot{color:#c18753}
     .nav-button{width:100%;text-align:left;display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:13px;color:var(--muted);font-weight:700}.nav-button svg{width:19px;height:19px;flex:none}.nav-button:hover,.nav-button.active{background:var(--surface);color:var(--accent-deep);box-shadow:0 4px 14px #17241c12}
@@ -21,12 +22,12 @@
     .workspace{flex:1;min-width:0;width:calc(100% - 242px);height:100vh;height:100dvh;min-height:0;padding:32px clamp(18px,3vw,48px) 16px;display:flex;flex-direction:column;overflow:hidden}.content-width{width:100%;max-width:1230px;margin:0 auto;flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:0 2px 24px;scrollbar-gutter:stable}.workspace>.site-footer{flex:none;margin-top:8px}.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-card);box-shadow:var(--shadow-card)}.eyebrow{color:var(--accent-deep);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.17em}.page-heading{font-size:clamp(28px,3vw,42px);line-height:1.12;margin:8px 0}.section-title{font-size:23px;line-height:1.2}.muted{color:var(--muted)}.field-label{display:block;font-size:13px;font-weight:700;margin-bottom:7px}.field{width:100%;min-height:44px;background:var(--field);color:var(--ink);border:1px solid var(--line);border-radius:var(--radius-control);padding:10px 12px}textarea.field{min-height:88px;resize:vertical}
     .primary,.secondary,.danger{display:inline-flex;align-items:center;justify-content:center;gap:7px;border-radius:var(--radius-control);font-weight:700;padding:11px 16px}.primary{background:var(--accent);color:var(--accent-text)}.secondary{background:var(--subtle);color:var(--accent-deep)}.danger{background:#fff1ed;color:var(--danger)}.primary:hover,.secondary:hover{filter:brightness(.93)}.metric{font-size:clamp(24px,2.6vw,34px);font-weight:700}.pill{border-radius:99px;background:var(--subtle);color:var(--accent-deep);font-size:11px;font-weight:800;padding:5px 9px;display:inline-block}.item-row,.draft-line{border:1px solid var(--line);border-radius:14px;padding:14px}.result-row{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding:10px 0}.result-row:last-child{border:0}.highlight-panel{background:var(--highlight)}.error{color:var(--danger)}.notice{border-left:4px solid var(--focus);background:var(--highlight);border-radius:10px;padding:15px 18px}.toast{position:fixed;right:20px;bottom:20px;z-index:70;background:var(--accent-deep);color:#fff;border-radius:12px;padding:14px 18px;max-width:min(430px,calc(100% - 40px));box-shadow:0 12px 30px #17241c40}
     .inventory-tabs{display:flex;align-items:stretch;gap:clamp(10px,2.2vw,28px);border-bottom:1px solid var(--line);margin:0 0 20px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin}
-    .inventory-tab{flex:none;background:transparent;color:var(--muted);font:700 14px "DM Sans",sans-serif;padding:13px 3px 12px;border:0;border-bottom:3px solid transparent;margin-bottom:-1px;white-space:nowrap}
+    .inventory-tab{flex:none;background:transparent;color:var(--muted);font:700 14px "Inter",sans-serif;padding:13px 3px 12px;border:0;border-bottom:3px solid transparent;margin-bottom:-1px;white-space:nowrap}
     .inventory-tab:hover{color:var(--accent-deep)}
     .inventory-tab[aria-selected="true"]{color:var(--accent-deep);border-bottom-color:var(--accent)}
     .inventory-tab-panel{min-width:0}
     .feature-tabs{display:flex;align-items:stretch;gap:clamp(12px,2.2vw,28px);border-bottom:1px solid var(--line);margin:0 0 20px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin;white-space:nowrap}
-    .feature-tab{flex:none;background:transparent;color:var(--muted);font:700 14px "DM Sans",sans-serif;padding:13px 3px 12px;border:0;border-bottom:3px solid transparent;margin-bottom:-1px;white-space:nowrap}
+    .feature-tab{flex:none;background:transparent;color:var(--muted);font:700 14px "Inter",sans-serif;padding:13px 3px 12px;border:0;border-bottom:3px solid transparent;margin-bottom:-1px;white-space:nowrap}
     .feature-tab:hover{color:var(--accent-deep)}
     .feature-tab[aria-selected="true"]{color:var(--accent-deep);border-bottom-color:var(--accent)}
     .feature-tab-panel{min-width:0}
@@ -221,7 +222,7 @@
       --page:#f4f7f5;--surface:#ffffff;--sidebar:#ffffff;--ink:#1d3026;--muted:#68786f;
       --line:#e3ebe5;--field:#ffffff;--accent:#1f7653;--accent-text:#ffffff;
       --accent-deep:#174b36;--subtle:#eaf3ed;--highlight:#edf5ef;--danger:#a64037;
-      --focus:#6eaa86;--font-body:"Inter",sans-serif;--font-heading:"Inter",sans-serif;
+      --focus:#6eaa86;--font-body:"Inter",sans-serif;--font-heading:"Plus Jakarta Sans",sans-serif;
       --radius-card:12px;--radius-control:10px;--shadow-card:0 3px 14px rgba(22,55,39,.055)
     }
     body{background:var(--page);color:var(--ink)}
@@ -3318,7 +3319,7 @@
   document.querySelectorAll('.sidebar .nav-button[data-view]').forEach(button=>{const label=button.querySelector('span')?.textContent?.trim();if(label){button.title=label;button.setAttribute('aria-label',label)}});
 
   const appearanceStyles={
-    minimalist:{name:'AA Forest Green',description:'The permanent AA PrintSystem brand theme',heading:'Inter',body:'Inter',radius:12,shadow:'0 4px 16px rgba(22,55,39,.06)',palettes:{
+    minimalist:{name:'AA Forest Green',description:'The permanent AA PrintSystem brand theme',heading:'Plus Jakarta Sans',body:'Inter',radius:12,shadow:'0 4px 16px rgba(22,55,39,.06)',palettes:{
       forest:{name:'AA Forest Green',accent:'#1f7653',page:'#f4f7f5',surface:'#ffffff',sidebar:'#ffffff',highlight:'#eaf3ed'}
     }},
     professional:{name:'Professional',description:'Structured, confident and businesslike',heading:'IBM Plex Sans',body:'IBM Plex Sans',radius:6,shadow:'0 3px 12px rgba(20,35,55,.07)',palettes:{
