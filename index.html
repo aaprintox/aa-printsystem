@@ -1219,7 +1219,21 @@
   const statuses = ['Pending','Confirmed','Processing','For Quality Checking','Ready for Pickup','Completed','Cancelled'];
   const milestones = [['Pending','Order Received'],['Confirmed','Confirmed'],['Processing','Processing'],['For Quality Checking','Quality Checking'],['Ready for Pickup','Ready for Pickup'],['Completed','Completed']];
   const methods = ['Cash','GCash','Bank Transfer','Other'];
-  const categories = ['Photocopying','Document Printing','Photo Printing','ID Printing','Lamination','Sticker Printing','Invitations','Tarpaulin Printing','Binding','Other Services'];
+  const categories = ['Photocopying','Document Printing','Photo Printing','ID Printing','Lamination','Sticker Printing','Invitations','Tarpaulin Printing','Binding','Other Services','Additionals'];
+  const additionalFeeProducts = [
+    {id:'default-fee-delivery',name:'Delivery Fee',category:'Additionals',cost:0,price:0,unit:'service',description:'Delivery of orders',status:'active'},
+    {id:'default-fee-rush',name:'Rush Fee',category:'Additionals',cost:0,price:0,unit:'service',description:'Urgent or priority processing',status:'active'},
+    {id:'default-fee-layout',name:'Layout Fee',category:'Additionals',cost:0,price:0,unit:'service',description:'Creating a layout/design',status:'active'},
+    {id:'default-fee-edit',name:'Editing Fee',category:'Additionals',cost:0,price:0,unit:'service',description:'Customer-requested edits',status:'active'},
+    {id:'default-fee-reprint',name:'Reprint Fee',category:'Additionals',cost:0,price:0,unit:'service',description:'Reprinting previously completed orders',status:'active'},
+    {id:'default-fee-extra-copy',name:'Extra Copy Fee',category:'Additionals',cost:0,price:0,unit:'service',description:'Additional copies beyond the original order',status:'active'},
+    {id:'default-fee-file-prep',name:'File Preparation Fee',category:'Additionals',cost:0,price:0,unit:'service',description:'Preparing, resizing, or formatting customer files',status:'active'},
+    {id:'default-fee-packaging',name:'Packaging Fee',category:'Additionals',cost:0,price:0,unit:'service',description:'Special packaging or gift wrapping',status:'active'},
+    {id:'default-fee-lamination',name:'Lamination Fee',category:'Additionals',cost:0,price:0,unit:'service',description:'Additional lamination not included in the product price',status:'active'},
+    {id:'default-fee-cutting',name:'Cutting Fee',category:'Additionals',cost:0,price:0,unit:'service',description:'Special cutting or trimming requirements',status:'active'},
+    {id:'default-fee-mounting',name:'Mounting Fee',category:'Additionals',cost:0,price:0,unit:'service',description:'Mounting prints onto boards or other materials',status:'active'},
+    {id:'default-fee-material',name:'Special Material Fee',category:'Additionals',cost:0,price:0,unit:'service',description:'Additional cost for special materials requested by customers',status:'active'}
+  ];
   const sampleProducts = [
     {id:'sample-1',name:'A4 black & white photocopy',category:'Photocopying',cost:.8,price:2},
     {id:'sample-2',name:'A4 color document print',category:'Document Printing',cost:5,price:12},
@@ -1270,6 +1284,20 @@
   function saveLegacy(name,value){try{localStorage.setItem(PREFIX+name,JSON.stringify(value));if(cloudReady&&['products','settings','message-templates','appearance','recent'].includes(name))cloudSetting(name.replaceAll('-','_'),value).catch(e=>notify('Saved on this device; cloud sync failed: '+e.message));return true}catch{notify('Could not save in this browser. Check available storage.');return false}}
   let products=readLegacy('products',sampleProducts);
   if(!Array.isArray(products))products=sampleProducts;
+  // Seed the approved Additionals list and gently update earlier seeded entries without changing their prices or user settings.
+  let updatedDefaultFees=false;
+  const approvedFeeIds=new Set(additionalFeeProducts.map(f=>f.id));
+  const obsoleteDefaultFeeIds=new Set(['default-fee-install','default-fee-proof']);
+  products=products.filter(p=>!obsoleteDefaultFeeIds.has(p.id));
+  if(products.length!==readLegacy('products',sampleProducts).length)updatedDefaultFees=true;
+  for(const fee of additionalFeeProducts){
+    const existing=products.find(p=>p.id===fee.id);
+    if(!existing){products.push({...fee});updatedDefaultFees=true;continue;}
+    for(const key of ['name','category','description','unit']){
+      if(existing[key]!==fee[key]){existing[key]=fee[key];updatedDefaultFees=true;}
+    }
+  }
+  if(updatedDefaultFees){try{localStorage.setItem(PREFIX+'products',JSON.stringify(products))}catch{}}
   let recent=readLegacy('recent',[]);
   if(!Array.isArray(recent))recent=[];
   let settings={...defaults,...readLegacy('settings',{})};
