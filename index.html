@@ -32,6 +32,7 @@
     @media print{body,body[data-template-id="__page-root"]{background:#fff!important;color:#172a20!important}.app-shell,.mobile-top,.public-page,.toast,.mobile-backdrop,.dialog-backdrop{display:none!important}.print-only{display:block!important;padding:32px;width:100%}.print-only table{width:100%;border-collapse:collapse;margin-top:24px}.print-only th,.print-only td{border-bottom:1px solid #ddd;padding:10px;text-align:left}}
     .site-footer{width:100%;max-width:1230px;margin:30px auto 0;padding:18px 12px 8px;border-top:1px solid var(--line);text-align:center;color:var(--muted);font-size:12px;line-height:1.7}.site-footer strong{color:var(--ink)}.site-footer p{margin:0}
     /* Long lists stay inside their own area instead of making the whole page longer. */
+    .catalogue-tab{background:transparent;border:0;border-bottom:2px solid transparent;padding:.65rem .15rem;color:var(--muted);font-weight:600;cursor:pointer}.catalogue-tab.active{border-bottom-color:#8b78ed;color:#8b78ed}
     #product-list{max-height:min(62vh,720px);overflow-y:auto;overscroll-behavior:contain;padding-right:6px;scrollbar-gutter:stable}
     #saved-list{max-height:min(58vh,650px);overflow-y:auto;overscroll-behavior:contain;padding-right:6px;scrollbar-gutter:stable}
     #order-list{max-height:min(64vh,760px);overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable}
@@ -502,7 +503,12 @@
        <h1 class="page-heading">Products &amp; services</h1>
        <p class="muted">Keep your go-to prices handy for faster quotations.</p>
       </header>
-      <div class="grid xl:grid-cols-[.8fr_1.2fr] gap-5 items-start">
+      <div class="flex flex-wrap gap-5 border-b mb-5" role="tablist" aria-label="Catalogue management">
+       <button type="button" class="catalogue-tab active" data-catalogue-tab="product" role="tab" aria-selected="true">Add a Product</button>
+       <button type="button" class="catalogue-tab" data-catalogue-tab="service" role="tab" aria-selected="false">Add Service</button>
+       <button type="button" class="catalogue-tab" data-catalogue-tab="fee" role="tab" aria-selected="false">Add Fee</button>
+      </div>
+      <div id="product-service-layout" class="grid xl:grid-cols-[.8fr_1.2fr] gap-5 items-start">
        <form id="product-form" class="panel p-6">
         <h2 id="product-form-title" class="section-title mb-5">Add a product</h2>
         <div class="space-y-4">
@@ -541,6 +547,23 @@
         </div><label for="product-search" class="field-label">Search products, SKU or description</label><input id="product-search" class="field mb-3" type="search">
         <div class="grid sm:grid-cols-3 gap-2 mb-4"><select id="product-filter-category" class="field" aria-label="Filter by category"><option value="">All categories</option></select><select id="product-filter-status" class="field" aria-label="Filter by status"><option value="all">All statuses</option><option value="active">Active only</option><option value="inactive">Inactive only</option></select><select id="product-sort" class="field" aria-label="Sort products"><option value="name">Sort: Name A–Z</option><option value="name-desc">Sort: Name Z–A</option><option value="price-low">Sort: Lowest price</option><option value="price-high">Sort: Highest price</option><option value="margin-low">Sort: Lowest margin</option></select></div>
         <div id="product-list"></div><div id="product-pagination" class="mt-4"></div>
+       </section>
+      </div>
+      <div id="fee-layout" class="grid xl:grid-cols-[.8fr_1.2fr] gap-5 items-start" hidden>
+       <form id="fee-form" class="panel p-6">
+        <h2 id="fee-form-title" class="section-title mb-5">Add a fee</h2>
+        <div class="space-y-4">
+         <div><label class="field-label" for="fee-name">Fee name</label><input id="fee-name" class="field" required maxlength="100"></div>
+         <div><label class="field-label" for="fee-description">Description (optional)</label><textarea id="fee-description" class="field" rows="2" maxlength="300"></textarea></div>
+         <div><label class="field-label" for="fee-price">Fee amount</label><input id="fee-price" class="field" type="number" min="0" step="0.01" required></div>
+         <div><label class="field-label" for="fee-status">Status</label><select id="fee-status" class="field"><option value="active">Active — available for orders</option><option value="inactive">Inactive — hidden from new orders</option></select></div>
+        </div>
+        <p id="fee-error" class="error text-sm mt-3" role="alert" hidden></p>
+        <div class="flex flex-wrap gap-2 mt-6"><button id="fee-submit" type="submit" class="primary">Save Fee</button><button id="fee-cancel" type="button" class="secondary" hidden>Cancel editing</button></div>
+       </form>
+       <section class="panel p-6"><div class="flex justify-between gap-3 mb-5"><h2 class="section-title">Additional Fees Catalogue</h2><span id="fee-count" class="pill"></span></div>
+        <label for="fee-search" class="field-label">Search fees</label><input id="fee-search" class="field mb-3" type="search" placeholder="Search fee name or description">
+        <div id="fee-list"></div>
        </section>
       </div>
      </section>
@@ -1284,20 +1307,14 @@
   function saveLegacy(name,value){try{localStorage.setItem(PREFIX+name,JSON.stringify(value));if(cloudReady&&['products','settings','message-templates','appearance','recent'].includes(name))cloudSetting(name.replaceAll('-','_'),value).catch(e=>notify('Saved on this device; cloud sync failed: '+e.message));return true}catch{notify('Could not save in this browser. Check available storage.');return false}}
   let products=readLegacy('products',sampleProducts);
   if(!Array.isArray(products))products=sampleProducts;
-  // Seed the approved Additionals list and gently update earlier seeded entries without changing their prices or user settings.
-  let updatedDefaultFees=false;
+  // Fees are stored separately from the product/service catalogue. Migrate any legacy fee records out of products.
   const approvedFeeIds=new Set(additionalFeeProducts.map(f=>f.id));
-  const obsoleteDefaultFeeIds=new Set(['default-fee-install','default-fee-proof']);
-  products=products.filter(p=>!obsoleteDefaultFeeIds.has(p.id));
-  if(products.length!==readLegacy('products',sampleProducts).length)updatedDefaultFees=true;
-  for(const fee of additionalFeeProducts){
-    const existing=products.find(p=>p.id===fee.id);
-    if(!existing){products.push({...fee});updatedDefaultFees=true;continue;}
-    for(const key of ['name','category','description','unit']){
-      if(existing[key]!==fee[key]){existing[key]=fee[key];updatedDefaultFees=true;}
-    }
-  }
-  if(updatedDefaultFees){try{localStorage.setItem(PREFIX+'products',JSON.stringify(products))}catch{}}
+  let fees=readLegacy('fees',[]);if(!Array.isArray(fees))fees=[];
+  const legacyFees=products.filter(p=>approvedFeeIds.has(p.id)||String(p.category||'').trim().toLowerCase()==='additionals');
+  legacyFees.forEach(p=>{if(!fees.some(f=>f.id===p.id))fees.push({id:p.id,name:p.name,description:p.description||'',price:Number(p.price)||0,status:p.status||'active'});});
+  products=products.filter(p=>!approvedFeeIds.has(p.id)&&String(p.category||'').trim().toLowerCase()!=='additionals'&&!['default-fee-install','default-fee-proof'].includes(p.id));
+  additionalFeeProducts.forEach(seed=>{if(!fees.some(f=>f.id===seed.id))fees.push({id:seed.id,name:seed.name,description:seed.description,price:0,status:'active'});});
+  try{localStorage.setItem(PREFIX+'products',JSON.stringify(products));localStorage.setItem(PREFIX+'fees',JSON.stringify(fees));}catch{}
   let recent=readLegacy('recent',[]);
   if(!Array.isArray(recent))recent=[];
   let settings={...defaults,...readLegacy('settings',{})};
@@ -1478,8 +1495,8 @@
     const holder=$('order-lines'),ids=new Set(orderLines.map(l=>l.id));
     holder.querySelectorAll('[data-order-line]').forEach(el=>{if(!ids.has(el.dataset.orderLine))el.remove()});
     for(const line of orderLines){
-      const matched=line.productId?products.find(p=>p.id===line.productId):products.find(p=>p.name.toLowerCase()===String(line.name||'').trim().toLowerCase());
-      if(matched){line.productId=matched.id;line.category=matched.category;line.custom=false}
+      const matched=line.productId?(products.find(p=>p.id===line.productId)||fees.find(f=>f.id===line.productId)):products.find(p=>p.name.toLowerCase()===String(line.name||'').trim().toLowerCase());
+      if(matched){line.productId=matched.id;line.category=products.some(p=>p.id===matched.id)?matched.category:'Others';line.custom=false}
       else if(line.name && line.custom!==false){line.productId='__custom__';line.custom=true}
       let el=Array.from(holder.children).find(e=>e.dataset.orderLine===line.id);
       if(!el){el=document.createElement('div');el.className='draft-line grid sm:grid-cols-2 xl:grid-cols-[minmax(0,2fr)_100px_130px_auto] gap-3 items-end';el.dataset.orderLine=line.id;
@@ -1491,7 +1508,7 @@
       product.hidden=isOthers;el.querySelector('.order-product-label').hidden=isOthers;
       const additionalWrap=el.querySelector('.order-additional-wrap');additionalWrap.hidden=!isOthers;
       const additionalSelect=el.querySelector('.order-additional');
-      const feeProducts=products.filter(p=>p.category==='Additionals'&&((p.status||'active')==='active'||p.id===line.productId)).sort((a,b)=>a.name.localeCompare(b.name,undefined,{sensitivity:'base'}));
+      const feeProducts=fees.filter(f=>String(f.status||'active').trim().toLowerCase()==='active'||f.id===line.productId).sort((a,b)=>a.name.localeCompare(b.name,undefined,{sensitivity:'base'}));
       additionalSelect.innerHTML='<option value="">Choose an additional fee</option>'+feeProducts.map(p=>`<option value="${esc(p.id)}" ${line.productId===p.id?'selected':''}>${esc(p.name)} — ${esc(money(p.price))}</option>`).join('');
       const custom=line.productId==='__custom__'||line.custom===true;
       el.querySelector('.order-custom-wrap').hidden=!custom;
@@ -1503,7 +1520,7 @@
   }
   $('add-order-item').onclick=()=>{orderLines.push({id:uid(),name:'',category:'',productId:'',custom:false,quantity:1,price:0});renderOrderLines()};
   $('order-lines').addEventListener('input',e=>{const el=e.target.closest('[data-order-line]');if(!el)return;const l=orderLines.find(x=>x.id===el.dataset.orderLine);if(e.target.classList.contains('order-custom'))l.name=e.target.value;if(e.target.classList.contains('order-quantity'))l.quantity=Number(e.target.value);if(e.target.classList.contains('order-price'))l.price=Number(e.target.value);el.querySelector('.order-line-total').textContent=money(l.quantity*l.price||0);orderMath()});
-  $('order-lines').addEventListener('change',e=>{const el=e.target.closest('[data-order-line]');if(!el)return;const l=orderLines.find(x=>x.id===el.dataset.orderLine);if(e.target.classList.contains('order-category')){l.category=e.target.value;l.productId='';l.name='';l.price=0;l.custom=false;renderOrderLines();return}if(e.target.classList.contains('order-product')||e.target.classList.contains('order-additional')){const value=e.target.value;l.productId=value;l.custom=value==='__custom__';if(value==='__custom__'){l.name='';l.price=0}else{const p=products.find(p=>p.id===value);l.name=p?.name||'';l.price=p?.price??0;if(e.target.classList.contains('order-product'))l.category=p?.category||l.category}renderOrderLines();if(value==='__custom__')el.querySelector('.order-custom').focus();return}});
+  $('order-lines').addEventListener('change',e=>{const el=e.target.closest('[data-order-line]');if(!el)return;const l=orderLines.find(x=>x.id===el.dataset.orderLine);if(e.target.classList.contains('order-category')){l.category=e.target.value;l.productId='';l.name='';l.price=0;l.custom=false;renderOrderLines();return}if(e.target.classList.contains('order-product')||e.target.classList.contains('order-additional')){const value=e.target.value;l.productId=value;l.custom=value==='__custom__';if(value==='__custom__'){l.name='';l.price=0}else{const p=e.target.classList.contains('order-additional')?fees.find(f=>f.id===value):products.find(p=>p.id===value);l.name=p?.name||'';l.price=p?.price??0;if(e.target.classList.contains('order-product'))l.category=p?.category||l.category}renderOrderLines();if(value==='__custom__')el.querySelector('.order-custom').focus();return}});
   $('order-lines').addEventListener('click',e=>{if(!e.target.classList.contains('order-remove'))return;orderLines=orderLines.filter(l=>l.id!==e.target.closest('[data-order-line]').dataset.orderLine);renderOrderLines()});
   document.querySelectorAll('.order-math').forEach(el=>el.addEventListener('input',orderMath));
   $('order-date').addEventListener('change',renderReferencePreview);
@@ -2341,12 +2358,13 @@
     else if(key==='inventory'||key==='movements')renderInventory();
   });
 
+  let catalogueMode='product';
+  function isServiceRecord(p){return String(p.unit||'').toLowerCase()==='service'||String(p.category||'').toLowerCase()==='other services'}
   function renderProducts(){
     const query=$('product-search').value.toLowerCase().trim(),cat=$('product-filter-category').value,status=$('product-filter-status').value,sort=$('product-sort').value;
-    let shown=products.filter(p=>`${p.name} ${p.category} ${p.sku||''} ${p.description||''}`.toLowerCase().includes(query)&&(!cat||p.category===cat)&&(status==='all'||(p.status||'active')===status));
+    let shown=products.filter(p=>(catalogueMode==='service'?isServiceRecord(p):!isServiceRecord(p))&&`${p.name} ${p.category} ${p.sku||''} ${p.description||''}`.toLowerCase().includes(query)&&(!cat||p.category===cat)&&(status==='all'||(p.status||'active')===status));
     shown.sort((a,b)=>sort==='name-desc'?String(b.name).localeCompare(String(a.name)):sort==='price-low'?Number(a.price)-Number(b.price):sort==='price-high'?Number(b.price)-Number(a.price):sort==='margin-low'?((Number(a.price)-Number(a.cost))/Math.max(Number(a.price),.000001))-((Number(b.price)-Number(b.cost))/Math.max(Number(b.price),.000001)):String(a.name).localeCompare(String(b.name)));
-    const active=products.filter(p=>(p.status||'active')==='active').length;
-    $('catalogue-count').textContent=`${shown.length} shown · ${active} active of ${products.length}`;
+    $('catalogue-count').textContent=`${shown.length} ${catalogueMode==='service'?'services':'products'} · ${shown.filter(p=>(p.status||'active')==='active').length} active`;document.querySelector('#product-service-layout h2.section-title').textContent=catalogueMode==='service'?'Your services catalogue':'Your products catalogue';document.querySelector('label[for=product-search]').textContent=catalogueMode==='service'?'Search services, code or description':'Search products, SKU or description';
     const page=pageSlice(shown,'products');
     $('product-list').innerHTML=page.items.length?page.items.map(p=>`<article class="item-row mb-2" data-product-id="${esc(p.id)}"><div class="flex flex-wrap items-center gap-2"><strong>${esc(p.name)}</strong>${p.sku?`<span class="pill">${esc(p.sku)}</span>`:''}<span class="pill">${esc(p.category)}</span><span class="pill">${(p.status||'active')==='active'?'Active':'Inactive'}</span></div>${p.description?`<p class="text-sm muted mt-2">${esc(p.description)}</p>`:''}<p class="text-xs muted my-2">Cost ${esc(exactMoney(p.cost))} · Selling ${esc(money(p.price))} / ${esc(p.unit||'unit')} · Profit ${esc(money(Number(p.price)-Number(p.cost)))} · ${marginBadge(p)}</p><div class="flex flex-wrap gap-2"><button type="button" data-product-action="edit" class="secondary">Edit</button><button type="button" data-product-action="duplicate" class="secondary">Duplicate</button><button type="button" data-product-action="toggle" class="secondary">${(p.status||'active')==='active'?'Set inactive':'Set active'}</button><button type="button" data-product-action="delete" class="danger">Delete</button></div></article>`).join(''):'<p class="text-sm muted py-5">No matching products. Try changing your search or filters.</p>';
     renderPagination('product-pagination','products',page.total,page.page,page.pages);renderCatalogueHealth();
@@ -2362,7 +2380,7 @@
   $('product-price').addEventListener('input',updateProductMarginPreview);
   function startEditProduct(p){
     editingProductId=p.id;$('product-name').value=p.name;$('product-sku').value=p.sku||'';$('product-description').value=p.description||'';$('product-status').value=p.status||'active';const unit=String(p.unit||'piece');const units=Array.from($('product-unit').options).map(o=>o.value);$('product-unit').value=units.includes(unit)?unit:'__other__';$('product-unit-custom').hidden=$('product-unit').value!=='__other__';$('product-unit-custom').value=$('product-unit').value==='__other__'?unit:'';$('product-category').value=p.category;$('product-cost').value=p.cost;$('product-price').value=p.price;
-    $('product-form-title').textContent='Edit product';$('product-submit').textContent='Update product';$('product-cancel').hidden=false;$('product-name').focus();updateProductMarginPreview();
+    $('product-form-title').textContent=catalogueMode==='service'?'Edit service':'Edit product';$('product-submit').textContent=catalogueMode==='service'?'Update service':'Update product';$('product-cancel').hidden=false;$('product-name').focus();updateProductMarginPreview();
   }
   function renderCatalogueHealth(){
     const holder=$('health-list');if(!holder)return;
@@ -2389,22 +2407,32 @@
     const p=products.find(x=>x.id===b.closest('[data-health-id]').dataset.healthId);if(!p)return;
     setView('products');startEditProduct(p);
   });
-  function resetProduct(){editingProductId=null;$('product-form').reset();$('product-unit-custom').hidden=true;$('product-unit-custom').value='';$('product-status').value='active';$('product-form-title').textContent='Add a product';$('product-submit').textContent='Save product';$('product-cancel').hidden=true;showError('product-error','');updateProductMarginPreview()}
+  function resetProduct(){editingProductId=null;$('product-form').reset();$('product-unit-custom').hidden=true;$('product-unit-custom').value='';$('product-status').value='active';$('product-form-title').textContent=catalogueMode==='service'?'Add a service':'Add a product';$('product-submit').textContent=catalogueMode==='service'?'Save service':'Save product';if(catalogueMode==='service'){$('product-unit').value='service';$('product-category').value='Other Services'}else{$('product-unit').value='piece';if(!$('product-category').value)$('product-category').selectedIndex=0;}$('product-cancel').hidden=true;showError('product-error','');updateProductMarginPreview()}
   $('product-cancel').onclick=resetProduct;
   $('product-form').onsubmit=e=>{
-    e.preventDefault();const name=$('product-name').value.trim(),sku=$('product-sku').value.trim(),unit=$('product-unit').value==='__other__'?$('product-unit-custom').value.trim():$('product-unit').value,description=$('product-description').value.trim(),status=$('product-status').value,category=$('product-category').value,cost=Number($('product-cost').value),price=Number($('product-price').value);
+    e.preventDefault();const name=$('product-name').value.trim(),sku=$('product-sku').value.trim(),unit=catalogueMode==='service'?'service':($('product-unit').value==='__other__'?$('product-unit-custom').value.trim():$('product-unit').value),description=$('product-description').value.trim(),status=$('product-status').value,category=catalogueMode==='service'?'Other Services':$('product-category').value,cost=Number($('product-cost').value),price=Number($('product-price').value);
     if(!name||!unit||!['active','inactive'].includes(status)||!categories.includes(category)||!validAmount($('product-cost').value)||!validAmount($('product-price').value)){showError('product-error','Complete all fields with non-negative prices.');return}
     if(sku&&products.some(p=>p.id!==editingProductId&&String(p.sku||'').trim().toLowerCase()===sku.toLowerCase())){showError('product-error','This SKU is already assigned to another product. Use a unique SKU.');return}
     const next=structuredClone(products),existing=next.find(p=>p.id===editingProductId);
     if(editingProductId&&!existing){showError('product-error','This product is no longer available.');return}
     if(existing)Object.assign(existing,{name,sku,unit,description,status,category,cost,price});else next.unshift({id:uid(),name,sku,unit,description,status,category,cost,price});
-    if(saveLegacy('products',next)){products=next;resetProduct();renderProducts();renderDashboard();renderQuote();renderOrderLines();notify(existing?'Product updated.':'Product saved.')}
+    if(saveLegacy('products',next)){products=next;resetProduct();renderProducts();renderDashboard();renderQuote();renderOrderLines();notify(existing?(catalogueMode==='service'?'Service updated.':'Product updated.'):(catalogueMode==='service'?'Service saved.':'Product saved.'))}
   };
+  let editingFeeId=null;
+  function resetFee(){editingFeeId=null;$('fee-form').reset();$('fee-status').value='active';$('fee-form-title').textContent='Add a fee';$('fee-submit').textContent='Save Fee';$('fee-cancel').hidden=true;showError('fee-error','');}
+  function renderFees(){const term=$('fee-search').value.trim().toLowerCase(),shown=fees.filter(f=>`${f.name} ${f.description||''}`.toLowerCase().includes(term));$('fee-count').textContent=`${shown.length} fees · ${fees.filter(f=>(f.status||'active')==='active').length} active`;$('fee-list').innerHTML=shown.length?shown.map(f=>`<article class="item-row mb-2" data-fee-id="${esc(f.id)}"><div class="flex flex-wrap items-center gap-2"><strong>${esc(f.name)}</strong><span class="pill">${(f.status||'active')==='active'?'Active':'Inactive'}</span></div>${f.description?`<p class="text-sm muted mt-2">${esc(f.description)}</p>`:''}<p class="text-sm font-bold my-2">${esc(money(f.price))}</p><div class="flex flex-wrap gap-2"><button type="button" class="secondary" data-fee-action="edit">Edit</button><button type="button" class="secondary" data-fee-action="toggle">${(f.status||'active')==='active'?'Set inactive':'Set active'}</button><button type="button" class="danger" data-fee-action="delete">Delete</button></div></article>`).join(''):'<p class="text-sm muted py-5">No fees match your search.</p>';}
+  function startEditFee(f){editingFeeId=f.id;$('fee-name').value=f.name;$('fee-description').value=f.description||'';$('fee-price').value=f.price;$('fee-status').value=f.status||'active';$('fee-form-title').textContent='Edit fee';$('fee-submit').textContent='Update Fee';$('fee-cancel').hidden=false;$('fee-name').focus();}
+  $('fee-form').onsubmit=e=>{e.preventDefault();const name=$('fee-name').value.trim(),description=$('fee-description').value.trim(),price=Number($('fee-price').value),status=$('fee-status').value;if(!name||!validAmount($('fee-price').value)||!['active','inactive'].includes(status)){showError('fee-error','Enter a fee name and valid non-negative amount.');return}const next=structuredClone(fees),existing=next.find(f=>f.id===editingFeeId);if(existing)Object.assign(existing,{name,description,price,status});else next.unshift({id:uid(),name,description,price,status});if(saveLegacy('fees',next)){fees=next;resetFee();renderFees();renderOrderLines();notify(existing?'Fee updated.':'Fee saved.')}};
+  $('fee-cancel').onclick=resetFee;$('fee-search').oninput=renderFees;
+  $('fee-list').onclick=e=>{const b=e.target.closest('[data-fee-action]');if(!b)return;const f=fees.find(x=>x.id===b.closest('[data-fee-id]').dataset.feeId);if(!f)return;if(b.dataset.feeAction==='edit')startEditFee(f);if(b.dataset.feeAction==='toggle'){const next=fees.map(x=>x.id===f.id?{...x,status:(x.status||'active')==='active'?'inactive':'active'}:x);if(saveLegacy('fees',next)){fees=next;renderFees();renderOrderLines();notify('Fee status updated.')}}if(b.dataset.feeAction==='delete')b.parentElement.innerHTML='<span class="text-sm">Delete this fee? Saved orders will retain their saved amount and description.</span><button type="button" class="danger" data-fee-action="confirm">Confirm delete</button><button type="button" class="secondary" data-fee-action="cancel">Cancel</button>';if(b.dataset.feeAction==='cancel')renderFees();if(b.dataset.feeAction==='confirm'){const next=fees.filter(x=>x.id!==f.id);if(saveLegacy('fees',next)){fees=next;renderFees();renderOrderLines();notify('Fee deleted.')}}};
+  function switchCatalogueTab(mode){catalogueMode=mode;document.querySelectorAll('[data-catalogue-tab]').forEach(btn=>{const active=btn.dataset.catalogueTab===mode;btn.classList.toggle('active',active);btn.setAttribute('aria-selected',String(active));});$('product-service-layout').hidden=mode==='fee';$('fee-layout').hidden=mode!=='fee';if(mode==='fee'){renderFees();return;}resetProduct();if(mode==='service'){$('product-unit').value='service';$('product-category').value='Other Services';$('product-form-title').textContent='Add a service';$('product-submit').textContent='Save service';}else{$('product-unit').value='piece';$('product-form-title').textContent='Add a product';$('product-submit').textContent='Save product';}renderProducts();}
+  document.querySelectorAll('[data-catalogue-tab]').forEach(btn=>btn.addEventListener('click',()=>switchCatalogueTab(btn.dataset.catalogueTab)));
+  $('fee-search').oninput=renderFees;
   $('product-search').oninput=()=>{listPages.products=1;renderProducts()};
   ['product-filter-category','product-filter-status','product-sort'].forEach(id=>$(id).addEventListener('change',()=>{listPages.products=1;renderProducts()}));
   $('product-list').onclick=e=>{
     const b=e.target.closest('[data-product-action]');if(!b)return;const p=products.find(p=>p.id===b.closest('[data-product-id]').dataset.productId);if(!p)return;
-    if(b.dataset.productAction==='edit')startEditProduct(p);
+    if(b.dataset.productAction==='edit'){switchCatalogueTab(isServiceRecord(p)?'service':'product');startEditProduct(p);}
     if(b.dataset.productAction==='toggle'){const next=products.map(x=>x.id===p.id?{...x,status:(x.status||'active')==='active'?'inactive':'active'}:x);if(saveLegacy('products',next)){products=next;renderProducts();renderQuote();renderOrderLines();notify((p.status||'active')==='active'?'Product set to inactive.':'Product set to active.')}}
     if(b.dataset.productAction==='duplicate'){const copy={...p,id:uid(),name:p.name+' (Copy)',sku:'',status:'inactive'};const next=[copy,...products];if(saveLegacy('products',next)){products=next;renderProducts();renderQuote();renderOrderLines();notify('Product copied as an inactive item. Update its name, code and prices before activating it.')}}
     if(b.dataset.productAction==='delete')b.parentElement.innerHTML='<span class="text-sm">Delete this product? Old orders and quotations keep their saved item names and prices. This cannot be undone.</span><button type="button" data-product-action="confirm" class="danger">Confirm delete</button><button type="button" data-product-action="cancel" class="secondary">Cancel</button>';
@@ -2877,7 +2905,7 @@
       }
       $('staff-labor-cost').value = settings.labor;
       $('cost-other').value = settings.overhead;
-      renderAllOrders();renderProducts();renderQuote();renderOrderLines();calculatePricing();$('profit-target').value=targetMargin();calculateProfit();renderCatalogueHealth();notify('Business settings saved.')
+      renderAllOrders();renderProducts();renderFees();renderQuote();renderOrderLines();calculatePricing();$('profit-target').value=targetMargin();calculateProfit();renderCatalogueHealth();notify('Business settings saved.')
     }
   };
   $('message-settings-form').onsubmit=e=>{e.preventDefault();const next={confirmMessenger:$('template-confirm-messenger').value,confirmSms:$('template-confirm-sms').value,readyMessenger:$('template-ready-messenger').value,readySms:$('template-ready-sms').value};if(Object.values(next).some(v=>!v.trim())){showError('template-error','All four message templates need text.');return}if(saveLegacy('message-templates',next)){templates=next;showError('template-error','');notify('Message templates saved.')}};
@@ -2931,7 +2959,7 @@
   $('staff-labor-cost').value=settings.labor;
   $('cost-other').value=settings.overhead;
   renderLibrary();renderRecipe();renderSaved();calculatePricing();calculateProfit();resetQuoteForm();
-  (async()=>{await initializeCloudRepository();for(const key of ['products','recent','settings','message_templates','appearance']){try{const value=await readCloudSetting(key);const localKey=key==='message_templates'?'message-templates':key;const fallback=key==='products'?products:key==='recent'?recent:key==='settings'?settings:key==='message_templates'?templates:savedAppearance;if(value!==null){localStorage.setItem(PREFIX+localKey,JSON.stringify(value));if(key==='products'&&Array.isArray(value))products=value;if(key==='recent'&&Array.isArray(value))recent=value;if(key==='settings'&&value&&typeof value==='object')settings={...defaults,...value};if(key==='message_templates'&&value)templates={...defaultTemplates,...value};if(key==='appearance'&&value)savedAppearance=value;}else{await cloudSetting(key,fallback);}}catch(e){/* Preserve local copy if a cloud setting is not available. */}}fillSettings();applyAppearance(savedAppearance);renderProducts();renderDashboard();renderAllOrders();$('include-owner-labor').checked=Boolean(settings.includeOwnerLabor);if(settings.ownerHourlyRate!=null&&settings.ownerHourlyRate>0){$('owner-hourly-rate').value=String(settings.ownerHourlyRate)}$('staff-labor-cost').value=settings.labor;$('cost-other').value=settings.overhead;calculatePricing();})();
+  (async()=>{await initializeCloudRepository();for(const key of ['products','recent','settings','message_templates','appearance']){try{const value=await readCloudSetting(key);const localKey=key==='message_templates'?'message-templates':key;const fallback=key==='products'?products:key==='recent'?recent:key==='settings'?settings:key==='message_templates'?templates:savedAppearance;if(value!==null){localStorage.setItem(PREFIX+localKey,JSON.stringify(value));if(key==='products'&&Array.isArray(value)){products=value.filter(p=>!approvedFeeIds.has(p.id)&&String(p.category||'').trim().toLowerCase()!=='additionals');}if(key==='recent'&&Array.isArray(value))recent=value;if(key==='settings'&&value&&typeof value==='object')settings={...defaults,...value};if(key==='message_templates'&&value)templates={...defaultTemplates,...value};if(key==='appearance'&&value)savedAppearance=value;}else{await cloudSetting(key,fallback);}}catch(e){/* Preserve local copy if a cloud setting is not available. */}}fillSettings();applyAppearance(savedAppearance);renderProducts();renderDashboard();renderAllOrders();$('include-owner-labor').checked=Boolean(settings.includeOwnerLabor);if(settings.ownerHourlyRate!=null&&settings.ownerHourlyRate>0){$('owner-hourly-rate').value=String(settings.ownerHourlyRate)}$('staff-labor-cost').value=settings.labor;$('cost-other').value=settings.overhead;calculatePricing();})();
   if(window.lucide)lucide.createIcons();
   if(window.location.hash==='#track')showPublic();
 })();
