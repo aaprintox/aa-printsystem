@@ -215,6 +215,43 @@
   .dashboard-shortcut:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
   .dashboard-shortcut::after{content:'View details →';display:block;margin-top:10px;font-size:11px;color:var(--muted);font-weight:600}
 
+
+    /* AA PrintSystem Phase 1 — forest-green visual foundation */
+    :root{
+      --page:#f4f7f5;--surface:#ffffff;--sidebar:#ffffff;--ink:#1d3026;--muted:#68786f;
+      --line:#e3ebe5;--field:#ffffff;--accent:#1f7653;--accent-text:#ffffff;
+      --accent-deep:#174b36;--subtle:#eaf3ed;--highlight:#edf5ef;--danger:#a64037;
+      --focus:#6eaa86;--font-body:"Inter",sans-serif;--font-heading:"Inter",sans-serif;
+      --radius-card:12px;--radius-control:10px;--shadow-card:0 3px 14px rgba(22,55,39,.055)
+    }
+    body{background:var(--page);color:var(--ink)}
+    .sidebar{background:var(--sidebar);border-right:1px solid var(--line)}
+    .brand{color:var(--accent-deep)}
+    .nav-button{border-radius:10px;transition:background .16s ease,color .16s ease,box-shadow .16s ease}
+    .nav-button:hover,.nav-button.active{background:var(--subtle);color:var(--accent-deep);box-shadow:none}
+    .panel{border:1px solid var(--line);border-radius:var(--radius-card);box-shadow:var(--shadow-card)}
+    .field{border-color:var(--line);border-radius:var(--radius-control);background:var(--field);transition:border-color .16s ease,box-shadow .16s ease}
+    .field:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(31,118,83,.11);outline:0}
+    .primary,.secondary,.danger{border-radius:var(--radius-control);min-height:40px;transition:background .16s ease,filter .16s ease,transform .16s ease}
+    .primary{background:var(--accent);box-shadow:0 2px 5px rgba(23,75,54,.12)}
+    .primary:hover{background:#195f43;filter:none}
+    .secondary{background:var(--subtle);color:var(--accent-deep);border:1px solid #dce9df}
+    .secondary:hover{background:#deeee3;filter:none}
+    .danger{border-radius:var(--radius-control)}
+    .pill{background:var(--subtle);color:var(--accent-deep);border:1px solid #dfebe2}
+    .item-row,.draft-line{border-color:var(--line);border-radius:12px;background:var(--surface)}
+    .notice{border-left-color:var(--accent);background:var(--highlight);border-radius:10px}
+    .toast{background:var(--accent-deep);border-radius:12px}
+    .inventory-tabs,.feature-tabs{border-bottom-color:var(--line)}
+    .inventory-tab,.feature-tab{font-weight:650;color:var(--muted);border-bottom-width:3px}
+    .inventory-tab[aria-selected="true"],.feature-tab[aria-selected="true"]{color:var(--accent-deep);border-bottom-color:var(--accent)}
+    .theme-card{border-radius:12px}
+    .brand-theme-panel{background:var(--surface)}
+    .brand-swatch-row{display:flex;gap:10px;flex-wrap:wrap}
+    .brand-swatch-row span{display:block;width:54px;height:38px;border:1px solid rgba(23,75,54,.12);border-radius:9px}
+    .brand-theme-sample{padding:16px;border:1px solid var(--line);border-radius:12px;background:#fbfdfb}
+    @media(max-width:850px){.mobile-top{background:var(--sidebar);border-bottom:1px solid var(--line)}}
+    @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
 </style>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.577.0/dist/umd/lucide.min.js" type="text/javascript"></script>
   <script src="https://cdn.tailwindcss.com/3.4.17" type="text/javascript"></script>
@@ -256,7 +293,7 @@
      <div class="nav-group">
       <p class="nav-group-label">System</p>
       <button type="button" class="nav-button" data-view="settings"><i data-lucide="settings-2"></i><span data-template-id="nav-settings" class="canva-text" style="font-weight:  400; font-style: normal; font-size: 15px;">Business Settings</span></button>
-      <button type="button" class="nav-button" data-view="appearance"><i data-lucide="palette"></i><span data-template-id="nav-appearance" class="canva-text" style="font-weight: 400; font-style: normal; font-size: 15px;">Appearance &amp; Themes</span></button>
+      <button type="button" class="nav-button" data-view="appearance"><i data-lucide="palette"></i><span data-template-id="nav-appearance" class="canva-text" style="font-weight: 400; font-style: normal; font-size: 15px;">Appearance</span></button>
      </div>
     </nav>
     <p class="mt-auto px-3 text-xs muted">A little more clarity for every print job.</p>
@@ -1104,67 +1141,42 @@
      </section>
      <section id="view-appearance" class="view" hidden="">
       <header class="mb-7">
-       <p class="eyebrow">YOUR WORKSPACE, YOUR WAY</p>
-       <h1 class="page-heading">Appearance &amp; Themes</h1>
-       <p class="muted">Choose a visual style, then pick a color palette that suits your print shop. Preview everything before applying.</p>
+       <p class="eyebrow">AA PRINTSYSTEM BRAND IDENTITY</p>
+       <h1 class="page-heading">Appearance</h1>
+       <p class="muted">Your workspace uses the standard AA PrintSystem forest-green theme across every module.</p>
       </header>
-      <section class="panel p-6 mb-5">
-       <h2 class="section-title">1. Choose your visual style</h2>
-       <p class="muted mt-1 mb-5">Each style includes its own typography, shape language and interface details.</p>
-       <div id="style-gallery" class="grid sm:grid-cols-2 xl:grid-cols-3 gap-4"></div>
-      </section>
-      <section class="panel p-6 mb-5">
-       <h2 class="section-title">2. Choose a color palette</h2>
-       <p id="palette-intro" class="muted mt-1 mb-5">Select a palette for your chosen style.</p>
-       <div id="palette-gallery" class="grid sm:grid-cols-2 xl:grid-cols-4 gap-4"></div>
-      </section>
-      <div class="grid lg:grid-cols-2 gap-5 mb-5">
-       <section class="panel p-6">
-        <h2 class="section-title mb-2">Custom accent</h2>
-        <p class="muted mb-5">Optional: fine-tune the main accent color. Text contrast adjusts automatically.</p>
-        <label class="field-label" for="accent-picker">Choose an accent color</label>
-        <input id="accent-picker" class="color-control" type="color" value="#456c5a">
-        <button id="reset-accent" type="button" class="secondary block mt-5">Reset to selected palette</button>
-       </section>
-       <section class="panel p-6">
-        <h2 class="section-title mb-2">Display mode</h2>
-        <p class="muted mb-5">Dark Mode stays separate and works with every visual style and palette.</p>
-        <div class="flex gap-2">
-         <button id="mode-light" type="button" class="secondary" aria-pressed="true">Light Mode</button>
-         <button id="mode-dark" type="button" class="secondary" aria-pressed="false">Dark Mode</button>
+      <section class="panel p-6 mb-5 brand-theme-panel">
+       <div class="flex flex-wrap items-start justify-between gap-4">
+        <div>
+         <p class="eyebrow">ACTIVE WORKSPACE THEME</p>
+         <h2 class="section-title mt-2">AA Forest Green</h2>
+         <p class="muted mt-2">A consistent light interface with forest-green actions, soft sage highlights, clean white cards, and moderately rounded corners.</p>
         </div>
-       </section>
+        <span class="pill">Standard theme</span>
+       </div>
+       <div class="brand-swatch-row mt-6" aria-label="AA Forest Green color palette">
+        <span style="background:#174b36"></span><span style="background:#1f7653"></span><span style="background:#5c9b78"></span><span style="background:#eaf3ed"></span><span style="background:#f4f7f5"></span>
+       </div>
+       <div class="grid sm:grid-cols-2 gap-4 mt-6">
+        <div class="brand-theme-sample">
+         <p class="muted text-xs">PRIMARY ACTION</p>
+         <button type="button" class="primary mt-3" disabled>Forest green button</button>
+        </div>
+        <div class="brand-theme-sample">
+         <p class="muted text-xs">SECONDARY ACTION</p>
+         <button type="button" class="secondary mt-3" disabled>Soft green button</button>
+        </div>
+       </div>
+       <p class="muted text-sm mt-5">Theme switching, custom accent colors, and dark mode are disabled to keep the application visually consistent. Your business records and operational settings are unaffected.</p>
+      </section>
+      <div hidden aria-hidden="true">
+       <div id="style-gallery"></div><p id="palette-intro"></p><div id="palette-gallery"></div>
+       <input id="accent-picker" type="color" value="#1f7653"><button id="reset-accent" type="button"></button>
+       <button id="mode-light" type="button"></button><button id="mode-dark" type="button"></button>
+       <p id="appearance-status">Standard AA Forest Green theme</p>
+       <button id="preview-theme" type="button"></button><button id="apply-theme" type="button"></button>
+       <button id="cancel-theme" type="button"></button><button id="reset-theme" type="button"></button>
       </div>
-      <section class="panel p-6 mb-5">
-       <h2 class="section-title mb-2">3. Live preview</h2>
-       <p class="muted mb-4">This sample updates when you preview a style or palette.</p>
-       <div id="appearance-preview" class="rounded-xl border p-4" style="border-color:var(--line);background:var(--page)">
-        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-         <div><p class="eyebrow">AA PRINTSYSTEM</p><h3 class="text-xl font-bold">Workspace overview</h3></div>
-         <span class="pill">Preview</span>
-        </div>
-        <div class="grid sm:grid-cols-3 gap-3 mb-4">
-         <div class="panel p-3"><p class="muted text-xs">Today's orders</p><p class="metric">12</p></div>
-         <div class="panel p-3"><p class="muted text-xs">Pending payments</p><p class="metric">₱8,450</p></div>
-         <div class="panel p-3"><p class="muted text-xs">Ready for pickup</p><p class="metric">5</p></div>
-        </div>
-        <div class="flex flex-wrap items-center gap-2">
-         <button type="button" class="primary">Primary action</button>
-         <button type="button" class="secondary">Secondary action</button>
-         <span class="pill">Status label</span>
-        </div>
-       </div>
-      </section>
-      <section class="panel p-6">
-       <h2 class="section-title mb-2">4. Apply your appearance</h2>
-       <p id="appearance-status" class="muted mb-4" aria-live="polite"></p>
-       <div class="flex flex-wrap gap-2">
-        <button id="preview-theme" type="button" class="secondary">Preview Theme</button>
-        <button id="apply-theme" type="button" class="primary">Apply Theme</button>
-        <button id="cancel-theme" type="button" class="secondary">Cancel</button>
-        <button id="reset-theme" type="button" class="secondary">Reset to Default</button>
-       </div>
-      </section>
      </section>
     </div>
     <footer class="site-footer">
@@ -3255,11 +3267,8 @@
   document.querySelectorAll('.sidebar .nav-button[data-view]').forEach(button=>{const label=button.querySelector('span')?.textContent?.trim();if(label){button.title=label;button.setAttribute('aria-label',label)}});
 
   const appearanceStyles={
-    minimalist:{name:'Minimalist',description:'Clean, quiet and uncluttered',heading:'Inter',body:'Inter',radius:8,shadow:'none',palettes:{
-      neutral:{name:'Pure Neutral',accent:'#475569',page:'#f5f6f7',surface:'#ffffff',sidebar:'#e9edf0',highlight:'#e9edf0'},
-      sage:{name:'Sage Green',accent:'#456c5a',page:'#f7f4ed',surface:'#ffffff',sidebar:'#e8eee3',highlight:'#e8eee3'},
-      ocean:{name:'Ocean Blue',accent:'#256b91',page:'#f2f7fa',surface:'#ffffff',sidebar:'#e2edf3',highlight:'#e2edf3'},
-      sand:{name:'Warm Sand',accent:'#9a7654',page:'#faf6ef',surface:'#ffffff',sidebar:'#eee5d8',highlight:'#eee5d8'}
+    minimalist:{name:'AA Forest Green',description:'The permanent AA PrintSystem brand theme',heading:'Inter',body:'Inter',radius:12,shadow:'0 4px 16px rgba(22,55,39,.06)',palettes:{
+      forest:{name:'AA Forest Green',accent:'#1f7653',page:'#f4f7f5',surface:'#ffffff',sidebar:'#ffffff',highlight:'#eaf3ed'}
     }},
     professional:{name:'Professional',description:'Structured, confident and businesslike',heading:'IBM Plex Sans',body:'IBM Plex Sans',radius:6,shadow:'0 3px 12px rgba(20,35,55,.07)',palettes:{
       navy:{name:'Corporate Navy',accent:'#244a73',page:'#f2f5f9',surface:'#ffffff',sidebar:'#e3eaf2',highlight:'#e3eaf2'},
@@ -3292,13 +3301,9 @@
     terracotta:['elegant','espresso'],mint:['friendly','matcha']
   };
   function normalizeAppearance(a){
-    let style=a?.style,palette=a?.palette;
-    if(!appearanceStyles[style]){
-      const legacy=legacyAppearance[a?.theme]||['minimalist','sage'];
-      style=legacy[0];palette=legacy[1];
-    }
-    if(!appearanceStyles[style].palettes[palette])palette=Object.keys(appearanceStyles[style].palettes)[0];
-    return {style,palette,dark:a?.dark===true,accent:typeof a?.accent==='string'&&/^#[0-9a-f]{6}$/i.test(a.accent)?a.accent:null};
+    // Phase 1: AA PrintSystem uses one fixed forest-green light theme.
+    // Ignore legacy palette, accent and dark-mode preferences so old settings cannot override the brand.
+    return {style:'minimalist',palette:'forest',dark:false,accent:null};
   }
   let savedAppearance=normalizeAppearance(readLegacy('appearance',{})),pendingAppearance={...savedAppearance},previewing=false;
   function selectedPalette(state){return appearanceStyles[state.style].palettes[state.palette]}
@@ -3380,7 +3385,7 @@
   $('staff-labor-cost').value=settings.labor;
   $('cost-other').value=settings.overhead;
   renderLibrary();renderRecipe();renderSaved();calculatePricing();calculateProfit();resetQuoteForm();
-  (async()=>{await initializeCloudRepository();for(const key of ['products','recent','settings','message_templates','appearance']){try{const value=await readCloudSetting(key);const localKey=key==='message_templates'?'message-templates':key;const fallback=key==='products'?products:key==='recent'?recent:key==='settings'?settings:key==='message_templates'?templates:savedAppearance;if(value!==null){localStorage.setItem(PREFIX+localKey,JSON.stringify(value));if(key==='products'&&Array.isArray(value))products=value;if(key==='recent'&&Array.isArray(value))recent=value;if(key==='settings'&&value&&typeof value==='object')settings={...defaults,...value};if(key==='message_templates'&&value)templates={...defaultTemplates,...value};if(key==='appearance'&&value)savedAppearance=value;}else{await cloudSetting(key,fallback);}}catch(e){/* Preserve local copy if a cloud setting is not available. */}}fillSettings();applyAppearance(savedAppearance);renderProducts();renderDashboard();renderAllOrders();$('include-owner-labor').checked=Boolean(settings.includeOwnerLabor);if(settings.ownerHourlyRate!=null&&settings.ownerHourlyRate>0){$('owner-hourly-rate').value=String(settings.ownerHourlyRate)}$('staff-labor-cost').value=settings.labor;$('cost-other').value=settings.overhead;calculatePricing();})();
+  (async()=>{await initializeCloudRepository();for(const key of ['products','recent','settings','message_templates','appearance']){try{const value=await readCloudSetting(key);const localKey=key==='message_templates'?'message-templates':key;const fallback=key==='products'?products:key==='recent'?recent:key==='settings'?settings:key==='message_templates'?templates:savedAppearance;if(value!==null){localStorage.setItem(PREFIX+localKey,JSON.stringify(value));if(key==='products'&&Array.isArray(value))products=value;if(key==='recent'&&Array.isArray(value))recent=value;if(key==='settings'&&value&&typeof value==='object')settings={...defaults,...value};if(key==='message_templates'&&value)templates={...defaultTemplates,...value};if(key==='appearance'&&value)savedAppearance=normalizeAppearance(value);}else{await cloudSetting(key,fallback);}}catch(e){/* Preserve local copy if a cloud setting is not available. */}}fillSettings();applyAppearance(savedAppearance);renderProducts();renderDashboard();renderAllOrders();$('include-owner-labor').checked=Boolean(settings.includeOwnerLabor);if(settings.ownerHourlyRate!=null&&settings.ownerHourlyRate>0){$('owner-hourly-rate').value=String(settings.ownerHourlyRate)}$('staff-labor-cost').value=settings.labor;$('cost-other').value=settings.overhead;calculatePricing();})();
   if(window.lucide)lucide.createIcons();
   if(window.location.hash==='#track')showPublic();
 })();
@@ -3458,9 +3463,7 @@
     setupFeatureTabs('view-settings',[
       {label:'Business Details'},{label:'Customer Messages'},{label:'Customer Tracking'}
     ],child=>child.id==='settings-form'?0:child.id==='message-settings-form'?1:2);
-    setupFeatureTabs('view-appearance',[
-      {label:'Styles & Palettes'},{label:'Customize Appearance'}
-    ],child=>child.querySelector('#style-gallery')?0:1);
+    setupFeatureTabs('view-appearance',[{label:'Brand Theme'}],()=>0);
   }
   setupAllFeatureTabs();
 
